@@ -1,0 +1,338 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── MULTI-TENANT CORE ─────────────────────────────────────────────
+
+model User {
+  id           String             @id @default(cuid())
+  email        String             @unique
+  password     String
+  name         String?
+  role         String             @default("user") // super_admin, user
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  memberships  TenantMembership[]
+  invitations  Invitation[]
+}
+
+model Tenant {
+  id            String             @id @default(cuid())
+  name          String
+  slug          String             @unique
+  contactEmail  String?
+  plan          String             @default("free") // free, starter, pro, enterprise
+  status        String             @default("active") // active, paused, suspended, cancelled
+  timezone      String             @default("UTC")
+  notes         String?
+  memberships   TenantMembership[]
+  domains       Domain[]
+  settings      TenantSettings?
+  ingestionLogs IngestionLog[]
+  rawFiles      RawFile[]
+  actionItems   ActionItem[]
+  aliases       AliasMapping[]
+  invitations   Invitation[]
+  onboarding    OnboardingChecklist?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model TenantMembership {
+  id        String   @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      String   @default("admin") // owner, admin, viewer
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tenantId])
+}
+
+// ─── ALIAS MAPPING ──────────────────────────────────────────────────
+
+model AliasMapping {
+  id        String   @id @default(cuid())
+  alias     String   @unique // e.g. acme@mydomain.site
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── INVITATIONS ────────────────────────────────────────────────────
+
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role        String    @default("admin") // admin, viewer
+  token       String    @unique
+  status      String    @default("pending") // pending, accepted, expired, revoked
+  invitedById String?
+  invitedBy   User?     @relation(fields: [invitedById], references: [id])
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([tenantId])
+}
+
+// ─── ONBOARDING CHECKLIST ───────────────────────────────────────────
+
+model OnboardingChecklist {
+  id                     String    @id @default(cuid())
+  tenantId               String    @unique
+  tenant                 Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domainAdded            Boolean   @default(false)
+  aliasAssigned          Boolean   @default(false)
+  dmarcRuaUpdated        Boolean   @default(false)
+  sampleReportUploaded   Boolean   @default(false)
+  firstReportReceived    Boolean   @default(false)
+  parsingComplete        Boolean   @default(false)
+  sendersReviewed        Boolean   @default(false)
+  assumptionsConfigured  Boolean   @default(false)
+  dashboardReady         Boolean   @default(false)
+  completedAt            DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+// ─── DOMAIN & REPORTS ───────────────────────────────────────────────
+
+model Domain {
+  id              String        @id @default(cuid())
+  domain          String
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  isPrimary       Boolean       @default(false)
+  verified        Boolean       @default(false)
+  dmarcSetupStatus String       @default("pending") // pending, in_progress, configured, verified
+  notes           String?
+  reports         DmarcReport[]
+  senders         Sender[]
+  riskScores      RiskScore[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([domain, tenantId])
+}
+
+model DmarcReport {
+  id          String        @id @default(cuid())
+  reportId    String
+  orgName     String
+  email       String?
+  dateBegin   DateTime
+  dateEnd     DateTime
+  domainId    String
+  domain      Domain        @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  records     DmarcRecord[]
+  rawFileId   String?
+  rawFile     RawFile?      @relation(fields: [rawFileId], references: [id])
+  status      String        @default("processed") // pending, processing, processed, failed
+  policyDomain String?
+  policyAdkim  String?
+  policyAspf   String?
+  policyP      String?
+  policySp     String?
+  policyPct    Int?
+  createdAt   DateTime      @default(now())
+
+  @@unique([reportId, domainId])
+}
+
+model DmarcRecord {
+  id             String         @id @default(cuid())
+  reportId       String
+  report         DmarcReport    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  sourceIp       String
+  count          Int
+  disposition    String // none, quarantine, reject
+  spfResult      String // pass, fail
+  dkimResult     String // pass, fail
+  dmarcResult    String // pass, fail
+  headerFrom     String?
+  envelopeFrom   String?
+  spfDomain      String?
+  dkimDomain     String?
+  ipEnrichment   IpEnrichment?  @relation(fields: [ipEnrichmentId], references: [id])
+  ipEnrichmentId String?
+  createdAt      DateTime       @default(now())
+}
+
+// ─── FILE STORAGE TRACKING ─────────────────────────────────────────
+
+model RawFile {
+  id           String        @id @default(cuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fileName     String
+  originalName String
+  fileSize     Int
+  mimeType     String?
+  storagePath  String        // relative path: {tenant_id}/raw/{filename}
+  fileHash     String?       // SHA-256 for dedup
+  status       String        @default("pending") // pending, unzipped, parsed, failed
+  reports      DmarcReport[]
+  createdAt    DateTime      @default(now())
+}
+
+// ─── SENDER INTELLIGENCE ────────────────────────────────────────────
+
+model Sender {
+  id              String                @id @default(cuid())
+  ip              String
+  hostname        String?
+  label           String?
+  status          String                @default("unknown") // known, unknown, suspicious, trusted
+  notes           String?
+  tags            String?
+  domainId        String
+  domain          Domain                @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  totalVolume     Int                   @default(0)
+  passCount       Int                   @default(0)
+  failCount       Int                   @default(0)
+  lastSeen        DateTime?
+  classification  SenderClassification?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@unique([ip, domainId])
+}
+
+model SenderClassification {
+  id              String   @id @default(cuid())
+  senderId        String   @unique
+  sender          Sender   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  category        String   // legitimate, marketing, transactional, forwarding, spoofing, unknown
+  provider        String?  // Google, Amazon SES, Mailchimp, SendGrid, etc.
+  confidence      Float    @default(0) // 0-1 confidence in classification
+  isFirstPartySender Boolean @default(false)
+  autoClassified  Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── IP ENRICHMENT ──────────────────────────────────────────────────
+
+model IpEnrichment {
+  id             String        @id @default(cuid())
+  ip             String        @unique
+  reverseDns     String?
+  asn            String?
+  asnOrg         String?
+  country        String?
+  city           String?
+  provider       String?       // Detected provider: Google, AWS, etc.
+  providerType   String?       // cloud, isp, hosting, enterprise
+  isKnownSender  Boolean       @default(false)
+  records        DmarcRecord[]
+  lastUpdated    DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+}
+
+// ─── RISK & BUSINESS IMPACT ────────────────────────────────────────
+
+model RiskScore {
+  id                    String   @id @default(cuid())
+  domainId              String
+  domain                Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  calculatedAt          DateTime @default(now())
+  trustScore            Int      // 0-100
+  deliveryScore         Float    // 0-1
+  inboxProbability      Float
+  spamProbability       Float
+  rejectProbability     Float
+  riskLevel             String   // healthy, medium, high, critical
+  totalVolume           Int
+  passVolume            Int
+  failVolume            Int
+  // Business impact snapshot
+  estimatedReachable    Int      @default(0)
+  potentialLeadLoss     Int      @default(0)
+  estimatedRevenueAtRisk Float   @default(0)
+  campaignHealthScore   Int      @default(100)
+  createdAt             DateTime @default(now())
+}
+
+// ─── ACTION ITEMS ───────────────────────────────────────────────────
+
+model ActionItem {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domainId    String?
+  type        String   // spf_failure, dkim_failure, unknown_sender, suspicious_ip, policy_recommendation, config_issue
+  severity    String   // critical, high, medium, low, info
+  title       String
+  description String
+  recommendation String
+  sourceIp    String?
+  status      String   @default("open") // open, acknowledged, resolved, dismissed
+  resolvedAt  DateTime?
+  metadata    String?  // JSON blob for extra context
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── TENANT SETTINGS ───────────────────────────────────────────────
+
+model TenantSettings {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversionRate    Float    @default(0.02)
+  avgLeadValue      Float    @default(50.0)
+  campaignBenchmark Float    @default(0.15)
+  reportRetention   Int      @default(90)
+  notifications     Boolean  @default(true)
+  emailDigest       String   @default("weekly") // daily, weekly, monthly, never
+  alertThreshold    Float    @default(0.7) // alert when trust score drops below
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ─── INGESTION LOG ──────────────────────────────────────────────────
+
+model IngestionLog {
+  id           String   @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  fileName     String
+  fileSize     Int?
+  source       String   @default("upload") // upload, email, api
+  status       String   // pending, processing, success, failed, duplicate
+  recordCount  Int      @default(0)
+  reportCount  Int      @default(0)
+  errorMessage String?
+  domainId     String?
+  processingMs Int?     // processing duration in ms
+  createdAt    DateTime @default(now())
+}
+
+// ─── DEMO REQUESTS ──────────────────────────────────────────────────
+
+model DemoRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  message   String?
+  status    String   @default("pending") // pending, contacted, converted
+  createdAt DateTime @default(now())
+}
