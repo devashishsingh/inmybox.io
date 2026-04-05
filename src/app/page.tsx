@@ -17,6 +17,9 @@ import {
   Lock,
   Activity,
   ChevronRight,
+  ExternalLink,
+  ShieldAlert,
+  Ban,
 } from 'lucide-react'
 import { Navbar } from '@/components/landing-nav'
 import { AnimateOnScroll } from '@/components/animate'
@@ -249,6 +252,166 @@ export default function LandingPage() {
               </AnimateOnScroll>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════ INDUSTRY ENFORCEMENT ═══════════ */}
+      <section className="py-24 md:py-32 bg-slate-900/30 border-y border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll>
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <p className="text-red-400 font-semibold text-sm uppercase tracking-wider mb-3">
+                Industry Crackdown
+              </p>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
+                Google, Yahoo &amp; Microsoft Are Rejecting
+                Unauthenticated Email
+              </h2>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                The world&apos;s largest email providers have rolled out strict DMARC
+                enforcement. If your domain isn&apos;t compliant, your emails are
+                going straight to spam &mdash; or being rejected entirely.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {/* Google */}
+            <AnimateOnScroll delay={0}>
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Google</h3>
+                    <p className="text-xs text-slate-500">Gmail &amp; Google Workspace</p>
+                  </div>
+                </div>
+                <blockquote className="text-sm text-slate-300 leading-relaxed italic border-l-2 border-blue-500/50 pl-4 mb-5 flex-1">
+                  &ldquo;Starting February 2024, Gmail requires bulk senders (5,000+ messages/day)
+                  to authenticate emails with SPF, DKIM, and DMARC. Unauthenticated messages
+                  will be rejected or sent to spam.&rdquo;
+                </blockquote>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Ban className="w-4 h-4 text-red-400" />
+                    <span className="text-xs text-red-400 font-medium">Rejecting unauthenticated mail</span>
+                  </div>
+                  <a
+                    href="https://blog.google/products/gmail/gmail-security-authentication-spam-protection/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                  >
+                    Read more <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </AnimateOnScroll>
+
+            {/* Yahoo */}
+            <AnimateOnScroll delay={120}>
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#7B1FA2">
+                      <path d="M13.131 7.894l3.478-7.142h-3.478L10.96 5.27 8.791.752H5.097l3.675 7.142v5.054h1.29V7.894h3.069zM16.744 6.068h2.652v6.88h-2.652zM18.07 2.084c-.894 0-1.46.563-1.46 1.345 0 .775.548 1.337 1.44 1.337h.02c.913 0 1.463-.562 1.463-1.337-.02-.782-.55-1.345-1.463-1.345z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Yahoo</h3>
+                    <p className="text-xs text-slate-500">Yahoo Mail &amp; AOL</p>
+                  </div>
+                </div>
+                <blockquote className="text-sm text-slate-300 leading-relaxed italic border-l-2 border-purple-500/50 pl-4 mb-5 flex-1">
+                  &ldquo;Beginning Q1 2024, Yahoo will require bulk senders to implement
+                  SPF, DKIM, and DMARC authentication. Messages that fail these checks
+                  will not be delivered to Yahoo inboxes.&rdquo;
+                </blockquote>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Ban className="w-4 h-4 text-red-400" />
+                    <span className="text-xs text-red-400 font-medium">Blocking non-compliant senders</span>
+                  </div>
+                  <a
+                    href="https://blog.postmaster.yahooinc.com/post/730172167494483968/more-secure-less-spam"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1"
+                  >
+                    Read more <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </AnimateOnScroll>
+
+            {/* Microsoft */}
+            <AnimateOnScroll delay={240}>
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+                      <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
+                      <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
+                      <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">Microsoft</h3>
+                    <p className="text-xs text-slate-500">Outlook &amp; Microsoft 365</p>
+                  </div>
+                </div>
+                <blockquote className="text-sm text-slate-300 leading-relaxed italic border-l-2 border-cyan-500/50 pl-4 mb-5 flex-1">
+                  &ldquo;Starting May 2025, Outlook.com will require DMARC alignment for
+                  high&#8209;volume senders. Non&#8209;compliant messages will first be
+                  routed to Junk, and eventually rejected outright.&rdquo;
+                </blockquote>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs text-amber-400 font-medium">Enforcing DMARC alignment</span>
+                  </div>
+                  <a
+                    href="https://techcommunity.microsoft.com/blog/microsoftdefenderforoffice365blog/strengthening-email-ecosystem--outlook%E2%80%99s-new-requirements-for-high%E2%80%90volume-luftsen/4399730"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1"
+                  >
+                    Read more <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </AnimateOnScroll>
+          </div>
+
+          {/* Urgency CTA */}
+          <AnimateOnScroll delay={360}>
+            <div className="mt-12 text-center">
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/20">
+                <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+                <span className="text-sm text-red-300">
+                  <strong className="text-red-200">Non-compliance = lost revenue.</strong>{' '}
+                  Every unauthenticated email is a lead that never arrives.
+                </span>
+              </div>
+              <div className="mt-6">
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 hover:-translate-y-0.5"
+                >
+                  Check Your DMARC Compliance
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </AnimateOnScroll>
         </div>
       </section>
 

@@ -125,6 +125,7 @@ export interface AnalyticsSummary {
   totalReports: number;
   totalRecords: number;
   totalVolume: number;
+  dataStartDate: string | null;
   spfPassRate: number;
   dkimPassRate: number;
   dmarcPassRate: number;

@@ -26,6 +26,7 @@ function emptyAnalytics() {
     totalReports: 0,
     totalRecords: 0,
     totalVolume: 0,
+    dataStartDate: null,
     spfPassRate: 0,
     dkimPassRate: 0,
     dmarcPassRate: 0,

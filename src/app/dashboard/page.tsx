@@ -86,8 +86,11 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Email delivery health across {data.totalReports} reports &middot;{' '}
-            {formatNumber(data.totalVolume)} emails analyzed
+            {data.totalReports} reports analyzed &middot;{' '}
+            {formatNumber(data.totalVolume)} emails{' '}
+            {data.dataStartDate && (
+              <>&middot; Data since {new Date(data.dataStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
+            )}
           </p>
         </div>
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
@@ -102,35 +105,47 @@ export default function DashboardPage() {
 
       {/* Technical Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="SPF Pass Rate"
-          value={formatPercent(data.spfPassRate)}
-          icon={Shield}
-          trend={data.spfPassRate > 0.9 ? 'up' : 'down'}
-          accent={data.spfPassRate > 0.9 ? 'emerald' : 'amber'}
-        />
-        <StatCard
-          title="DKIM Health"
-          value={formatPercent(data.dkimPassRate)}
-          icon={ShieldCheck}
-          trend={data.dkimPassRate > 0.9 ? 'up' : 'down'}
-          accent={data.dkimPassRate > 0.9 ? 'emerald' : 'amber'}
-        />
-        <StatCard
-          title="DMARC Pass Rate"
-          value={formatPercent(data.dmarcPassRate)}
-          icon={Activity}
-          trend={data.dmarcPassRate > 0.9 ? 'up' : 'down'}
-          accent={data.dmarcPassRate > 0.9 ? 'emerald' : 'amber'}
-        />
-        <StatCard
-          title="Rejection Rate"
-          value={formatPercent(data.rejectionRate)}
-          icon={AlertTriangle}
-          trend={data.rejectionRate < 0.05 ? 'up' : 'down'}
-          accent={data.rejectionRate < 0.05 ? 'emerald' : 'red'}
-          invertTrend
-        />
+        <Link href="/dashboard/drilldown/spf">
+          <StatCard
+            title="SPF Pass Rate"
+            value={formatPercent(data.spfPassRate)}
+            icon={Shield}
+            trend={data.spfPassRate > 0.9 ? 'up' : 'down'}
+            accent={data.spfPassRate > 0.9 ? 'emerald' : 'amber'}
+            clickable
+          />
+        </Link>
+        <Link href="/dashboard/drilldown/dkim">
+          <StatCard
+            title="DKIM Health"
+            value={formatPercent(data.dkimPassRate)}
+            icon={ShieldCheck}
+            trend={data.dkimPassRate > 0.9 ? 'up' : 'down'}
+            accent={data.dkimPassRate > 0.9 ? 'emerald' : 'amber'}
+            clickable
+          />
+        </Link>
+        <Link href="/dashboard/drilldown/dmarc">
+          <StatCard
+            title="DMARC Pass Rate"
+            value={formatPercent(data.dmarcPassRate)}
+            icon={Activity}
+            trend={data.dmarcPassRate > 0.9 ? 'up' : 'down'}
+            accent={data.dmarcPassRate > 0.9 ? 'emerald' : 'amber'}
+            clickable
+          />
+        </Link>
+        <Link href="/dashboard/drilldown/disposition">
+          <StatCard
+            title="Rejection Rate"
+            value={formatPercent(data.rejectionRate)}
+            icon={AlertTriangle}
+            trend={data.rejectionRate < 0.05 ? 'up' : 'down'}
+            accent={data.rejectionRate < 0.05 ? 'emerald' : 'red'}
+            invertTrend
+            clickable
+          />
+        </Link>
       </div>
 
       {/* Business Impact Cards */}
@@ -286,7 +301,7 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500 mt-0.5">Senders with highest failure rates</p>
             </div>
             <Link
-              href="/dashboard/senders"
+              href="/dashboard/drilldown/ip"
               className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1"
             >
               View all <ArrowRight className="w-3 h-3" />
@@ -372,6 +387,7 @@ function StatCard({
   trend,
   accent = 'brand',
   invertTrend = false,
+  clickable = false,
 }: {
   title: string
   value: string
@@ -380,6 +396,7 @@ function StatCard({
   trend?: 'up' | 'down'
   accent?: string
   invertTrend?: boolean
+  clickable?: boolean
 }) {
   const accentColors: Record<string, string> = {
     brand: 'bg-brand-50 text-brand-600',
@@ -391,16 +408,21 @@ function StatCard({
   const isGood = invertTrend ? trend === 'down' : trend === 'up'
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 card-hover">
+    <div className={`bg-white rounded-2xl border border-slate-200 p-5 card-hover ${clickable ? 'cursor-pointer hover:border-brand-300 hover:shadow-md transition-all group' : ''}`}>
       <div className="flex items-start justify-between mb-3">
         <div className={`w-10 h-10 rounded-xl ${accentColors[accent] || accentColors.brand} flex items-center justify-center`}>
           <Icon className="w-5 h-5" />
         </div>
-        {trend && (
-          <div className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? 'text-emerald-600' : 'text-red-500'}`}>
-            {isGood ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {trend && (
+            <div className={`flex items-center gap-0.5 text-xs font-medium ${isGood ? 'text-emerald-600' : 'text-red-500'}`}>
+              {isGood ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            </div>
+          )}
+          {clickable && (
+            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-500 transition-colors" />
+          )}
+        </div>
       </div>
       <div className="text-2xl font-bold text-slate-900">{value}</div>
       <div className="text-xs text-slate-500 mt-1">{subtitle || title}</div>

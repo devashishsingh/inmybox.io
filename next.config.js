@@ -4,7 +4,7 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {
-    serverComponentsExternalPackages: ['jspdf'],
+    serverComponentsExternalPackages: ['jspdf', 'imapflow', '7zip-bin', 'node-7z'],
   },
 };
 

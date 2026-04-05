@@ -6,8 +6,19 @@ import * as path from 'path'
 import * as os from 'os'
 import type { DmarcFeedback, DmarcRecordParsed } from '@/types'
 
-// Resolve 7za binary path at module level from node_modules
-const SEVEN_ZIP_BIN = path.join(process.cwd(), 'node_modules', '7zip-bin', 'win', 'x64', '7za.exe')
+// Resolve 7za binary path based on platform
+function get7zBin(): string {
+  const platform = process.platform
+  const arch = process.arch
+  if (platform === 'win32') {
+    return path.join(process.cwd(), 'node_modules', '7zip-bin', 'win', arch === 'ia32' ? 'ia32' : 'x64', '7za.exe')
+  } else if (platform === 'darwin') {
+    return path.join(process.cwd(), 'node_modules', '7zip-bin', 'mac', arch === 'arm64' ? 'arm64' : 'x64', '7za')
+  } else {
+    // Linux (Vercel, etc.)
+    return path.join(process.cwd(), 'node_modules', '7zip-bin', 'linux', arch === 'arm64' ? 'arm64' : 'x64', '7za')
+  }
+}
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
@@ -79,9 +90,10 @@ async function extractFrom7z(buffer: Buffer, fileName: string): Promise<{ name: 
   fs.writeFileSync(archivePath, buffer)
 
   try {
-    // Use 7za.exe directly via child_process to avoid Next.js bundling issues
+    // Use 7za binary directly via child_process to avoid Next.js bundling issues
+    const sevenZipBin = get7zBin()
     await new Promise<void>((resolve, reject) => {
-      execFile(SEVEN_ZIP_BIN, ['x', archivePath, `-o${extractDir}`, '-y'], (err, stdout, stderr) => {
+      execFile(sevenZipBin, ['x', archivePath, `-o${extractDir}`, '-y'], (err, stdout, stderr) => {
         if (err) {
           reject(new Error(`7z extraction failed: ${stderr || err.message}`))
         } else {
