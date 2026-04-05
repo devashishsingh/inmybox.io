@@ -68,6 +68,4 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Trust the host header on Vercel (avoids NEXTAUTH_URL requirement)
-  ...(process.env.VERCEL && { trustHost: true }),
 }
