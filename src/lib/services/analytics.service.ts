@@ -88,7 +88,7 @@ export async function computeAnalytics(tenantId: string): Promise<AnalyticsSumma
       ip,
       count: data.count,
       failRate: data.failCount / data.count,
-      domain: data.domain,
+      domain: data.domain || undefined,
     }))
     .filter((ip) => ip.failRate > 0)
     .sort((a, b) => b.count - a.count)
