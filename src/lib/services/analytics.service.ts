@@ -75,11 +75,12 @@ export async function computeAnalytics(tenantId: string): Promise<AnalyticsSumma
   }))
 
   // Top failing IPs
-  const ipFailMap = new Map<string, { count: number; failCount: number }>()
+  const ipFailMap = new Map<string, { count: number; failCount: number; domain: string | null }>()
   for (const rec of records) {
-    const existing = ipFailMap.get(rec.sourceIp) || { count: 0, failCount: 0 }
+    const existing = ipFailMap.get(rec.sourceIp) || { count: 0, failCount: 0, domain: null }
     existing.count += rec.count
     if (rec.dmarcResult === 'fail') existing.failCount += rec.count
+    if (!existing.domain && rec.headerFrom) existing.domain = rec.headerFrom
     ipFailMap.set(rec.sourceIp, existing)
   }
   const topFailingIps = Array.from(ipFailMap.entries())
@@ -87,9 +88,10 @@ export async function computeAnalytics(tenantId: string): Promise<AnalyticsSumma
       ip,
       count: data.count,
       failRate: data.failCount / data.count,
+      domain: data.domain,
     }))
     .filter((ip) => ip.failRate > 0)
-    .sort((a, b) => b.failRate - a.failRate)
+    .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
   // Sender breakdown + action items

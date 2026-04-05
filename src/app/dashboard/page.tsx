@@ -316,6 +316,9 @@ export default function DashboardPage() {
                   <div>
                     <span className="text-sm font-mono text-slate-700">{ip.ip}</span>
                     <span className="text-xs text-slate-400 ml-2">{formatNumber(ip.count)} msgs</span>
+                    {ip.domain && (
+                      <span className="text-xs text-slate-400 ml-1">· {ip.domain}</span>
+                    )}
                   </div>
                   <span className={`text-sm font-semibold ${ip.failRate > 0.5 ? 'text-red-600' : 'text-amber-500'}`}>
                     {formatPercent(ip.failRate)} fail

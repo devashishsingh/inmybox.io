@@ -113,7 +113,7 @@ export function AdminSidebar() {
           {userMenuOpen && (
             <div className="absolute bottom-full left-0 right-0 mb-1 bg-slate-800 rounded-xl shadow-lg border border-slate-700 py-1 z-50">
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-700"
               >
                 <LogOut className="w-4 h-4" />

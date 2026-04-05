@@ -25,6 +25,7 @@ const navItems = [
   { href: '/dashboard/reports', icon: FileText, label: 'Reports' },
   { href: '/dashboard/senders', icon: Users, label: 'Senders' },
   { href: '/dashboard/actions', icon: AlertTriangle, label: 'Actions Required' },
+  { href: '/dashboard/bimi', icon: Shield, label: 'BIMI & Brand' },
   { href: '/dashboard/export', icon: Download, label: 'Export' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
@@ -122,7 +123,7 @@ export function DashboardSidebar() {
                 Settings
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
               >
                 <LogOut className="w-4 h-4" />

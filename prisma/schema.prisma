@@ -42,6 +42,7 @@ model Tenant {
   invitations   Invitation[]
   onboarding    OnboardingChecklist?
   pipeline      PipelineConfig?
+  bimiConfigs   BimiConfig[]
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 }
@@ -146,6 +147,7 @@ model Domain {
   reports         DmarcReport[]
   senders         Sender[]
   riskScores      RiskScore[]
+  bimiConfigs     BimiConfig[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -343,6 +345,48 @@ model IngestionLog {
   domainId     String?
   processingMs Int?     // processing duration in ms
   createdAt    DateTime @default(now())
+}
+
+// ─── BIMI ───────────────────────────────────────────────────────────
+
+model BimiConfig {
+  id                String      @id @default(cuid())
+  tenantId          String
+  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domainId          String
+  domain            Domain      @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  logoUrl           String?     // BIMI SVG logo URL
+  certificateUrl    String?     // VMC/CMC certificate URL
+  generatedRecord   String?     // Generated BIMI TXT record value
+  publishedAt       DateTime?   // When customer published to DNS
+  // Readiness
+  readinessStatus   String      @default("unknown") // ready, partially_ready, blocked, unknown
+  readinessScore    Int         @default(0) // 0-100
+  blockers          String?     // JSON array of blocker strings
+  // Asset validation
+  logoValid         Boolean     @default(false)
+  logoError         String?
+  certValid         Boolean?    // null if no cert provided
+  certError         String?
+  // Monitoring
+  overallStatus     String      @default("not_started") // not_started, setup, ready, published, misconfigured, regression
+  lastCheckAt       DateTime?
+  lastCheckResult   String?     // JSON of latest check result
+  checks            BimiCheck[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@unique([tenantId, domainId])
+}
+
+model BimiCheck {
+  id              String     @id @default(cuid())
+  bimiConfigId    String
+  bimiConfig      BimiConfig @relation(fields: [bimiConfigId], references: [id], onDelete: Cascade)
+  checkType       String     // readiness, asset, dns, monitoring
+  status          String     // pass, fail, warning
+  details         String?    // JSON details
+  createdAt       DateTime   @default(now())
 }
 
 // ─── DEMO REQUESTS ──────────────────────────────────────────────────

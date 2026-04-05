@@ -8,7 +8,9 @@ const reverseLookup = promisify(dns.reverse)
 // Known email provider IP ranges and PTR patterns
 const KNOWN_PROVIDERS: { pattern: RegExp; provider: string; type: string }[] = [
   { pattern: /\.google\.com$/i, provider: 'Google', type: 'cloud' },
+  { pattern: /\.google$/i, provider: 'Google', type: 'cloud' },
   { pattern: /\.googleusercontent\.com$/i, provider: 'Google', type: 'cloud' },
+  { pattern: /\.1e100\.net$/i, provider: 'Google', type: 'cloud' },
   { pattern: /\.amazonaws\.com$/i, provider: 'Amazon SES', type: 'cloud' },
   { pattern: /\.outlook\.com$/i, provider: 'Microsoft 365', type: 'cloud' },
   { pattern: /\.protection\.outlook\.com$/i, provider: 'Microsoft 365', type: 'cloud' },
@@ -24,6 +26,7 @@ const KNOWN_PROVIDERS: { pattern: RegExp; provider: string; type: string }[] = [
   { pattern: /\.pphosted\.com$/i, provider: 'Proofpoint', type: 'enterprise' },
   { pattern: /\.messagelabs\.com$/i, provider: 'Broadcom/Symantec', type: 'enterprise' },
   { pattern: /\.cloudflare\.com$/i, provider: 'Cloudflare', type: 'cloud' },
+  { pattern: /\.cloudflare-dns\.com$/i, provider: 'Cloudflare', type: 'cloud' },
   { pattern: /\.ovh\.(net|com)$/i, provider: 'OVH', type: 'hosting' },
   { pattern: /\.hetzner\.(com|de)$/i, provider: 'Hetzner', type: 'hosting' },
   { pattern: /\.linode\.com$/i, provider: 'Linode', type: 'cloud' },
@@ -137,23 +140,25 @@ async function rdapLookup(ip: string): Promise<RdapResult> {
  * Enriches an IP address with reverse DNS, provider detection.
  * Checks cache first, then performs live lookups.
  */
-export async function enrichIp(ip: string): Promise<IpEnrichmentData> {
-  // Check cache first
-  const cached = await prisma.ipEnrichment.findUnique({ where: { ip } })
-  if (cached) {
-    // Return cached if less than 7 days old
-    const age = Date.now() - cached.lastUpdated.getTime()
-    if (age < 7 * 24 * 60 * 60 * 1000) {
-      return {
-        ip: cached.ip,
-        reverseDns: cached.reverseDns || undefined,
-        asn: cached.asn || undefined,
-        asnOrg: cached.asnOrg || undefined,
-        country: cached.country || undefined,
-        city: cached.city || undefined,
-        provider: cached.provider || undefined,
-        providerType: (cached.providerType as IpEnrichmentData['providerType']) || undefined,
-        isKnownSender: cached.isKnownSender,
+export async function enrichIp(ip: string, forceFresh = false): Promise<IpEnrichmentData> {
+  // Check cache first (skip if force refresh)
+  if (!forceFresh) {
+    const cached = await prisma.ipEnrichment.findUnique({ where: { ip } })
+    if (cached) {
+      // Return cached if less than 7 days old
+      const age = Date.now() - cached.lastUpdated.getTime()
+      if (age < 7 * 24 * 60 * 60 * 1000) {
+        return {
+          ip: cached.ip,
+          reverseDns: cached.reverseDns || undefined,
+          asn: cached.asn || undefined,
+          asnOrg: cached.asnOrg || undefined,
+          country: cached.country || undefined,
+          city: cached.city || undefined,
+          provider: cached.provider || undefined,
+          providerType: (cached.providerType as IpEnrichmentData['providerType']) || undefined,
+          isKnownSender: cached.isKnownSender,
+        }
       }
     }
   }
@@ -185,6 +190,19 @@ export async function enrichIp(ip: string): Promise<IpEnrichmentData> {
 
   // RDAP/WHOIS lookup for ASN, org, country, city
   const rdap = await rdapLookup(ip)
+
+  // If no provider from PTR, try to infer from RDAP org name
+  if (!provider && rdap.asnOrg) {
+    const org = rdap.asnOrg.toLowerCase()
+    if (org.includes('google')) { provider = 'Google'; providerType = 'cloud'; isKnownSender = true }
+    else if (org.includes('amazon') || org.includes('aws')) { provider = 'Amazon'; providerType = 'cloud'; isKnownSender = true }
+    else if (org.includes('microsoft')) { provider = 'Microsoft'; providerType = 'cloud'; isKnownSender = true }
+    else if (org.includes('cloudflare')) { provider = 'Cloudflare'; providerType = 'cloud'; isKnownSender = true }
+    else if (org.includes('oracle')) { provider = 'Oracle Cloud'; providerType = 'cloud' }
+    else if (org.includes('quad9') || org.includes('cisco')) { provider = rdap.asnOrg; providerType = 'enterprise' }
+    else if (org.includes('akamai')) { provider = 'Akamai'; providerType = 'cloud' }
+    else if (org.includes('fastly')) { provider = 'Fastly'; providerType = 'cloud' }
+  }
 
   const enrichment: IpEnrichmentData = {
     ip,

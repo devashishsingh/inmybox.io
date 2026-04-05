@@ -57,12 +57,21 @@ export async function listSenders(tenantId: string) {
     orderBy: { totalVolume: 'desc' },
   })
 
-  // Batch-fetch enrichment for all sender IPs
+  // Batch-fetch enrichment for all sender IPs, trigger lookup for missing ones
   const ips = senders.map((s) => s.ip)
   const enrichments = await prisma.ipEnrichment.findMany({
     where: { ip: { in: ips } },
   })
   const enrichmentMap = new Map(enrichments.map((e) => [e.ip, e]))
+
+  // Trigger enrichment for IPs not yet cached (fire-and-forget)
+  const uncachedIps = ips.filter((ip) => !enrichmentMap.has(ip))
+  if (uncachedIps.length > 0) {
+    const { batchEnrichIps } = await import('./ip-enrichment.service')
+    batchEnrichIps(uncachedIps).catch((err) =>
+      console.warn('[sender] background enrichment failed:', err.message)
+    )
+  }
 
   return senders.map((s) => ({
     ...s,

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { resolveTenantContext } from '@/lib/services/tenant.service'
 import { listSenders, updateSenderStatus } from '@/lib/services/sender.service'
+import { enrichIp } from '@/lib/services/ip-enrichment.service'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -54,4 +55,31 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json({ sender: updated })
+}
+
+// POST — live WHOIS/IP enrichment lookup
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await req.json()
+  const { ip } = body
+
+  if (!ip || typeof ip !== 'string') {
+    return NextResponse.json({ error: 'IP address required' }, { status: 400 })
+  }
+
+  // Basic IP format validation
+  if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip) && !/^[0-9a-f:]+$/i.test(ip)) {
+    return NextResponse.json({ error: 'Invalid IP format' }, { status: 400 })
+  }
+
+  try {
+    const enrichment = await enrichIp(ip, true) // force fresh lookup
+    return NextResponse.json({ enrichment })
+  } catch (err: any) {
+    return NextResponse.json({ error: 'Lookup failed', detail: err.message }, { status: 500 })
+  }
 }
