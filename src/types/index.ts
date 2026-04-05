@@ -134,7 +134,7 @@ export interface AnalyticsSummary {
   delivery: DeliveryOutcome;
   impact: BusinessImpact;
   trendData: TrendPoint[];
-  topFailingIps: { ip: string; count: number; failRate: number }[];
+  topFailingIps: { ip: string; count: number; failRate: number; domain?: string }[];
   senderBreakdown: { known: number; unknown: number; suspicious: number; trusted: number };
   actionItems?: { open: number; critical: number; high: number };
 }
