@@ -74,7 +74,14 @@ export default function SignInPage() {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
+        <Link
+          href="/"
+          className="absolute top-6 left-6 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Home
+        </Link>
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
@@ -163,13 +170,6 @@ export default function SignInPage() {
             </Link>
           </p>
 
-          <Link
-            href="/"
-            className="flex items-center justify-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mt-4 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to home
-          </Link>
         </div>
       </div>
     </div>
