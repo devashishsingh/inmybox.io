@@ -17,6 +17,11 @@ import {
   Search,
   Copy,
   AlertTriangle,
+  Play,
+  Square,
+  RefreshCw,
+  Timer,
+  Zap,
 } from 'lucide-react'
 
 export default function TenantDetailPage() {
@@ -27,6 +32,11 @@ export default function TenantDetailPage() {
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', contactEmail: '', status: '', plan: '', timezone: '', notes: '' })
   const [saving, setSaving] = useState(false)
+  const [pipelineAction, setPipelineAction] = useState(false)
+  const [pipelineDuration, setPipelineDuration] = useState('30')
+  const [pollInterval, setPollInterval] = useState('5')
+  const [fetchingNow, setFetchingNow] = useState(false)
+  const [fetchNowResult, setFetchNowResult] = useState<string | null>(null)
 
   const fetchTenant = () => {
     setLoading(true)
@@ -49,6 +59,19 @@ export default function TenantDetailPage() {
 
   useEffect(() => { fetchTenant() }, [params.id])
 
+  // Refresh tenant data every 30s to reflect server-side cron changes
+  useEffect(() => {
+    const interval = setInterval(() => fetchTenant(), 30_000)
+    return () => clearInterval(interval)
+  }, [params.id])
+
+  // Sync pollInterval from tenant data
+  useEffect(() => {
+    if (tenant?.pipeline?.pollIntervalMinutes) {
+      setPollInterval(String(tenant.pipeline.pollIntervalMinutes))
+    }
+  }, [tenant?.pipeline?.pollIntervalMinutes])
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -64,6 +87,40 @@ export default function TenantDetailPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handlePipeline = async (action: 'start' | 'stop' | 'renew') => {
+    setPipelineAction(true)
+    try {
+      await fetch(`/api/admin/tenants/${params.id}/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          durationDays: action !== 'stop' && pipelineDuration !== 'unlimited'
+            ? parseInt(pipelineDuration) : undefined,
+          pollIntervalMinutes: action !== 'stop' ? parseInt(pollInterval) : undefined,
+        }),
+      })
+      fetchTenant()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setPipelineAction(false)
+    }
+  }
+
+  // Pipeline status helpers
+  const getPipelineStatus = () => {
+    const p = tenant?.pipeline
+    if (!p || !p.enabled) return { status: 'stopped', label: 'Stopped', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-700' }
+    if (p.expiresAt) {
+      const days = Math.ceil((new Date(p.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+      if (days <= 0) return { status: 'expired', label: 'Expired', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/30' }
+      if (days <= 3) return { status: 'expiring', label: `Expiring in ${days}d`, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' }
+      return { status: 'active', label: `Active (${days}d left)`, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
+    }
+    return { status: 'active', label: 'Active (unlimited)', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
   }
 
   if (loading) {
@@ -277,6 +334,201 @@ export default function TenantDetailPage() {
 
         {/* Right — Sidebar */}
         <div className="space-y-6">
+          {/* Pipeline Control */}
+          {(() => {
+            const ps = getPipelineStatus()
+            const p = tenant.pipeline
+            return (
+              <div className={`bg-slate-900 rounded-2xl border p-6 ${ps.bg}`}>
+                <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-brand-400" /> Pipeline Control
+                </h3>
+
+                {/* Status Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${ps.status === 'active' ? 'bg-emerald-400 animate-pulse' : ps.status === 'expiring' ? 'bg-amber-400 animate-pulse' : ps.status === 'expired' ? 'bg-red-400' : 'bg-slate-500'}`} />
+                    <span className={`text-sm font-medium ${ps.color}`}>{ps.label}</span>
+                  </div>
+                  {p?.fetchCount > 0 && (
+                    <span className="text-xs text-slate-500">{p.fetchCount} fetches</span>
+                  )}
+                </div>
+
+                {/* Polling Info (server-side) */}
+                {p?.enabled && !p?.stoppedAt && (
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="w-3 h-3 text-emerald-400 animate-spin" style={{ animationDuration: '3s' }} />
+                      <span className="text-xs text-emerald-400">
+                        Server polling every {(p.pollIntervalMinutes || 1440) >= 60 ? `${Math.round((p.pollIntervalMinutes || 1440) / 60)}h` : `${p.pollIntervalMinutes || 1440}m`}
+                      </span>
+                    </div>
+                    {p.lastFetchAt && (() => {
+                      const nextDue = new Date(new Date(p.lastFetchAt).getTime() + (p.pollIntervalMinutes || 1440) * 60 * 1000)
+                      const diff = nextDue.getTime() - Date.now()
+                      const overdue = diff < 0
+                      return (
+                        <div className="text-[10px] text-slate-500 mt-1">
+                          Next fetch: {overdue ? 'due now' : diff < 60000 ? '<1m' : diff < 3600000 ? `${Math.ceil(diff / 60000)}m` : `${Math.round(diff / 3600000)}h`}
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+
+                {/* Fetch Now Button */}
+                {p?.enabled && !p?.stoppedAt && (
+                  <div className="mb-3">
+                    <button
+                      onClick={async () => {
+                        setFetchingNow(true)
+                        setFetchNowResult(null)
+                        try {
+                          const res = await fetch('/api/cron/fetch-emails', { method: 'POST' })
+                          const data = await res.json()
+                          setFetchNowResult(`${data.fetched || 0} pipeline(s) fetched, ${data.expired || 0} expired`)
+                          fetchTenant()
+                        } catch {
+                          setFetchNowResult('Fetch failed')
+                        } finally {
+                          setFetchingNow(false)
+                        }
+                      }}
+                      disabled={fetchingNow}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 text-xs hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${fetchingNow ? 'animate-spin' : ''}`} />
+                      {fetchingNow ? 'Fetching...' : 'Fetch Now'}
+                    </button>
+                    {fetchNowResult && (
+                      <div className="text-[10px] text-slate-500 mt-1 text-center">{fetchNowResult}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Last Fetch */}
+                {p?.lastFetchAt && (
+                  <div className="text-xs text-slate-500 mb-3">
+                    Last fetch: {new Date(p.lastFetchAt).toLocaleString()}
+                  </div>
+                )}
+                {p?.startedAt && p.enabled && (
+                  <div className="text-xs text-slate-500 mb-3">
+                    Started: {new Date(p.startedAt).toLocaleDateString()}
+                    {p.expiresAt && ` · Expires: ${new Date(p.expiresAt).toLocaleDateString()}`}
+                  </div>
+                )}
+                {p?.stoppedAt && !p.enabled && (
+                  <div className="text-xs text-slate-500 mb-3">
+                    Stopped: {new Date(p.stoppedAt).toLocaleString()}
+                    {p.stoppedReason && ` (${p.stoppedReason})`}
+                  </div>
+                )}
+
+                {/* Duration & Polling Interval */}
+                {(!p?.enabled || ps.status === 'expired') && (
+                  <div className="mb-3">
+                    <label className="text-xs text-slate-400 mb-1.5 block">Duration</label>
+                    <select
+                      value={pipelineDuration}
+                      onChange={(e) => setPipelineDuration(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm outline-none"
+                    >
+                      <option value="7">1 Week</option>
+                      <option value="14">2 Weeks</option>
+                      <option value="30">1 Month</option>
+                      <option value="60">2 Months</option>
+                      <option value="90">3 Months</option>
+                      <option value="unlimited">Unlimited</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Polling Interval — always visible */}
+                <div className="mb-3">
+                  <label className="text-xs text-slate-400 mb-1.5 block">Poll Interval</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={pollInterval}
+                      onChange={(e) => setPollInterval(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm outline-none"
+                    >
+                      <optgroup label="Minutes">
+                        <option value="1">1 Minute</option>
+                        <option value="2">2 Minutes</option>
+                        <option value="5">5 Minutes</option>
+                        <option value="10">10 Minutes</option>
+                        <option value="15">15 Minutes</option>
+                        <option value="30">30 Minutes</option>
+                      </optgroup>
+                      <optgroup label="Hours">
+                        <option value="60">1 Hour</option>
+                        <option value="120">2 Hours</option>
+                        <option value="360">6 Hours</option>
+                        <option value="720">12 Hours</option>
+                      </optgroup>
+                      <optgroup label="Days">
+                        <option value="1440">1 Day</option>
+                        <option value="2880">2 Days</option>
+                        <option value="4320">3 Days</option>
+                        <option value="10080">7 Days</option>
+                      </optgroup>
+                    </select>
+                    {p?.enabled && String(p.pollIntervalMinutes) !== pollInterval && (
+                      <button
+                        onClick={async () => {
+                          await fetch(`/api/admin/tenants/${params.id}/pipeline`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'update_interval', pollIntervalMinutes: parseInt(pollInterval) }),
+                          })
+                          fetchTenant()
+                        }}
+                        className="px-3 py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-500 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {(!p?.enabled || ps.status === 'expired') ? (
+                    <button
+                      onClick={() => handlePipeline('start')}
+                      disabled={pipelineAction}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                    >
+                      <Play className="w-3.5 h-3.5" />
+                      {pipelineAction ? 'Starting...' : 'Start Pipeline'}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handlePipeline('stop')}
+                        disabled={pipelineAction}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-600/80 text-white text-sm font-semibold hover:bg-red-500 disabled:opacity-50 transition-colors"
+                      >
+                        <Square className="w-3.5 h-3.5" />
+                        Stop
+                      </button>
+                      <button
+                        onClick={() => handlePipeline('renew')}
+                        disabled={pipelineAction}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 disabled:opacity-50 transition-colors"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Renew
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Onboarding Progress */}
           <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
             <h3 className="text-sm font-semibold text-white mb-4">Onboarding Progress</h3>

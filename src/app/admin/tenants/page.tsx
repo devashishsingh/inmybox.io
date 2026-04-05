@@ -28,6 +28,7 @@ interface Tenant {
   aliases: { id: string; alias: string; isActive: boolean }[]
   _count: { memberships: number; ingestionLogs: number; actionItems: number }
   onboarding: { completedAt: string | null } | null
+  pipeline: { enabled: boolean; startedAt: string | null; expiresAt: string | null; stoppedAt: string | null; lastFetchAt: string | null } | null
 }
 
 export default function AdminTenantsPage() {
@@ -116,6 +117,7 @@ export default function AdminTenantsPage() {
                 <th className="text-left px-4 py-3 text-slate-400 font-medium">Plan</th>
                 <th className="text-left px-4 py-3 text-slate-400 font-medium">Users</th>
                 <th className="text-left px-4 py-3 text-slate-400 font-medium">Onboarding</th>
+                <th className="text-left px-4 py-3 text-slate-400 font-medium">Pipeline</th>
                 <th className="text-left px-4 py-3 text-slate-400 font-medium"></th>
               </tr>
             </thead>
@@ -123,14 +125,14 @@ export default function AdminTenantsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-slate-800/50">
-                    <td colSpan={7} className="px-4 py-4">
+                    <td colSpan={8} className="px-4 py-4">
                       <div className="h-5 bg-slate-800 rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : tenants.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
                     No tenants found. Create one to get started.
                   </td>
                 </tr>
@@ -175,6 +177,32 @@ export default function AdminTenantsPage() {
                         ) : (
                           <span className="text-amber-400 text-xs font-medium">In Progress</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const p = t.pipeline
+                          if (!p || !p.startedAt) return <span className="text-slate-500 text-xs">Not configured</span>
+                          if (p.stoppedAt || !p.enabled) return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> Stopped
+                            </span>
+                          )
+                          if (p.expiresAt && new Date(p.expiresAt) < new Date()) return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" /> Expired
+                            </span>
+                          )
+                          if (p.expiresAt && new Date(p.expiresAt).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000) return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" /> Expiring
+                            </span>
+                          )
+                          return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         <Link

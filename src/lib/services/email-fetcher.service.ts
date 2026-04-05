@@ -1,5 +1,6 @@
 import { resolveTenantByEmailAlias } from './tenant.service'
 import { ingestReport } from './ingestion.service'
+import { prisma } from '@/lib/prisma'
 import { ImapFlow } from 'imapflow'
 import { simpleParser, type AddressObject } from 'mailparser'
 
@@ -202,6 +203,7 @@ async function fetchEmailsFromImap(): Promise<{
 /**
  * Processes a single inbound DMARC report email.
  * Routes the attachment to the correct tenant and triggers ingestion.
+ * Checks pipeline config — skips tenants with disabled/expired pipelines.
  */
 export async function processInboundEmail(message: EmailMessage) {
   // Extract the alias from the To address
@@ -212,6 +214,26 @@ export async function processInboundEmail(message: EmailMessage) {
   if (!tenant) {
     console.warn(`[email-fetcher] No tenant found for alias: ${alias}`)
     return { processed: false, reason: 'no_tenant_match', alias }
+  }
+
+  // Check pipeline config
+  const pipeline = await prisma.pipelineConfig.findUnique({
+    where: { tenantId: tenant.id },
+  })
+
+  if (!pipeline || !pipeline.enabled) {
+    console.log(`[email-fetcher] Pipeline disabled for tenant: ${tenant.name}`)
+    return { processed: false, reason: 'pipeline_disabled', tenantName: tenant.name }
+  }
+
+  // Auto-expire if past expiration date
+  if (pipeline.expiresAt && pipeline.expiresAt < new Date()) {
+    await prisma.pipelineConfig.update({
+      where: { tenantId: tenant.id },
+      data: { enabled: false, stoppedAt: new Date(), stoppedReason: 'expired' },
+    })
+    console.log(`[email-fetcher] Pipeline expired for tenant: ${tenant.name}`)
+    return { processed: false, reason: 'pipeline_expired', tenantName: tenant.name }
   }
 
   if (message.attachments.length === 0) {
@@ -232,6 +254,15 @@ export async function processInboundEmail(message: EmailMessage) {
     })
     results.push(result)
   }
+
+  // Update pipeline fetch stats
+  await prisma.pipelineConfig.update({
+    where: { tenantId: tenant.id },
+    data: {
+      lastFetchAt: new Date(),
+      fetchCount: { increment: 1 },
+    },
+  })
 
   return {
     processed: true,

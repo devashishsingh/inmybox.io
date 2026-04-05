@@ -5,6 +5,7 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['jspdf', 'imapflow', '7zip-bin', 'node-7z'],
+    instrumentationHook: true,
   },
 };
 

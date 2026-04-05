@@ -148,6 +148,7 @@ export async function listTenantsForAdmin(params?: {
       include: {
         domains: { select: { id: true, domain: true, isPrimary: true } },
         aliases: { select: { id: true, alias: true, isActive: true } },
+        pipeline: { select: { enabled: true, pollIntervalMinutes: true, startedAt: true, expiresAt: true, stoppedAt: true, lastFetchAt: true } },
         _count: {
           select: {
             memberships: true,
@@ -178,6 +179,7 @@ export async function getTenantForAdmin(tenantId: string) {
       settings: true,
       aliases: true,
       onboarding: true,
+      pipeline: true,
       memberships: {
         include: { user: { select: { id: true, email: true, name: true, role: true, isActive: true } } },
       },

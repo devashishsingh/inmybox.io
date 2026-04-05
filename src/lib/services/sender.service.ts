@@ -48,7 +48,7 @@ export async function listSenders(tenantId: string) {
   })
   const domainIds = domains.map((d) => d.id)
 
-  return prisma.sender.findMany({
+  const senders = await prisma.sender.findMany({
     where: { domainId: { in: domainIds } },
     include: {
       classification: true,
@@ -56,6 +56,18 @@ export async function listSenders(tenantId: string) {
     },
     orderBy: { totalVolume: 'desc' },
   })
+
+  // Batch-fetch enrichment for all sender IPs
+  const ips = senders.map((s) => s.ip)
+  const enrichments = await prisma.ipEnrichment.findMany({
+    where: { ip: { in: ips } },
+  })
+  const enrichmentMap = new Map(enrichments.map((e) => [e.ip, e]))
+
+  return senders.map((s) => ({
+    ...s,
+    enrichment: enrichmentMap.get(s.ip) || null,
+  }))
 }
 
 /**

@@ -7,15 +7,26 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
-  Eye,
   Edit3,
-  Tag,
-  CheckCircle2,
-  AlertTriangle,
   HelpCircle,
   X,
+  Globe,
+  Server,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { formatNumber, formatPercent } from '@/lib/utils'
+
+interface Enrichment {
+  asn: string | null
+  asnOrg: string | null
+  country: string | null
+  city: string | null
+  provider: string | null
+  providerType: string | null
+  reverseDns: string | null
+  isKnownSender: boolean
+}
 
 interface Sender {
   id: string
@@ -28,6 +39,7 @@ interface Sender {
   totalVolume: number
   failCount: number
   lastSeen: string | null
+  enrichment: Enrichment | null
 }
 
 export default function SendersPage() {
@@ -37,6 +49,8 @@ export default function SendersPage() {
   const [filter, setFilter] = useState('all')
   const [editingSender, setEditingSender] = useState<Sender | null>(null)
   const [editForm, setEditForm] = useState({ label: '', status: '', notes: '' })
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/senders')
@@ -84,6 +98,48 @@ export default function SendersPage() {
       }
     } catch (e) {
       console.error('Failed to update sender', e)
+    }
+  }
+
+  const toggleTrust = async (sender: Sender) => {
+    const newStatus = sender.status === 'trusted' ? 'unknown' : 'trusted'
+    setTogglingId(sender.id)
+    try {
+      const res = await fetch(`/api/senders?id=${sender.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) {
+        setSenders((prev) =>
+          prev.map((s) => (s.id === sender.id ? { ...s, status: newStatus } : s))
+        )
+      }
+    } catch (e) {
+      console.error('Failed to toggle trust', e)
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  const markSuspicious = async (sender: Sender) => {
+    const newStatus = sender.status === 'suspicious' ? 'unknown' : 'suspicious'
+    setTogglingId(sender.id)
+    try {
+      const res = await fetch(`/api/senders?id=${sender.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) {
+        setSenders((prev) =>
+          prev.map((s) => (s.id === sender.id ? { ...s, status: newStatus } : s))
+        )
+      }
+    } catch (e) {
+      console.error('Failed to mark suspicious', e)
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -182,11 +238,12 @@ export default function SendersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto -mx-6">
-            <table className="w-full text-sm min-w-[700px]">
+            <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                  <th className="px-6 py-3 w-8"></th>
                   <th className="px-6 py-3">IP Address</th>
-                  <th className="px-6 py-3">Label</th>
+                  <th className="px-6 py-3">Organization</th>
                   <th className="px-6 py-3">Status</th>
                   <th className="px-6 py-3">Volume</th>
                   <th className="px-6 py-3">Fail Rate</th>
@@ -197,19 +254,37 @@ export default function SendersPage() {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((sender) => {
                   const failRate = sender.totalVolume > 0 ? sender.failCount / sender.totalVolume : 0
+                  const e = sender.enrichment
+                  const isExpanded = expandedId === sender.id
                   return (
-                    <tr key={sender.id} className="table-row-hover">
+                    <>
+                    <tr key={sender.id} className="table-row-hover cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : sender.id)}>
+                      <td className="pl-6 py-3.5">
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                        )}
+                      </td>
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-2">
                           {statusIcon(sender.status)}
                           <span className="font-mono text-slate-700">{sender.ip}</span>
                         </div>
-                        {sender.hostname && (
-                          <div className="text-xs text-slate-400 ml-6">{sender.hostname}</div>
+                        {(sender.hostname || e?.reverseDns) && (
+                          <div className="text-xs text-slate-400 ml-6 truncate max-w-[200px]">{sender.hostname || e?.reverseDns}</div>
                         )}
                       </td>
                       <td className="px-6 py-3.5">
-                        <span className="text-slate-700">{sender.label || '—'}</span>
+                        <div className="text-slate-700 text-xs font-medium">
+                          {e?.asnOrg || e?.provider || sender.label || '—'}
+                        </div>
+                        {e?.country && (
+                          <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                            <Globe className="w-3 h-3" />
+                            {e.city ? `${e.city}, ${e.country}` : e.country}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-3.5">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${statusBadge(sender.status)}`}>
@@ -227,16 +302,79 @@ export default function SendersPage() {
                       <td className="px-6 py-3.5 text-slate-500 text-xs">
                         {sender.lastSeen ? new Date(sender.lastSeen).toLocaleDateString() : '—'}
                       </td>
-                      <td className="px-6 py-3.5 text-right">
-                        <button
-                          onClick={() => startEdit(sender)}
-                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                          title="Edit sender"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
+                      <td className="px-6 py-3.5 text-right" onClick={(ev) => ev.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => toggleTrust(sender)}
+                            disabled={togglingId === sender.id}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              sender.status === 'trusted'
+                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                : 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-600'
+                            }`}
+                            title={sender.status === 'trusted' ? 'Remove trust' : 'Mark as trusted'}
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => markSuspicious(sender)}
+                            disabled={togglingId === sender.id}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              sender.status === 'suspicious'
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                : 'hover:bg-red-50 text-slate-400 hover:text-red-600'
+                            }`}
+                            title={sender.status === 'suspicious' ? 'Remove suspicious' : 'Mark as suspicious'}
+                          >
+                            <ShieldAlert className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => startEdit(sender)}
+                            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                            title="Edit sender"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
+                    {/* Expanded WHOIS Detail Row */}
+                    {isExpanded && (
+                      <tr key={`${sender.id}-detail`} className="bg-slate-50/50">
+                        <td colSpan={8} className="px-6 py-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                            <div>
+                              <span className="text-slate-400 uppercase tracking-wider font-medium">Reverse DNS</span>
+                              <p className="text-slate-700 mt-1 font-mono break-all">{e?.reverseDns || '—'}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 uppercase tracking-wider font-medium">ASN</span>
+                              <p className="text-slate-700 mt-1">{e?.asn ? `AS${e.asn}` : '—'}{e?.asnOrg ? ` · ${e.asnOrg}` : ''}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 uppercase tracking-wider font-medium">Location</span>
+                              <p className="text-slate-700 mt-1">{e?.city && e?.country ? `${e.city}, ${e.country}` : e?.country || '—'}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 uppercase tracking-wider font-medium">Provider</span>
+                              <p className="text-slate-700 mt-1">
+                                {e?.provider || '—'}
+                                {e?.providerType && (
+                                  <span className="ml-1.5 px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded text-[10px] uppercase">{e.providerType}</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          {sender.notes && (
+                            <div className="mt-3 pt-3 border-t border-slate-200 text-xs">
+                              <span className="text-slate-400 uppercase tracking-wider font-medium">Notes</span>
+                              <p className="text-slate-600 mt-1">{sender.notes}</p>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                    </>
                   )
                 })}
               </tbody>
