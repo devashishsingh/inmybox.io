@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { Mail, Lock, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react'
 
 export default function SignInPage() {
   const router = useRouter()
@@ -162,6 +162,14 @@ export default function SignInPage() {
               Request a demo
             </Link>
           </p>
+
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mt-4 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to home
+          </Link>
         </div>
       </div>
     </div>
