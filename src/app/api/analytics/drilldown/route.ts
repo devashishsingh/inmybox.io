@@ -19,7 +19,12 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url)
-  const type = searchParams.get('type') // spf, dkim, dmarc, ip, disposition
+  // INMYBOX ENHANCEMENT — Phase 2 M2: Validate query param enums
+  const validTypes = ['spf', 'dkim', 'dmarc', 'ip', 'disposition']
+  const type = searchParams.get('type')
+  if (type && !validTypes.includes(type)) {
+    return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 })
+  }
   const filter = searchParams.get('filter') // pass, fail, none, quarantine, reject, or specific IP
 
   const domainIds = await getDomainIds(ctx.tenantId)

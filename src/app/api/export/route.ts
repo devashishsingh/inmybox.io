@@ -13,7 +13,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const format = new URL(req.url).searchParams.get('format') || 'csv'
+  // INMYBOX ENHANCEMENT — Phase 2 M2: Validate export format enum
+  const validFormats = ['csv', 'pdf']
+  const rawFormat = new URL(req.url).searchParams.get('format') || 'csv'
+  const format = validFormats.includes(rawFormat) ? rawFormat : 'csv'
   const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 

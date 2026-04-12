@@ -10,9 +10,13 @@ export async function GET(req: NextRequest) {
   const page = parseInt(url.searchParams.get('page') || '1', 10)
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 200)
   const search = url.searchParams.get('search')?.trim()
-  const risk = url.searchParams.get('risk')?.trim()
+  const rawRisk = url.searchParams.get('risk')?.trim()
   const hasEmail = url.searchParams.get('hasEmail')
   const format = url.searchParams.get('format') // csv
+
+  // INMYBOX ENHANCEMENT — Phase 2 M2: Validate risk enum before using in WHERE clause
+  const validRiskLevels = ['critical', 'high', 'medium', 'low']
+  const risk = rawRisk && validRiskLevels.includes(rawRisk) ? rawRisk : undefined
 
   const where: Record<string, unknown> = {}
   if (search) {

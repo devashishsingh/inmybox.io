@@ -83,8 +83,10 @@ async function extractFromZip(buffer: Buffer): Promise<{ name: string; content: 
 }
 
 async function extractFrom7z(buffer: Buffer, fileName: string): Promise<{ name: string; content: string }[]> {
+  // INMYBOX ENHANCEMENT — Phase 2 M1: Sanitize filename to prevent path traversal in execFile
+  const sanitizedName = path.basename(fileName).replace(/[^a-zA-Z0-9._-]/g, '_')
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dmarc-7z-'))
-  const archivePath = path.join(tmpDir, fileName)
+  const archivePath = path.join(tmpDir, sanitizedName)
   const extractDir = path.join(tmpDir, 'extracted')
   fs.mkdirSync(extractDir, { recursive: true })
   fs.writeFileSync(archivePath, buffer)

@@ -18,8 +18,13 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url)
-  const status = searchParams.get('status') || undefined
-  const severity = searchParams.get('severity') || undefined
+  // INMYBOX ENHANCEMENT — Phase 2 M2: Validate query param enums
+  const validStatuses = ['open', 'acknowledged', 'resolved', 'dismissed']
+  const validSeverities = ['critical', 'high', 'medium', 'low']
+  const rawStatus = searchParams.get('status')
+  const rawSeverity = searchParams.get('severity')
+  const status = rawStatus && validStatuses.includes(rawStatus) ? rawStatus : undefined
+  const severity = rawSeverity && validSeverities.includes(rawSeverity) ? rawSeverity : undefined
 
   const actionItems = await listActionItems(ctx.tenantId, { status, severity })
   return NextResponse.json({ actionItems })
