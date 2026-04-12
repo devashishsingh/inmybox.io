@@ -19,10 +19,12 @@ import {
   LogOut,
   ChevronDown,
   Shield,
+  Radar,
 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Overview' },
+  { href: '/admin/leads', icon: Radar, label: 'Scan Leads' },
   { href: '/admin/tenants', icon: Building2, label: 'Tenants' },
   { href: '/admin/domains', icon: Globe, label: 'Domains' },
   { href: '/admin/aliases', icon: AtSign, label: 'Alias Mapping' },

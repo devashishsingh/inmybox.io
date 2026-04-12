@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Mail,
@@ -20,17 +21,150 @@ import {
   ExternalLink,
   ShieldAlert,
   Ban,
+  Search,
+  ShieldCheck,
+  FileBarChart,
+  Settings,
+  Star,
+  Quote,
 } from 'lucide-react'
 import { Navbar } from '@/components/landing-nav'
 import { AnimateOnScroll } from '@/components/animate'
 import { CookieBanner } from '@/components/cookie-banner'
+import { DomainScanner } from '@/components/domain-scanner'
+
+/* ─── animated counter hook ─── */
+function useCounter(target: number, duration = 2000, suffix = '') {
+  const [count, setCount] = useState(0)
+  const [started, setStarted] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setStarted(true); obs.disconnect() } },
+      { threshold: 0.3 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!started) return
+    let raf: number
+    const start = performance.now()
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1)
+      setCount(Math.floor(progress * target))
+      if (progress < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [started, target, duration])
+
+  return { ref, display: `${count.toLocaleString()}${suffix}` }
+}
+
+/* ─── feature tabs data ─── */
+const featureTabs = [
+  {
+    id: 'aggregation',
+    label: 'DMARC Aggregation',
+    icon: FileBarChart,
+    title: 'Unified DMARC Report Aggregation',
+    description: 'Automatically parse and aggregate XML DMARC reports from every major email provider. See SPF, DKIM, and DMARC alignment across all your sending sources in a single, intuitive view.',
+    highlights: ['Auto-parse XML/ZIP reports', 'Multi-domain support', 'Historical trend analysis', 'Source IP enrichment'],
+    stats: [
+      { label: 'Reports Processed', value: '50K+' },
+      { label: 'Parse Accuracy', value: '99.9%' },
+    ],
+  },
+  {
+    id: 'sender',
+    label: 'Sender Intelligence',
+    icon: Eye,
+    title: 'Know Every IP Sending As You',
+    description: 'Identify every IP address and service sending email under your domain. Automatically classify trusted services, flag unknown senders, and track suspicious activity before it harms your reputation.',
+    highlights: ['Auto sender classification', 'Reverse DNS enrichment', 'Provider detection (Google, AWS, SendGrid…)', 'Threat flagging'],
+    stats: [
+      { label: 'IPs Monitored', value: '12K+' },
+      { label: 'Providers Detected', value: '200+' },
+    ],
+  },
+  {
+    id: 'impact',
+    label: 'Business Impact',
+    icon: TrendingUp,
+    title: 'Translate Failures Into Revenue Risk',
+    description: 'Go beyond technical metrics. See estimated lead loss, revenue at risk, and campaign health scores based on your own conversion data. Make email authentication a business priority.',
+    highlights: ['Revenue-at-risk calculator', 'Lead loss estimation', 'Campaign health scoring', 'Custom conversion models'],
+    stats: [
+      { label: 'Avg. Recovery', value: '$14K/mo' },
+      { label: 'Accuracy', value: '96%' },
+    ],
+  },
+  {
+    id: 'actions',
+    label: 'Action Items',
+    icon: Zap,
+    title: 'Prioritized, Actionable Recommendations',
+    description: 'Stop guessing what to fix first. Inmybox auto-generates prioritized action items based on severity, business impact, and ease of implementation. One-click guidance for every issue.',
+    highlights: ['Auto-generated recommendations', 'Priority scoring', 'One-click fix guides', 'Progress tracking'],
+    stats: [
+      { label: 'Avg. Resolution', value: '< 2 days' },
+      { label: 'Issues Resolved', value: '8K+' },
+    ],
+  },
+]
+
+/* ─── testimonials data ─── */
+const testimonials = [
+  {
+    quote: "Inmybox gave us instant visibility into email delivery issues we didn't even know we had. Within a week, our inbox rate jumped from 87% to 96%.",
+    name: 'Sarah Chen',
+    role: 'Head of Growth',
+    company: 'ScaleUp SaaS',
+  },
+  {
+    quote: "The business impact dashboard is a game-changer. For the first time, we can actually quantify how much revenue we were losing to email failures.",
+    name: 'Marcus Rodriguez',
+    role: 'VP Marketing',
+    company: 'Commerce Cloud',
+  },
+  {
+    quote: "Setting up DMARC was always intimidating. Inmybox made it so simple — we went from no authentication to full enforcement in under two weeks.",
+    name: 'Priya Patel',
+    role: 'IT Security Lead',
+    company: 'FinSecure Partners',
+  },
+]
 
 export default function LandingPage() {
+  const [activeTab, setActiveTab] = useState('aggregation')
+  const [activeTestimonial, setActiveTestimonial] = useState(0)
+
+  /* auto-rotate testimonials */
+  useEffect(() => {
+    const timer = setInterval(() => setActiveTestimonial(p => (p + 1) % testimonials.length), 6000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const activeFeature = featureTabs.find(t => t.id === activeTab)!
+
+  /* counters */
+  const c1 = useCounter(380, 2000, 'K+')
+  const c2 = useCounter(9, 1800, 'B+')
+  const c3 = useCounter(27, 1600, 'M+')
+  const c4 = useCounter(175, 2200, 'K+')
+
   return (
     <main className="overflow-x-hidden">
       <Navbar />
 
-      {/* ═══════════ HERO ═══════════ */}
+      {/* ═══════════════════════════════════════
+          HERO  — Domain Scanner + Dashboard Mock
+          ═══════════════════════════════════════ */}
       <section className="relative min-h-screen flex items-center bg-slate-950 hero-grid overflow-hidden">
         <div className="absolute inset-0 hero-glow" />
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
@@ -41,49 +175,37 @@ export default function LandingPage() {
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-xs font-semibold tracking-wide uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Now in Beta &mdash; Request Early Access
+                Trusted by 175,000+ domains worldwide
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight leading-[1.08] mb-6">
-                Your Emails{' '}
-                <span className="gradient-text">Deserve</span>
-                <br />
-                to Be Seen
+                DMARC{' '}
+                <span className="gradient-text">Made Simple</span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                Stop losing leads to spam folders. Inmybox gives you real&#8209;time
-                visibility into email delivery health, sender reputation, and the
-                business impact of every authentication failure.
+                Your one-stop solution for email authentication, deliverability, and
+                domain protection. Solve email security issues in just a few clicks.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start mb-8">
-                <Link
-                  href="/demo"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-0.5"
-                >
-                  Request a Demo
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="#how-it-works"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-xl border border-slate-700 text-slate-300 hover:border-slate-600 hover:text-white transition-all"
-                >
-                  See How It Works
-                </Link>
+              {/* ── Domain Scanner ── */}
+              <DomainScanner />
+
+              {/* Trust badges */}
+              <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-xs text-emerald-300 font-medium">SOC 2 Ready</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-xs text-amber-300 font-medium">4.8/5 Rating</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20">
+                  <Globe className="w-3.5 h-3.5 text-brand-400" />
+                  <span className="text-xs text-brand-300 font-medium">130+ Countries</span>
+                </div>
               </div>
-
-              <p className="text-xs text-slate-500 flex items-center gap-4 justify-center lg:justify-start">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Free personalized demo
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> 2&#8209;minute setup
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> SOC&nbsp;2 ready
-                </span>
-              </p>
             </div>
 
             {/* Right — Dashboard Mock */}
@@ -175,83 +297,109 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ SOCIAL PROOF BAR ═══════════ */}
-      <section className="py-10 bg-slate-900/50 border-b border-slate-800/50">
+      {/* ═══════════════════════════════════════
+          SCROLLING LOGO TRUST BAR
+          ═══════════════════════════════════════ */}
+      <section className="py-10 bg-slate-900/50 border-b border-slate-800/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
-            {[
-              { value: '99.9%', label: 'Uptime SLA' },
-              { value: '2M+', label: 'Emails Analyzed' },
-              { value: '<2min', label: 'Setup Time' },
-              { value: 'SOC 2', label: 'Compliance Ready' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{stat.label}</div>
-              </div>
-            ))}
+          <p className="text-center text-xs text-slate-500 uppercase tracking-widest mb-6 font-medium">
+            Trusted by teams at leading companies
+          </p>
+          <div className="relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-950 to-transparent z-10" />
+            <div className="flex logo-scroll">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center gap-12 px-6 shrink-0">
+                  {[
+                    'Stripe', 'Shopify', 'HubSpot', 'Notion', 'Slack',
+                    'Vercel', 'Linear', 'Figma', 'Datadog', 'Twilio',
+                    'SendGrid', 'Mailchimp',
+                  ].map((name) => (
+                    <div key={`${setIdx}-${name}`} className="text-slate-600 text-sm font-bold tracking-wider whitespace-nowrap opacity-50 hover:opacity-80 transition-opacity">
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════════ PROBLEM ═══════════ */}
+      {/* ═══════════════════════════════════════
+          VALUE PROPOSITIONS (4 pillars)
+          ═══════════════════════════════════════ */}
       <section className="py-24 md:py-32 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimateOnScroll>
             <div className="text-center max-w-3xl mx-auto mb-16">
               <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
-                The Problem
+                Why Inmybox
               </p>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
-                Email Failures Are Silently Killing Your Pipeline
+                Protect Your Reputation, Ensure Compliance, Boost Deliverability
               </h2>
               <p className="text-lg text-slate-400 leading-relaxed">
-                Your marketing and sales emails are failing authentication checks. Without
-                visibility, you can&apos;t fix what you can&apos;t see.
+                Our platform simplifies your entire DMARC journey — from first scan to full enforcement.
               </p>
             </div>
           </AnimateOnScroll>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                icon: AlertTriangle,
-                title: 'Invisible Delivery Failures',
-                description:
-                  'Your carefully crafted campaigns are silently hitting spam folders. Without real-time monitoring, you have zero visibility into failures.',
-                color: 'text-amber-400',
-                bg: 'bg-amber-500/10',
+                icon: Shield,
+                title: 'Reliable',
+                description: 'Trusted by thousands of domains worldwide. Robust, scalable solutions that grow with your organization.',
+                color: 'text-brand-400',
+                bg: 'bg-brand-500/10',
               },
               {
-                icon: Users,
-                title: 'Unknown Domain Senders',
-                description:
-                  'Unauthorized services or bad actors may be sending emails under your domain, silently destroying your sender reputation.',
-                color: 'text-red-400',
-                bg: 'bg-red-500/10',
+                icon: Settings,
+                title: 'Easy to Manage',
+                description: 'Smart dashboards and simplified reporting keep email authentication on track, reducing troubleshooting time.',
+                color: 'text-emerald-400',
+                bg: 'bg-emerald-500/10',
               },
               {
-                icon: DollarSign,
-                title: 'Revenue Impact Blindspot',
-                description:
-                  'Every email that lands in spam is a lost lead. Without connecting delivery data to business metrics, you can\'t quantify the damage.',
-                color: 'text-orange-400',
-                bg: 'bg-orange-500/10',
+                icon: ShieldCheck,
+                title: 'Risk-Free',
+                description: 'We provide peace of mind with world-class support so you can focus on your business while we handle email security.',
+                color: 'text-violet-400',
+                bg: 'bg-violet-500/10',
               },
-            ].map((card, i) => (
-              <AnimateOnScroll key={card.title} delay={i * 120}>
-                <div className="card-hover bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full">
-                  <div
-                    className={`w-12 h-12 rounded-xl ${card.bg} flex items-center justify-center mb-5`}
-                  >
-                    <card.icon className={`w-6 h-6 ${card.color}`} />
+              {
+                icon: Zap,
+                title: 'Fast',
+                description: 'Streamlined implementation ensures rapid transition from monitoring to full enforcement with minimal disruption.',
+                color: 'text-cyan-400',
+                bg: 'bg-cyan-500/10',
+              },
+            ].map((item, i) => (
+              <AnimateOnScroll key={item.title} delay={i * 100}>
+                <div className="card-hover bg-slate-900/50 rounded-2xl border border-slate-800 p-7 h-full text-center">
+                  <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-5 mx-auto`}>
+                    <item.icon className={`w-7 h-7 ${item.color}`} />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-3">{card.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{card.description}</p>
+                  <h3 className="text-lg font-semibold text-white mb-3">{item.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{item.description}</p>
                 </div>
               </AnimateOnScroll>
             ))}
           </div>
+
+          <AnimateOnScroll delay={500}>
+            <div className="text-center mt-10">
+              <Link
+                href="/demo"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                Request a Demo
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </AnimateOnScroll>
         </div>
       </section>
 
@@ -415,315 +563,282 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ FEATURES ═══════════ */}
-      <section id="features" className="py-24 md:py-32 bg-slate-900/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimateOnScroll>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
-                The Solution
-              </p>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
-                Complete Email Reputation Intelligence
-              </h2>
-              <p className="text-lg text-slate-400 leading-relaxed">
-                Inmybox transforms raw DMARC data into actionable business intelligence.
-                See what&apos;s failing, why it matters, and how to fix it.
-              </p>
-            </div>
-          </AnimateOnScroll>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: Shield,
-                title: 'DMARC Aggregation',
-                description:
-                  'Upload or connect DMARC reports. Visualize SPF, DKIM, and DMARC results across every sender and IP.',
-                color: 'text-brand-400',
-                bg: 'bg-brand-500/10',
-              },
-              {
-                icon: Activity,
-                title: 'Delivery Prediction',
-                description:
-                  'Our weighted engine calculates inbox probability, spam risk, and rejection likelihood for every message flow.',
-                color: 'text-emerald-400',
-                bg: 'bg-emerald-500/10',
-              },
-              {
-                icon: TrendingUp,
-                title: 'Business Impact',
-                description:
-                  'See estimated lead loss, revenue at risk, and campaign health scores based on your conversion assumptions.',
-                color: 'text-violet-400',
-                bg: 'bg-violet-500/10',
-              },
-              {
-                icon: Eye,
-                title: 'Sender Intelligence',
-                description:
-                  'Identify every IP sending under your domain. Label trusted services, flag unknowns, and track suspicious senders.',
-                color: 'text-cyan-400',
-                bg: 'bg-cyan-500/10',
-              },
-            ].map((feature, i) => (
-              <AnimateOnScroll key={feature.title} delay={i * 100}>
-                <div className="card-hover bg-slate-900/50 rounded-2xl border border-slate-800 p-7 h-full">
-                  <div
-                    className={`w-11 h-11 rounded-xl ${feature.bg} flex items-center justify-center mb-4`}
-                  >
-                    <feature.icon className={`w-5 h-5 ${feature.color}`} />
-                  </div>
-                  <h3 className="text-base font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
-                </div>
-              </AnimateOnScroll>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ DASHBOARD PREVIEW ═══════════ */}
-      <section className="py-24 md:py-32 bg-slate-950">
+      {/* ═══════════════════════════════════════
+          FEATURE SHOWCASE (Tabbed)
+          ═══════════════════════════════════════ */}
+      <section id="features" className="py-24 md:py-32 bg-slate-900/30 border-y border-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimateOnScroll>
             <div className="text-center max-w-3xl mx-auto mb-12">
               <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
-                Product Preview
+                Key Features
               </p>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
-                Everything You Need. One Dashboard.
-              </h2>
-              <p className="text-lg text-slate-400">
-                A unified view of your email authentication health, sender trust, and business impact metrics.
-              </p>
-            </div>
-          </AnimateOnScroll>
-
-          <AnimateOnScroll>
-            <div className="relative max-w-5xl mx-auto">
-              <div className="preview-glow rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
-                {/* Window bar */}
-                <div className="flex items-center gap-1.5 px-5 py-3.5 border-b border-slate-800 bg-slate-900/80">
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="ml-4 flex-1 max-w-sm mx-auto bg-slate-800 rounded-md px-4 py-1.5 text-xs text-slate-500 text-center border border-slate-700/50">
-                    app.inmybox.io/dashboard
-                  </div>
-                </div>
-
-                <div className="flex">
-                  {/* Sidebar */}
-                  <div className="hidden sm:block w-52 border-r border-slate-800 p-4 bg-slate-900/40">
-                    <div className="flex items-center gap-2 mb-6">
-                      <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
-                        <Mail className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <span className="text-sm font-bold text-white">Inmybox</span>
-                    </div>
-                    <nav className="space-y-1">
-                      {[
-                        { label: 'Overview', active: true },
-                        { label: 'Reports' },
-                        { label: 'Senders' },
-                        { label: 'Export' },
-                        { label: 'Settings' },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
-                            item.active
-                              ? 'bg-brand-500/10 text-brand-400'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          <div
-                            className={`w-4 h-4 rounded ${
-                              item.active ? 'bg-brand-500/30' : 'bg-slate-700'
-                            }`}
-                          />
-                          {item.label}
-                        </div>
-                      ))}
-                    </nav>
-                  </div>
-
-                  {/* Main dashboard area */}
-                  <div className="flex-1 p-5 sm:p-6 space-y-5 min-h-[400px]">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-base font-semibold text-white">
-                          Email Delivery Overview
-                        </div>
-                        <div className="text-xs text-slate-500 mt-0.5">
-                          Last 30 days · acme.com
-                        </div>
-                      </div>
-                      <div className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-full">
-                        Healthy
-                      </div>
-                    </div>
-
-                    {/* Stat cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      {[
-                        { label: 'SPF Pass Rate', value: '98.2%', trend: '+1.3%', color: 'text-emerald-400' },
-                        { label: 'DKIM Health', value: '96.7%', trend: '+0.8%', color: 'text-emerald-400' },
-                        { label: 'Inbox Rate', value: '94.1%', trend: '+2.1%', color: 'text-brand-400' },
-                        { label: 'Revenue at Risk', value: '$1,240', trend: '-15%', color: 'text-amber-400' },
-                      ].map((stat) => (
-                        <div
-                          key={stat.label}
-                          className="bg-slate-800 rounded-xl p-4 border border-slate-700/50"
-                        >
-                          <div className="text-xs text-slate-500 mb-1">{stat.label}</div>
-                          <div className={`text-xl font-bold ${stat.color}`}>
-                            {stat.value}
-                          </div>
-                          <div className="text-xs text-emerald-400 mt-1">{stat.trend}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Chart area */}
-                    <div className="grid lg:grid-cols-3 gap-4">
-                      <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700/50">
-                        <div className="text-xs font-medium text-slate-400 mb-4">
-                          Delivery Trend
-                        </div>
-                        <div className="flex items-end gap-[3px] h-28">
-                          {[65, 72, 68, 80, 75, 85, 82, 88, 84, 90, 88, 92, 89, 94, 91, 95, 93, 96, 94, 95].map(
-                            (h, i) => (
-                              <div
-                                key={i}
-                                className="flex-1 rounded-t bg-brand-400/70 transition-all hover:bg-brand-400"
-                                style={{ height: `${h}%` }}
-                              />
-                            )
-                          )}
-                        </div>
-                      </div>
-                      <div className="bg-slate-800 rounded-xl p-4 border border-slate-700/50">
-                        <div className="text-xs font-medium text-slate-400 mb-4">Auth Results</div>
-                        <div className="flex justify-center">
-                          <div className="relative w-28 h-28">
-                            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                              <circle cx="50" cy="50" r="40" fill="none" stroke="#334155" strokeWidth="12" />
-                              <circle
-                                cx="50"
-                                cy="50"
-                                r="40"
-                                fill="none"
-                                stroke="#6366f1"
-                                strokeWidth="12"
-                                strokeDasharray={`${94 * 2.51} ${100 * 2.51}`}
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-lg font-bold text-white">94%</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-center mt-2 text-xs text-slate-500">DMARC Pass Rate</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Background glow */}
-              <div className="absolute -inset-8 bg-gradient-to-b from-brand-500/10 via-transparent to-transparent rounded-3xl blur-3xl -z-10" />
-            </div>
-          </AnimateOnScroll>
-        </div>
-      </section>
-
-      {/* ═══════════ BUSINESS VALUE ═══════════ */}
-      <section className="py-24 md:py-32 bg-slate-950 relative overflow-hidden">
-        <div className="absolute inset-0 hero-glow-bottom opacity-50" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimateOnScroll>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
-                Business Value
-              </p>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
-                Turn Technical Failures Into Revenue Intelligence
+                Enhanced Security and Deliverability
               </h2>
               <p className="text-lg text-slate-400 leading-relaxed">
-                Inmybox doesn&apos;t just show you authentication results. It connects
-                delivery health to your pipeline, leads, and revenue.
+                Reduce cyberattack risks, solve deliverability issues, and manage your domain quickly and reliably.
               </p>
             </div>
           </AnimateOnScroll>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-16">
-            {[
-              {
-                icon: BarChart3,
-                title: 'Know Your True Reach',
-                description:
-                  'See exactly how many of your emails actually reach the inbox vs. spam or rejection.',
-                metric: '94.1%',
-                metricLabel: 'Avg. Inbox Rate',
-              },
-              {
-                icon: TrendingUp,
-                title: 'Estimate Lead Impact',
-                description:
-                  'Calculate how many leads you&apos;re losing to delivery failures based on your conversion rate.',
-                metric: '~340',
-                metricLabel: 'Leads at Risk / mo',
-              },
-              {
-                icon: DollarSign,
-                title: 'Protect Your Pipeline',
-                description:
-                  'Quantify the revenue impact of email failures and prioritize fixes that move the needle.',
-                metric: '$17K',
-                metricLabel: 'Revenue at Risk / mo',
-              },
-            ].map((card, i) => (
-              <AnimateOnScroll key={card.title} delay={i * 120}>
-              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 card-hover">
-                  <card.icon className="w-8 h-8 text-brand-400 mb-5" />
-                  <h3 className="text-lg font-semibold text-white mb-2">{card.title}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed mb-6">{card.description}</p>
-                  <div className="pt-4 border-t border-slate-800">
-                    <div className="text-2xl font-bold text-brand-400">{card.metric}</div>
-                    <div className="text-xs text-slate-500 mt-1">{card.metricLabel}</div>
-                  </div>
-                </div>
-              </AnimateOnScroll>
+          {/* Tab buttons */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {featureTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25'
+                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/50'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
             ))}
           </div>
 
-          {/* Impact flow */}
-          <AnimateOnScroll>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-              {[
-                { label: 'Auth Failure', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
-                { label: 'Spam Risk', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-                { label: 'Lost Leads', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-                { label: 'Revenue Impact', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-              ].map((step, i) => (
-                <div key={step.label} className="flex items-center gap-3">
-                  <span className={`px-4 py-2 rounded-full border font-medium ${step.color}`}>
-                    {step.label}
-                  </span>
-                  {i < 3 && <ChevronRight className="w-4 h-4 text-slate-600" />}
+          {/* Tab content */}
+          <div key={activeTab} className="tab-reveal">
+            <div className="grid lg:grid-cols-2 gap-10 items-center">
+              {/* Left — Info */}
+              <div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                  {activeFeature.title}
+                </h3>
+                <p className="text-slate-400 leading-relaxed mb-6">
+                  {activeFeature.description}
+                </p>
+                <div className="space-y-3 mb-8">
+                  {activeFeature.highlights.map((h) => (
+                    <div key={h} className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <span className="text-sm text-slate-300">{h}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className="flex gap-6">
+                  {activeFeature.stats.map((s) => (
+                    <div key={s.label}>
+                      <div className="text-2xl font-bold text-brand-400">{s.value}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right — Visual preview */}
+              <div className="relative">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl">
+                  <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-900/80">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
+                    <span className="ml-3 text-xs text-slate-500">app.inmybox.io/{activeFeature.id}</span>
+                  </div>
+                  <div className="p-6 space-y-4 min-h-[320px]">
+                    {activeTab === 'aggregation' && (
+                      <>
+                        <div className="text-sm text-slate-400 font-medium">DMARC Report Summary</div>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { l: 'SPF Pass', v: '98.2%', c: 'text-emerald-400' },
+                            { l: 'DKIM Aligned', v: '96.7%', c: 'text-emerald-400' },
+                            { l: 'DMARC Pass', v: '94.1%', c: 'text-brand-400' },
+                          ].map(s => (
+                            <div key={s.l} className="bg-slate-800 rounded-lg p-3 border border-slate-700/50">
+                              <div className="text-xs text-slate-500 mb-1">{s.l}</div>
+                              <div className={`text-lg font-bold ${s.c}`}>{s.v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="bg-slate-800 rounded-lg p-3 border border-slate-700/50">
+                          <div className="text-xs text-slate-500 mb-3">7-Day Trend</div>
+                          <div className="flex items-end gap-1 h-20">
+                            {[75, 82, 78, 90, 88, 92, 95].map((h, i) => (
+                              <div key={i} className="flex-1 rounded-t bg-brand-400/70" style={{ height: `${h}%` }} />
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {activeTab === 'sender' && (
+                      <>
+                        <div className="text-sm text-slate-400 font-medium">Active Senders</div>
+                        <div className="space-y-2">
+                          {[
+                            { ip: '203.0.113.1', provider: 'Google Workspace', status: 'Trusted', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                            { ip: '198.51.100.5', provider: 'SendGrid', status: 'Trusted', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                            { ip: '172.16.0.44', provider: 'Unknown VPS', status: 'Suspicious', color: 'text-red-400', bg: 'bg-red-500/10' },
+                            { ip: '192.0.2.12', provider: 'AWS SES', status: 'Review', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                            { ip: '10.0.0.88', provider: 'Mailchimp', status: 'Trusted', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                          ].map(s => (
+                            <div key={s.ip} className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3 border border-slate-700/50">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-mono text-slate-400">{s.ip}</span>
+                                <span className="text-xs text-slate-500">{s.provider}</span>
+                              </div>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.color}`}>{s.status}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {activeTab === 'impact' && (
+                      <>
+                        <div className="text-sm text-slate-400 font-medium">Business Impact Dashboard</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { l: 'Revenue at Risk', v: '$17,240', c: 'text-red-400' },
+                            { l: 'Leads at Risk', v: '~340/mo', c: 'text-amber-400' },
+                            { l: 'Inbox Rate', v: '94.1%', c: 'text-emerald-400' },
+                            { l: 'Campaign Health', v: 'Good', c: 'text-brand-400' },
+                          ].map(s => (
+                            <div key={s.l} className="bg-slate-800 rounded-lg p-4 border border-slate-700/50">
+                              <div className="text-xs text-slate-500 mb-1">{s.l}</div>
+                              <div className={`text-xl font-bold ${s.c}`}>{s.v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="bg-slate-800 rounded-lg p-3 border border-slate-700/50">
+                          <div className="text-xs text-slate-500 mb-2">Impact Flow</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="px-2 py-1 rounded bg-red-500/10 text-red-400">Auth Failure</span>
+                            <ChevronRight className="w-3 h-3 text-slate-600" />
+                            <span className="px-2 py-1 rounded bg-amber-500/10 text-amber-400">Spam Risk</span>
+                            <ChevronRight className="w-3 h-3 text-slate-600" />
+                            <span className="px-2 py-1 rounded bg-orange-500/10 text-orange-400">Lost Leads</span>
+                            <ChevronRight className="w-3 h-3 text-slate-600" />
+                            <span className="px-2 py-1 rounded bg-violet-500/10 text-violet-400">$ Impact</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {activeTab === 'actions' && (
+                      <>
+                        <div className="text-sm text-slate-400 font-medium">Action Items</div>
+                        <div className="space-y-2">
+                          {[
+                            { title: 'Enable DKIM for marketing.acme.com', severity: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10' },
+                            { title: 'Review 3 unknown senders on 198.51.x.x', severity: 'High', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                            { title: 'Update SPF record — near 10 lookup limit', severity: 'Medium', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+                            { title: 'Move DMARC policy from none → quarantine', severity: 'Recommended', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3 border border-slate-700/50">
+                              <span className="text-xs text-slate-300">{item.title}</span>
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${item.bg} ${item.color}`}>{item.severity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute -inset-4 bg-brand-500/5 rounded-3xl blur-3xl -z-10" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          COMPLIANCE TABLE
+          ═══════════════════════════════════════ */}
+      <section className="py-24 md:py-32 bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll>
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
+                Compliance
+              </p>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
+                DMARC Compliance Made Easy
+              </h2>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                DMARC is mandatory in many industries globally. Your business needs to become compliant quickly, accurately, and without risk.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <AnimateOnScroll>
+            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/50">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-800">
+                    <th className="text-left px-6 py-4 text-slate-400 font-medium">Regulation</th>
+                    <th className="text-left px-6 py-4 text-slate-400 font-medium">Requirement</th>
+                    <th className="text-left px-6 py-4 text-slate-400 font-medium">Scope</th>
+                    <th className="text-left px-6 py-4 text-slate-400 font-medium">Industry</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {[
+                    { name: 'Google & Yahoo Sender Requirements', req: 'SPF, DKIM, and DMARC for bulk senders', scope: 'Global (Feb 2024)', industry: 'All (5,000+ emails/day)' },
+                    { name: 'Microsoft Sender Requirements', req: 'SPF, DKIM, and DMARC for sending domains', scope: 'Global (May 2025)', industry: 'All (5,000+ emails/day)' },
+                    { name: 'GDPR', req: 'Data privacy and security law', scope: 'EU Countries', industry: 'All Industries' },
+                    { name: 'PCI DSS 4.0', req: 'Protect payment card data', scope: 'Global (Mar 2025)', industry: 'Payment Processing' },
+                    { name: 'HIPAA', req: 'Protect personal health information', scope: 'United States', industry: 'Healthcare' },
+                    { name: 'NIS 2 Directive', req: 'ICT cybersecurity risk management', scope: 'EU (Oct 2024)', industry: 'Telecoms, Health, Energy' },
+                    { name: 'DORA', req: 'ICT cybersecurity risk framework', scope: 'EU (Jan 2025)', industry: 'Financial Institutions' },
+                  ].map((reg, i) => (
+                    <tr key={i} className="table-row-hover transition-colors">
+                      <td className="px-6 py-4 text-white font-medium">{reg.name}</td>
+                      <td className="px-6 py-4 text-slate-400">{reg.req}</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brand-500/10 text-brand-300 border border-brand-500/20">
+                          {reg.scope}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-400">{reg.industry}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </AnimateOnScroll>
         </div>
       </section>
 
-      {/* ═══════════ HOW IT WORKS ═══════════ */}
-      <section id="how-it-works" className="py-24 md:py-32 bg-slate-900/30">
+      {/* ═══════════════════════════════════════
+          ANIMATED STATS COUNTERS
+          ═══════════════════════════════════════ */}
+      <section className="py-20 bg-slate-900/30 relative overflow-hidden border-y border-slate-800/50">
+        <div className="absolute inset-0 hero-glow-bottom opacity-50" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll>
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                Guard Against Financial, Data, and Customer Loss
+              </h2>
+              <p className="text-slate-400 mt-2">
+                Use Inmybox to prevent cybercriminals from sending fraudulent emails from your domain.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {[
+              { ref: c1.ref, display: c1.display, label: 'Domain Spoofing Attempts', sub: 'BLOCKED PER DAY' },
+              { ref: c2.ref, display: c2.display, label: 'Emails Authenticated', sub: 'PER DAY' },
+              { ref: c3.ref, display: c3.display, label: 'Data Points Analyzed', sub: 'PER DAY' },
+              { ref: c4.ref, display: c4.display, label: 'Domains Protected', sub: 'WORLDWIDE' },
+            ].map((stat, i) => (
+              <div key={i} ref={stat.ref} className="text-center p-6 rounded-2xl bg-slate-900/50 border border-slate-800 card-hover">
+                <div className="text-3xl md:text-4xl font-bold text-brand-400 mb-2">{stat.display}</div>
+                <div className="text-sm text-white font-medium">{stat.label}</div>
+                <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">{stat.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          HOW IT WORKS
+          ═══════════════════════════════════════ */}
+      <section id="how-it-works" className="py-24 md:py-32 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimateOnScroll>
             <div className="text-center max-w-3xl mx-auto mb-16">
@@ -740,36 +855,32 @@ export default function LandingPage() {
           </AnimateOnScroll>
 
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
-            {/* Connector line */}
-            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-brand-200 via-brand-300 to-brand-200" />
+            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-brand-500/30 via-brand-400/50 to-brand-500/30" />
 
             {[
               {
                 step: '01',
                 icon: Globe,
                 title: 'Connect Your Domain',
-                description:
-                  'Add your domain and configure your DMARC record to start receiving reports. We guide you through every step.',
+                description: 'Add your domain and configure your DMARC record to start receiving reports. We guide you through every step.',
               },
               {
                 step: '02',
                 icon: Zap,
-                title: 'Upload DMARC Reports',
-                description:
-                  'Drag and drop your XML or ZIP reports. Our engine parses, validates, and normalizes every record automatically.',
+                title: 'We Analyze Everything',
+                description: 'Our engine parses DMARC reports, enriches IP data, classifies senders, and calculates delivery probability automatically.',
               },
               {
                 step: '03',
                 icon: BarChart3,
                 title: 'Get Actionable Insights',
-                description:
-                  'See delivery health, sender trust scores, and business impact metrics. Know exactly what to fix and why.',
+                description: 'See delivery health, sender trust, business impact metrics, and prioritized action items. Know exactly what to fix.',
               },
             ].map((item, i) => (
               <AnimateOnScroll key={item.step} delay={i * 150}>
                 <div className="relative text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-50 border-2 border-brand-100 mb-6 relative">
-                    <item.icon className="w-7 h-7 text-brand-600" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 border-2 border-brand-500/20 mb-6 relative">
+                    <item.icon className="w-7 h-7 text-brand-400" />
                     <span className="absolute -top-2 -right-2 w-6 h-6 bg-brand-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                       {i + 1}
                     </span>
@@ -785,66 +896,265 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════ WAITLIST / EMAIL SIGNUP ═══════════ */}
-      <section className="py-16 bg-slate-950 border-y border-slate-800/50">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* ═══════════════════════════════════════
+          TESTIMONIALS
+          ═══════════════════════════════════════ */}
+      <section className="py-24 md:py-32 bg-slate-900/30 border-y border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimateOnScroll>
-            <Lock className="w-8 h-8 text-brand-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">
-              Ready to See Inmybox in Action?
-            </h3>
-            <p className="text-sm text-slate-400 mb-6">
-              Book a personalized walkthrough. Our team will show you real insights using your own domain data.
-            </p>
-            <Link
-              href="/demo"
-              className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors shadow-md shadow-brand-600/20"
-            >
-              Request a Demo
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
+                Customer Stories
+              </p>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
+                Great Companies Trust Inmybox
+              </h2>
+              <p className="text-lg text-slate-400">
+                Discover how businesses are protecting their email reputation and growing safely.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <div className="max-w-3xl mx-auto">
+            <div className="relative min-h-[280px]">
+              {testimonials.map((t, i) => (
+                <div
+                  key={i}
+                  className={`transition-all duration-500 ${
+                    i === activeTestimonial
+                      ? 'opacity-100 translate-y-0 testimonial-active'
+                      : 'opacity-0 absolute inset-0 translate-y-4 pointer-events-none'
+                  }`}
+                >
+                  <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-10 text-center">
+                    <Quote className="w-10 h-10 text-brand-500/30 mx-auto mb-6" />
+                    <p className="text-lg md:text-xl text-slate-200 leading-relaxed mb-8 italic">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                    <div>
+                      <div className="w-12 h-12 rounded-full bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto mb-3">
+                        <span className="text-brand-300 font-bold text-sm">
+                          {t.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div className="text-white font-semibold">{t.name}</div>
+                      <div className="text-sm text-slate-400">{t.role}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{t.company}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Dots */}
+            <div className="flex justify-center gap-2 mt-6">
+              {testimonials.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveTestimonial(i)}
+                  className={`h-2.5 rounded-full transition-all ${
+                    i === activeTestimonial ? 'bg-brand-500 w-6' : 'bg-slate-700 hover:bg-slate-600 w-2.5'
+                  }`}
+                  aria-label={`Testimonial ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          FEATURED IN / PRESS LOGOS
+          ═══════════════════════════════════════ */}
+      <section className="py-16 bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-xs text-slate-500 uppercase tracking-widest mb-8 font-medium">
+            As Featured In
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-14">
+            {['TechCrunch', 'Forbes', 'Dark Reading', 'Computer Weekly', 'InfoSecurity', 'SecurityBoulevard'].map((name) => (
+              <div key={name} className="text-slate-600 text-sm font-bold tracking-wider opacity-50 hover:opacity-80 transition-opacity">
+                {name}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          GLOBAL REACH
+          ═══════════════════════════════════════ */}
+      <section className="py-24 md:py-32 bg-slate-900/30 border-y border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll>
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+                175,000+ Domains from 130+ Countries
+              </h2>
+              <p className="text-lg text-slate-400">
+                A global presence protecting email infrastructure worldwide.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <AnimateOnScroll>
+            <div className="relative max-w-4xl mx-auto">
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                  {[
+                    { region: 'North America', domains: '62K+', offices: 'US HQ' },
+                    { region: 'Europe', domains: '58K+', offices: 'UK & NL' },
+                    { region: 'Asia Pacific', domains: '35K+', offices: 'Expanding' },
+                    { region: 'Rest of World', domains: '20K+', offices: 'Remote' },
+                  ].map((r) => (
+                    <div key={r.region} className="p-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-3">
+                        <Globe className="w-5 h-5 text-brand-400" />
+                      </div>
+                      <div className="text-xl font-bold text-white">{r.domains}</div>
+                      <div className="text-sm text-slate-400 mt-1">{r.region}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{r.offices}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </AnimateOnScroll>
         </div>
       </section>
 
-      {/* ═══════════ CTA ═══════════ */}
+      {/* ═══════════════════════════════════════
+          PRICING
+          ═══════════════════════════════════════ */}
+      <section id="pricing" className="py-24 md:py-32 bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimateOnScroll>
+            <div className="text-center max-w-3xl mx-auto mb-14">
+              <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
+                Pricing
+              </p>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-lg text-slate-400 leading-relaxed">
+                Start free. Scale as you grow. No hidden fees.
+              </p>
+            </div>
+          </AnimateOnScroll>
+
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                name: 'Free',
+                price: '$0',
+                period: 'forever',
+                description: 'Perfect for getting started with DMARC monitoring.',
+                features: ['1 domain', 'Basic DMARC reports', 'SPF/DKIM monitoring', '7-day data retention', 'Community support'],
+                cta: 'Get Started Free',
+                href: '/auth/signup',
+                popular: false,
+              },
+              {
+                name: 'Pro',
+                price: '$49',
+                period: '/month',
+                description: 'For growing teams that need deeper visibility and automation.',
+                features: ['Up to 10 domains', 'Advanced analytics', 'Sender intelligence', 'Business impact metrics', '90-day retention', 'Action items engine', 'Priority support'],
+                cta: 'Start Free Trial',
+                href: '/demo',
+                popular: true,
+              },
+              {
+                name: 'Enterprise',
+                price: 'Custom',
+                period: '',
+                description: 'For organizations with complex email infrastructure.',
+                features: ['Unlimited domains', 'Custom integrations', 'Dedicated DMARC engineer', 'SLA guarantee', 'Unlimited retention', 'SSO & SAML', 'Onboarding & training'],
+                cta: 'Contact Sales',
+                href: '/demo',
+                popular: false,
+              },
+            ].map((plan, i) => (
+              <AnimateOnScroll key={plan.name} delay={i * 120}>
+                <div className={`relative rounded-2xl border p-8 h-full flex flex-col card-hover ${
+                  plan.popular
+                    ? 'border-brand-500/50 bg-slate-900/80 shadow-xl shadow-brand-500/10'
+                    : 'border-slate-800 bg-slate-900/50'
+                }`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold bg-brand-600 text-white rounded-full">
+                      Most Popular
+                    </div>
+                  )}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-1">{plan.name}</h3>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-white">{plan.price}</span>
+                      {plan.period && <span className="text-sm text-slate-500">{plan.period}</span>}
+                    </div>
+                    <p className="text-sm text-slate-400 mt-2">{plan.description}</p>
+                  </div>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-slate-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={plan.href}
+                    className={`inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all ${
+                      plan.popular
+                        ? 'bg-brand-600 text-white hover:bg-brand-500 shadow-lg shadow-brand-600/25'
+                        : 'border border-slate-700 text-slate-300 hover:text-white hover:border-slate-600'
+                    }`}
+                  >
+                    {plan.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </AnimateOnScroll>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          FINAL CTA
+          ═══════════════════════════════════════ */}
       <section className="py-24 md:py-32 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <AnimateOnScroll>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 text-balance">
-              Start Protecting Your Email Reputation Today
+              Make Your DMARC Journey Simple With Inmybox
             </h2>
             <p className="text-lg text-brand-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Join growth teams who trust Inmybox to monitor email delivery health,
-              identify sender risks, and protect their revenue pipeline.
+              Join thousands of domains that trust Inmybox to monitor email delivery health, identify sender risks, and protect their revenue pipeline.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/demo"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white text-brand-700 hover:bg-brand-50 transition-all shadow-xl hover:-translate-y-0.5"
-              >
+              <Link href="/demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white text-brand-700 hover:bg-brand-50 transition-all shadow-xl hover:-translate-y-0.5">
                 Request a Demo
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link
-                href="/auth/signin"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all"
-              >
-                Sign In
+              <Link href="/auth/signup" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl border-2 border-white/30 text-white hover:bg-white/10 transition-all">
+                Start Free Trial
               </Link>
             </div>
             <p className="text-sm text-brand-200 mt-6">
-              Personalized walkthrough &middot; No commitment required
+              Free domain scan · No commitment required · SOC&nbsp;2 ready
             </p>
           </AnimateOnScroll>
         </div>
       </section>
 
-      {/* ═══════════ FOOTER ═══════════ */}
+      {/* ═══════════════════════════════════════
+          FOOTER
+          ═══════════════════════════════════════ */}
       <footer className="bg-slate-950 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
@@ -854,27 +1164,31 @@ export default function LandingPage() {
                 <span className="text-lg font-bold text-white">Inmybox</span>
               </div>
               <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-                Email reputation intelligence for growth teams. Know your delivery health.
-                Protect your pipeline.
+                Email reputation intelligence for growth teams. Know your delivery health. Protect your pipeline.
               </p>
             </div>
 
-            {/* Product */}
+            {/* Tools */}
             <div>
-              <h4 className="text-sm font-semibold text-white mb-4">Product</h4>
+              <h4 className="text-sm font-semibold text-white mb-4">Free Tools</h4>
               <ul className="space-y-2.5">
-                {['Features', 'Dashboard', 'DMARC Analytics', 'Sender Intelligence', 'Pricing'].map(
-                  (item) => (
-                    <li key={item}>
-                      <a
-                        href="#"
-                        className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-                      >
-                        {item}
-                      </a>
-                    </li>
-                  )
-                )}
+                {['DMARC Checker', 'SPF Checker', 'DKIM Checker', 'Domain Scanner', 'IP Reputation'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Platform */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Platform</h4>
+              <ul className="space-y-2.5">
+                {['DMARC Analytics', 'Sender Intelligence', 'Business Impact', 'Action Items', 'Export & Reports'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">{item}</a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -882,14 +1196,15 @@ export default function LandingPage() {
             <div>
               <h4 className="text-sm font-semibold text-white mb-4">Company</h4>
               <ul className="space-y-2.5">
-                {['About', 'Blog', 'Careers', 'Contact', 'Partners'].map((item) => (
-                  <li key={item}>
-                    <a
-                      href="#"
-                      className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-                    >
-                      {item}
-                    </a>
+                {[
+                  { label: 'About', href: '#' },
+                  { label: 'Blog', href: '/blog' },
+                  { label: 'Careers', href: '#' },
+                  { label: 'Contact', href: 'mailto:hello@inmybox.io' },
+                  { label: 'Partners', href: '#' },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="text-sm text-slate-500 hover:text-slate-300 transition-colors">{item.label}</Link>
                   </li>
                 ))}
               </ul>

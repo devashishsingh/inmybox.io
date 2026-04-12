@@ -38,24 +38,34 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'How It Works', 'Pricing'].map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                className={`text-sm font-medium transition-colors ${isDarkHero ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-brand-600'}`}
-              >
-                {item}
-              </a>
-            ))}
+            {[{ label: 'Features', href: '#features' }, { label: 'How It Works', href: '#how-it-works' }, { label: 'Blue Tick', href: '/blue-tick' }, { label: 'Pricing', href: '/pricing' }, { label: 'Blog', href: '/blog' }].map((item) => {
+              const isExternal = item.href.startsWith('#')
+              const Component = isExternal ? 'a' : Link
+              return (
+                <Component
+                  key={item.label}
+                  href={item.href}
+                  className={`text-sm font-medium transition-colors ${isDarkHero ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-brand-600'}`}
+                >
+                  {item.label}
+                </Component>
+              )
+            })}
           </div>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <Link
               href="/auth/signin"
               className={`text-sm font-medium transition-colors ${isDarkHero ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
             >
               Sign In
+            </Link>
+            <Link
+              href="/auth/signup"
+              className={`text-sm font-medium px-4 py-2 rounded-lg border transition-all ${isDarkHero ? 'border-slate-600 text-slate-300 hover:text-white hover:border-slate-500' : 'border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400'}`}
+            >
+              Start Free
             </Link>
             <Link
               href="/demo"
@@ -81,16 +91,20 @@ export function Navbar() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
           <div className="px-4 py-4 space-y-3">
-            {['Features', 'How It Works', 'Pricing'].map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                onClick={() => setMobileOpen(false)}
-                className="block text-sm font-medium text-slate-600 hover:text-brand-600 py-2"
-              >
-                {item}
-              </a>
-            ))}
+            {[{ label: 'Features', href: '#features' }, { label: 'How It Works', href: '#how-it-works' }, { label: 'Blue Tick', href: '/blue-tick' }, { label: 'Pricing', href: '/pricing' }, { label: 'Blog', href: '/blog' }].map((item) => {
+              const isExternal = item.href.startsWith('#')
+              const Component = isExternal ? 'a' : Link
+              return (
+                <Component
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-sm font-medium text-slate-600 hover:text-brand-600 py-2"
+                >
+                  {item.label}
+                </Component>
+              )
+            })}
             <hr className="border-slate-100" />
             <Link
               href="/auth/signin"

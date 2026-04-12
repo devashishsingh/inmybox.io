@@ -389,6 +389,30 @@ model BimiCheck {
   createdAt       DateTime   @default(now())
 }
 
+// ─── DOMAIN SCAN LEADS ──────────────────────────────────────────────
+
+model DomainScan {
+  id          String   @id @default(cuid())
+  domain      String
+  score       Int      // 0-100 overall health score
+  riskLevel   String   // healthy, medium, high, critical
+  dmarcScore  Int      @default(0)
+  spfScore    Int      @default(0)
+  dkimScore   Int      @default(0)
+  configScore Int      @default(0)
+  rawResult   String?  // JSON of full scan result
+  // Lead capture (optional — filled if user provides email)
+  email       String?
+  ipAddress   String?
+  userAgent   String?
+  country     String?
+  createdAt   DateTime @default(now())
+
+  @@index([domain])
+  @@index([email])
+  @@index([createdAt])
+}
+
 // ─── DEMO REQUESTS ──────────────────────────────────────────────────
 
 model DemoRequest {
