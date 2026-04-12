@@ -866,12 +866,14 @@ export async function GET(req: NextRequest) {
       })
       scanId = saved.id
     } catch (err) {
-      console.error('Failed to save scan:', err)
+      // INMYBOX ENHANCEMENT — Phase 5: Safe error logging (no raw objects)
+      console.error(`[scan] Failed to save scan: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
 
     return NextResponse.json({ ...result, scanId })
   } catch (err) {
-    console.error('Domain scan error:', err)
+    // INMYBOX ENHANCEMENT — Phase 5: Safe error logging (no raw objects)
+    console.error(`[scan] Domain scan error: ${err instanceof Error ? err.message : 'Unknown error'}`)
     return NextResponse.json(
       { error: 'Failed to scan domain. Please check the domain name and try again.' },
       { status: 500 }

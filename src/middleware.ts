@@ -1,10 +1,25 @@
 import { withAuth } from 'next-auth/middleware'
+import { NextResponse } from 'next/server'
 
-export default withAuth({
-  pages: {
-    signIn: '/auth/signin',
+// INMYBOX ENHANCEMENT — Phase 5: Request ID injection for traceability
+export default withAuth(
+  function middleware(req) {
+    const requestId = crypto.randomUUID()
+    const headers = new Headers(req.headers)
+    headers.set('x-request-id', requestId)
+
+    const response = NextResponse.next({
+      request: { headers },
+    })
+    response.headers.set('x-request-id', requestId)
+    return response
   },
-})
+  {
+    pages: {
+      signIn: '/auth/signin',
+    },
+  }
+)
 
 // INMYBOX ENHANCEMENT — Phase 3: Added /api/bimi to consolidate auth at middleware layer
 export const config = {

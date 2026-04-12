@@ -102,7 +102,8 @@ export async function GET(req: NextRequest) {
       discovered,
     })
   } catch (err) {
-    console.error('Subdomain discovery error:', err)
+    // INMYBOX ENHANCEMENT — Phase 5: Safe error logging (no raw objects)
+    console.error(`[scan/subdomains] Subdomain discovery error: ${err instanceof Error ? err.message : 'Unknown error'}`)
     return NextResponse.json(
       { error: 'Failed to discover subdomains. Please try again.' },
       { status: 500 }

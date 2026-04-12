@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       email,
       score: scan.score,
       riskLevel: scan.riskLevel,
-    }).catch(err => console.error('Lead notification error:', err))
+    }).catch(err => console.error(`[scan/capture] Lead notification error: ${err instanceof Error ? err.message : 'Unknown error'}`))
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
@@ -64,7 +64,8 @@ export async function POST(req: NextRequest) {
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Scan not found' }, { status: 404  })
     }
-    console.error('Lead capture error:', error)
+    // INMYBOX ENHANCEMENT — Phase 5: Safe error logging (no raw objects)
+    console.error(`[scan/capture] Lead capture error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return NextResponse.json(
       { error: 'Failed to save. Please try again.' },
       { status: 500 }
