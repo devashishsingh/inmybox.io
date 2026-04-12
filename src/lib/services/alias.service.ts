@@ -29,14 +29,26 @@ export async function createAlias(params: {
 }
 
 /**
- * Lists all alias mappings.
+ * Lists alias mappings.
+ * INMYBOX ENHANCEMENT — Phase 4: Split into admin (all) and tenant-scoped variants for safety.
  */
-export async function listAliases(params?: { tenantId?: string }) {
+export async function listAliasesForAdmin(tenantId?: string) {
   const where: Record<string, unknown> = {}
-  if (params?.tenantId) where.tenantId = params.tenantId
+  if (tenantId) where.tenantId = tenantId
 
   return prisma.aliasMapping.findMany({
     where,
+    include: { tenant: { select: { id: true, name: true, slug: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+/**
+ * Lists alias mappings for a specific tenant (enforced).
+ */
+export async function listAliases(tenantId: string) {
+  return prisma.aliasMapping.findMany({
+    where: { tenantId },
     include: { tenant: { select: { id: true, name: true, slug: true } } },
     orderBy: { createdAt: 'desc' },
   })

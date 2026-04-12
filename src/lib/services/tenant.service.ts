@@ -137,3 +137,23 @@ export async function resolveTenantByEmailAlias(alias: string) {
   })
   return mapping?.tenant || null
 }
+
+// INMYBOX ENHANCEMENT — Phase 4: Centralized tenant context resolver for API routes
+// Combines session check + tenant resolution in one call. Reduces boilerplate and ensures consistency.
+import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
+import { authOptions } from '@/lib/auth-config'
+
+export async function requireTenantContext(): Promise<TenantContext | NextResponse> {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const ctx = await resolveTenantContext(session.user.id)
+  if (!ctx) {
+    return NextResponse.json({ error: 'No tenant found' }, { status: 404 })
+  }
+
+  return ctx
+}

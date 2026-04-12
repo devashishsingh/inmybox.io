@@ -23,10 +23,8 @@ async function authorize(req: NextRequest): Promise<boolean> {
     return true
   }
 
-  // Internal background worker uses this header
-  if (req.headers.get('x-internal-cron') === 'true' && !cronSecret) {
-    return true
-  }
+  // INMYBOX ENHANCEMENT — Phase 4: Removed x-internal-cron bypass (was exploitable without CRON_SECRET)
+  // In development without CRON_SECRET, require admin session instead
 
   // Check admin session
   const session = await getServerSession(authOptions)

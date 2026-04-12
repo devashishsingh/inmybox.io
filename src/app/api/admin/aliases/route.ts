@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSuperAdmin } from '@/lib/admin-guard'
-import { createAlias, listAliases, updateAlias, deleteAlias } from '@/lib/services/alias.service'
+import { createAlias, listAliasesForAdmin, updateAlias, deleteAlias } from '@/lib/services/alias.service'
 import { z } from 'zod'
 
 const createAliasSchema = z.object({
@@ -10,6 +10,7 @@ const createAliasSchema = z.object({
 })
 
 // GET /api/admin/aliases
+// INMYBOX ENHANCEMENT — Phase 4: Uses listAliasesForAdmin (admin-only variant)
 export async function GET(req: NextRequest) {
   const auth = await requireSuperAdmin()
   if (auth instanceof NextResponse) return auth
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const tenantId = url.searchParams.get('tenantId') || undefined
 
-  const aliases = await listAliases({ tenantId })
+  const aliases = await listAliasesForAdmin(tenantId)
   return NextResponse.json(aliases)
 }
 
