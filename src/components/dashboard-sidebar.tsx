@@ -79,7 +79,7 @@ export function DashboardSidebar() {
       </div>
 
       {/* Admin Link (super_admin only) */}
-      {(session?.user as any)?.role === 'super_admin' && (
+      {session?.user?.role === 'super_admin' && (
         <div className="px-3 py-2 border-t border-slate-100">
           <Link
             href="/admin"

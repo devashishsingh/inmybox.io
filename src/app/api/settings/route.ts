@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {

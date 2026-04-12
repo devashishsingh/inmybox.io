@@ -51,6 +51,8 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, user })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 })
+    console.error('[admin/users] User update failed:', err.message)
+    // INMYBOX ENHANCEMENT: C5 — do not expose raw error details to client
+    return NextResponse.json({ error: 'User update failed' }, { status: 400 })
   }
 }

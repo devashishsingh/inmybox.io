@@ -30,7 +30,7 @@ async function authorize(req: NextRequest): Promise<boolean> {
 
   // Check admin session
   const session = await getServerSession(authOptions)
-  if ((session?.user as any)?.role === 'super_admin') {
+  if (session?.user?.role === 'super_admin') {
     return true
   }
 

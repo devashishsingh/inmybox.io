@@ -191,7 +191,8 @@ async function fetchEmailsFromImap(): Promise<{
 
       console.log(`[email-fetcher] Parsed email: "${parsed.subject}" from ${fromEmail}, ${attachments.length} DMARC attachment(s)`)
     } catch (err: any) {
-      console.error(`[email-fetcher] Failed to parse email UID ${uid}:`, err.message)
+      // INMYBOX ENHANCEMENT: H2 — do not log email UID or sender details
+      console.error(`[email-fetcher] Failed to parse email:`, err.message)
     }
   }
 
@@ -237,7 +238,8 @@ export async function processInboundEmail(message: EmailMessage) {
   }
 
   if (message.attachments.length === 0) {
-    console.warn(`[email-fetcher] No attachments in email from ${message.from}`)
+    // INMYBOX ENHANCEMENT: H2 — do not log sender email address
+    console.warn(`[email-fetcher] No attachments in inbound email`)
     return { processed: false, reason: 'no_attachments' }
   }
 

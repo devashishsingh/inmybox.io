@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const ctx = await resolveTenantContext((session.user as any).id)
+  const ctx = await resolveTenantContext(session.user.id)
   if (!ctx) {
     return NextResponse.json({ error: 'No tenant found' }, { status: 404 })
   }
@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const ctx = await resolveTenantContext((session.user as any).id)
+  const ctx = await resolveTenantContext(session.user.id)
   if (!ctx) {
     return NextResponse.json({ error: 'No tenant found' }, { status: 404 })
   }

@@ -15,7 +15,7 @@ export async function requireSuperAdmin(): Promise<
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = (session.user as any).id as string
+  const userId = session.user.id
   const isAdmin = await isSuperAdmin(userId)
 
   if (!isAdmin) {

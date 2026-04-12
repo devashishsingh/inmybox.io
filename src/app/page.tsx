@@ -27,6 +27,8 @@ import {
   Settings,
   Star,
   Quote,
+  CreditCard,
+  Clock,
 } from 'lucide-react'
 import { Navbar } from '@/components/landing-nav'
 import { AnimateOnScroll } from '@/components/animate'
@@ -140,9 +142,178 @@ const testimonials = [
   },
 ]
 
+// INMYBOX HERO ENHANCEMENT — Revenue Loss Calculator
+const INBOX_FAIL_RATE = 0.28 // 28% industry average fail-to-inbox
+
+function useAnimatedNumber(target: number, duration = 1500, active = true) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!active) { setValue(target); return }
+    let start = 0
+    const startTime = performance.now()
+    function tick(now: number) {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) start = requestAnimationFrame(tick)
+    }
+    start = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(start)
+  }, [target, duration, active])
+  return value
+}
+
+function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: number) => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const [emailsPerMonth, setEmailsPerMonth] = useState(1000)
+  const [conversionRate, setConversionRate] = useState(50)
+  const [leadValue, setLeadValue] = useState(10)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  const emailsLost = Math.round(emailsPerMonth * INBOX_FAIL_RATE)
+  const leadsLost = Math.round(emailsLost * (conversionRate / 100))
+  const revenueLostMonth = leadsLost * leadValue
+  const revenueLostYear = revenueLostMonth * 12
+
+  useEffect(() => {
+    onRevenueChange?.(revenueLostMonth)
+  }, [revenueLostMonth, onRevenueChange])
+
+  // Animated values for Mode A on page load
+  const animEmailsLost = useAnimatedNumber(emailsLost, 1500, mounted)
+  const animLeadsLost = useAnimatedNumber(leadsLost, 1500, mounted)
+  const animRevMonth = useAnimatedNumber(revenueLostMonth, 1500, mounted)
+  const animRevYear = useAnimatedNumber(revenueLostYear, 1500, mounted)
+
+  // Log-scale slider helper for email volume
+  const emailLogMin = Math.log(100)
+  const emailLogMax = Math.log(500000)
+  const emailSliderToValue = (pos: number) => Math.round(Math.exp(emailLogMin + (pos / 100) * (emailLogMax - emailLogMin)))
+  const emailValueToSlider = (val: number) => ((Math.log(val) - emailLogMin) / (emailLogMax - emailLogMin)) * 100
+
+  // Log-scale for lead value
+  const lvLogMin = Math.log(1)
+  const lvLogMax = Math.log(10000)
+  const lvSliderToValue = (pos: number) => Math.round(Math.exp(lvLogMin + (pos / 100) * (lvLogMax - lvLogMin)))
+  const lvValueToSlider = (val: number) => ((Math.log(val) - lvLogMin) / (lvLogMax - lvLogMin)) * 100
+
+  const displayEmailsLost = expanded ? emailsLost : animEmailsLost
+  const displayLeadsLost = expanded ? leadsLost : animLeadsLost
+  const displayRevMonth = expanded ? revenueLostMonth : animRevMonth
+  const displayRevYear = expanded ? revenueLostYear : animRevYear
+
+  return (
+    <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm p-4 mb-3">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-sm">📧</span>
+        <span className="text-xs text-slate-300 font-medium">
+          Based on {emailsPerMonth.toLocaleString()} emails/month
+        </span>
+      </div>
+
+      {/* Results grid */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="rounded-lg bg-slate-800/60 border border-slate-700/40 px-3 py-2">
+          <div className="text-[11px] text-slate-500 mb-0.5">Emails not reaching inbox</div>
+          <div className="text-base font-bold text-amber-400">~{displayEmailsLost.toLocaleString()}</div>
+        </div>
+        <div className="rounded-lg bg-slate-800/60 border border-slate-700/40 px-3 py-2">
+          <div className="text-[11px] text-slate-500 mb-0.5">Leads lost to spam</div>
+          <div className="text-base font-bold text-amber-400">~{displayLeadsLost.toLocaleString()}</div>
+        </div>
+        <div className="rounded-lg bg-slate-800/60 border border-red-500/20 px-3 py-2">
+          <div className="text-[11px] text-slate-500 mb-0.5">Revenue lost this month</div>
+          <div className="text-base font-bold text-red-400">${displayRevMonth.toLocaleString()}/mo</div>
+        </div>
+        <div className="rounded-lg bg-slate-800/60 border border-red-500/20 px-3 py-2">
+          <div className="text-[11px] text-slate-500 mb-0.5">Revenue lost this year</div>
+          <div className="text-base font-bold text-red-400">${displayRevYear.toLocaleString()}/yr</div>
+        </div>
+      </div>
+
+      {/* Assumptions line */}
+      <p className="text-[11px] text-slate-500 mb-2">
+        Assuming: {conversionRate}% lead rate · ${leadValue} per lead · 28% inbox failure rate
+      </p>
+
+      {/* MODE B — Sliders (expanded) */}
+      {expanded && (
+        <div className="border-t border-slate-700/50 pt-4 mt-2 space-y-4">
+          {/* Emails per month */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">📧 Emails you send per month</span>
+              <span className="text-sm font-semibold text-white">{emailsPerMonth.toLocaleString()}</span>
+            </div>
+            <input
+              type="range"
+              min={0} max={100} step={0.5}
+              value={emailValueToSlider(emailsPerMonth)}
+              onChange={e => setEmailsPerMonth(emailSliderToValue(Number(e.target.value)))}
+              className="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-700 accent-brand-500 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+            />
+          </div>
+
+          {/* Conversion rate */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">🎯 Email-to-lead conversion rate</span>
+              <span className="text-sm font-semibold text-white">{conversionRate}%</span>
+            </div>
+            <input
+              type="range"
+              min={1} max={80} step={1}
+              value={conversionRate}
+              onChange={e => setConversionRate(Number(e.target.value))}
+              className="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-700 accent-brand-500 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+            />
+          </div>
+
+          {/* Lead value */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">💰 Average value per lead</span>
+              <span className="text-sm font-semibold text-white">${leadValue.toLocaleString()}</span>
+            </div>
+            <input
+              type="range"
+              min={0} max={100} step={0.5}
+              value={lvValueToSlider(leadValue)}
+              onChange={e => setLeadValue(lvSliderToValue(Number(e.target.value)))}
+              className="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-700 accent-brand-500 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Toggle CTA */}
+      {!expanded ? (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full text-center text-sm font-medium text-brand-400 hover:text-brand-300 transition-colors py-2 border-t border-slate-700/50 mt-1"
+        >
+          These are YOUR numbers? Customise them →
+        </button>
+      ) : (
+        <div className="text-center mt-4">
+          <p className="text-xs text-slate-400">
+            Fix this in 2 minutes — scan your domain below ↓
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('aggregation')
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [hasScanResults, setHasScanResults] = useState(false)
 
   /* auto-rotate testimonials */
   useEffect(() => {
@@ -165,53 +336,110 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════
           HERO  — Domain Scanner + Dashboard Mock
           ═══════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center bg-slate-950 hero-grid overflow-hidden">
+      <section className="relative min-h-screen flex items-center bg-slate-950 overflow-hidden z-0">
+        {/* ── Background layers ── */}
+        <div className="absolute inset-0 hero-grid-fine" />
         <div className="absolute inset-0 hero-glow" />
+        <div className="absolute inset-0 noise-overlay" />
+
+        {/* Animated gradient orbs — INMYBOX HERO ENHANCEMENT */}
+        <div className="orb w-[700px] h-[700px] bg-blue-700/[0.07] top-[-10%] left-[-5%] animate-orb-drift-1" />
+        <div className="orb w-[600px] h-[600px] bg-indigo-600/[0.05] bottom-[-5%] right-[-5%] animate-orb-drift-2" />
+        <div className="orb w-[400px] h-[400px] bg-cyan-600/[0.06] top-[30%] right-[10%] animate-orb-pulse" />
+
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left — Copy */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 pb-8">
+          <div className={`grid ${hasScanResults ? 'lg:grid-cols-1' : 'lg:grid-cols-[52%_48%]'} gap-6 lg:gap-8 items-center transition-all duration-500`}>
+            {/* Left — Copy + Calculator + Scanner */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-xs font-semibold tracking-wide uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Trusted by 175,000+ domains worldwide
+              {/* INMYBOX HERO ENHANCEMENT — Urgency badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                Google &amp; Microsoft now enforcing DMARC — Is your domain ready?
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight leading-[1.08] mb-6">
-                DMARC{' '}
-                <span className="gradient-text">Made Simple</span>
+              {/* ⚠️ LOCKED — DO NOT CHANGE THIS HEADLINE OR SUBHEADLINE */}
+              <h1 className="text-3xl sm:text-4xl lg:text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.1] mb-3">
+                Sent Doesn&apos;t Mean Delivered.{' '}
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Delivered Doesn&apos;t Mean Seen.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                Your one-stop solution for email authentication, deliverability, and
-                domain protection. Solve email security issues in just a few clicks.
+              <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto lg:mx-0 mb-4 leading-relaxed">
+                Inmybox closes the gap — and shows you the revenue you&apos;ve been missing.
               </p>
+              {/* ⚠️ END LOCKED COPY */}
 
-              {/* ── Domain Scanner ── */}
-              <DomainScanner />
+              {/* ── Domain Scanner — primary hero CTA ── */}
+              <DomainScanner onScanResult={setHasScanResults} />
 
               {/* Trust badges */}
-              <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-xs text-emerald-300 font-medium">SOC 2 Ready</span>
+              <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[11px] text-emerald-300 font-medium">SOC 2 Ready</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                  <Star className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-xs text-amber-300 font-medium">4.8/5 Rating</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <Star className="w-3 h-3 text-amber-400" />
+                  <span className="text-[11px] text-amber-300 font-medium">4.8/5 Rating</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20">
-                  <Globe className="w-3.5 h-3.5 text-brand-400" />
-                  <span className="text-xs text-brand-300 font-medium">130+ Countries</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20">
+                  <Globe className="w-3 h-3 text-brand-400" />
+                  <span className="text-[11px] text-brand-300 font-medium">130+ Countries</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30">
+                  <CreditCard className="w-3 h-3 text-slate-400" />
+                  <span className="text-[11px] text-slate-300 font-medium">No credit card</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span className="text-[11px] text-slate-300 font-medium">Results in seconds</span>
                 </div>
               </div>
             </div>
 
-            {/* Right — Dashboard Mock */}
-            <div className="relative hidden lg:block">
-              <div className="relative animate-float">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-brand-500/10 overflow-hidden">
+            {/* Right — Dashboard Mock with 3D depth */}
+            {!hasScanResults && (
+            <div className="relative hidden lg:block overflow-hidden pr-2">
+              {/* Floating metric cards — INMYBOX HERO ENHANCEMENT */}
+              <div className="absolute -top-4 right-0 z-20 animate-float-card-1">
+                <div className="glass-float-green rounded-xl px-4 py-3 shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📬</span>
+                    <div>
+                      <div className="text-xs text-slate-400">Inbox Rate</div>
+                      <div className="text-sm font-bold text-emerald-400">94.1% <span className="text-emerald-300 text-xs">↑ 2.1%</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-2 left-0 z-20 animate-float-card-2">
+                <div className="glass-float-red rounded-xl px-4 py-3 shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💸</span>
+                    <div>
+                      <div className="text-xs text-slate-400">Revenue at Risk</div>
+                      <div className="text-sm font-bold text-red-400">$1,240</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute top-1/2 right-0 z-20 animate-float-card-3">
+                <div className="glass-float-blue rounded-xl px-4 py-3 shadow-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔒</span>
+                    <div>
+                      <div className="text-xs text-slate-400">SPF Pass</div>
+                      <div className="text-sm font-bold text-blue-400">98.2%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative animate-float-sm dashboard-3d depth-shadow rounded-2xl">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
                   {/* Window chrome */}
                   <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-900/80">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
@@ -293,31 +521,74 @@ export default function LandingPage() {
                 <div className="absolute -inset-4 bg-brand-500/10 rounded-3xl blur-3xl -z-10" />
               </div>
             </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════
-          SCROLLING LOGO TRUST BAR
+          // INMYBOX TICKER ENHANCEMENT
+          TWO-ROW TRUTH STATEMENTS TICKER
           ═══════════════════════════════════════ */}
-      <section className="py-10 bg-slate-900/50 border-b border-slate-800/50 overflow-hidden">
+      <section className="py-8 bg-slate-900/50 border-b border-slate-800/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-xs text-slate-500 uppercase tracking-widest mb-6 font-medium">
-            Trusted by teams at leading companies
+            Why email is the most powerful — and most attacked — channel in business
           </p>
-          <div className="relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-950 to-transparent z-10" />
-            <div className="flex logo-scroll">
+        </div>
+
+        <div className="ticker-wrapper space-y-4">
+          {/* Row 1 — Stats & Facts — scrolls LEFT */}
+          <div className="relative ticker-edge-fade">
+            <div className="flex ticker-row-1">
               {[...Array(2)].map((_, setIdx) => (
-                <div key={setIdx} className="flex items-center gap-12 px-6 shrink-0">
+                <div key={setIdx} className="flex items-center shrink-0">
                   {[
-                    'Stripe', 'Shopify', 'HubSpot', 'Notion', 'Slack',
-                    'Vercel', 'Linear', 'Figma', 'Datadog', 'Twilio',
-                    'SendGrid', 'Mailchimp',
-                  ].map((name) => (
-                    <div key={`${setIdx}-${name}`} className="text-slate-600 text-sm font-bold tracking-wider whitespace-nowrap opacity-50 hover:opacity-80 transition-opacity">
-                      {name}
+                    '4.6 billion email users worldwide',
+                    '$36 back for every $1 spent on email',
+                    '347 billion emails sent every single day',
+                    'Email beats social ROI by 4x every year',
+                    'Nobody sends a job offer over WhatsApp',
+                    'You sign contracts over email — not Slack',
+                    'Email is legally admissible in court',
+                    'Your email list is yours forever — Instagram can ban you tomorrow',
+                    'No algorithm between you and your recipient',
+                    'Everything said over email is documented and provable',
+                    'One email scales to millions — one call reaches one person',
+                    'Every platform on earth asks for your email to sign up',
+                  ].map((text, i) => (
+                    <div key={`${setIdx}-${i}`} className="flex items-center shrink-0">
+                      <span className="text-cyan-500/60 text-xs mx-4">◆</span>
+                      <span className="text-sm text-slate-300/90 whitespace-nowrap">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — Urgency & Threat — scrolls RIGHT */}
+          <div className="relative ticker-edge-fade">
+            <div className="flex ticker-row-2">
+              {[...Array(2)].map((_, setIdx) => (
+                <div key={setIdx} className="flex items-center shrink-0">
+                  {[
+                    '3.4 billion phishing emails sent every single day',
+                    '94% of malware arrives via email',
+                    'Business Email Compromise costs $6.7 billion annually',
+                    'Most attacks succeed because domains have zero DMARC',
+                    'Google now rejects unauthenticated bulk email',
+                    'Microsoft enforcing DMARC from May 2025',
+                    'Yahoo blocking non-compliant senders right now',
+                    'Your bank talks to you over email — so do attackers',
+                    'Email is the internet\u0027s only universal identity layer',
+                    'Sent does not mean delivered',
+                    'Delivered does not mean seen',
+                    'Is your domain one of the unprotected ones?',
+                  ].map((text, i) => (
+                    <div key={`${setIdx}-${i}`} className="flex items-center shrink-0">
+                      <span className="text-red-500/50 text-xs mx-4">◆</span>
+                      <span className="text-sm text-slate-400/80 whitespace-nowrap">{text}</span>
                     </div>
                   ))}
                 </div>

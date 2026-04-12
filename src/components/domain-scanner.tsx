@@ -11,7 +11,8 @@ import {
   CheckCircle2, AlertTriangle, XCircle, Info,
   ChevronDown, ChevronUp, ArrowRight, Loader2,
   FileText, Search, Lock, Settings, Mail,
-  Image,
+  Image, DollarSign, TrendingDown, BarChart3, Zap,
+  Globe, Upload, Plus, Minus, RefreshCw, Layers,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -29,6 +30,31 @@ interface Finding {
   title: string
   detail: string
   recommendation?: string
+}
+
+interface RevenueImpact {
+  per100: {
+    delivered: number
+    spam: number
+    rejected: number
+    deliveryRate: number
+  }
+  monthly: {
+    emailVolume: number
+    emailsLost: number
+    potentialLeadsLost: number
+    revenueAtRisk: number
+  }
+  assumptions: {
+    avgLeadValue: number
+    conversionRate: number
+    monthlyVolume: number
+  }
+  riskFactors: {
+    factor: string
+    impact: 'critical' | 'high' | 'medium' | 'low'
+    description: string
+  }[]
 }
 
 interface ScanResult {
@@ -57,9 +83,41 @@ interface ScanResult {
     vmcUrl: string | null
     dmarcReady: boolean
   }
+  revenueImpact?: RevenueImpact
 }
 
 /* ─── Risk configuration ─── */
+
+/* ─── Subdomain / multi-domain types ─── */
+interface DiscoveredSubdomain {
+  subdomain: string
+  fqdn: string
+  hasMx: boolean
+  hasSpf: boolean
+  hasDmarc: boolean
+  mxRecords: string[]
+  emailActive: boolean
+}
+
+interface MultiScanResult {
+  domain: string
+  error: string | null
+  result: ScanResult | null
+}
+
+interface AggregateResult {
+  domainsScanned: number
+  domainsFailed: number
+  averageScore: number
+  worstRiskLevel: 'healthy' | 'medium' | 'high' | 'critical'
+  riskDistribution: { critical: number; high: number; medium: number; healthy: number }
+  totalEmailsLost: number
+  totalLeadsLost: number
+  totalRevenueAtRisk: number
+  totalRevenueAtRiskYearly: number
+  riskFactors: { factor: string; impact: string; description: string; domains: string[] }[]
+}
+
 const RISK_CONFIG = {
   healthy: { color: '#10b981', bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-400', borderClass: 'border-emerald-500/30', icon: ShieldCheck },
   medium: { color: '#f59e0b', bgClass: 'bg-amber-500/10', textClass: 'text-amber-400', borderClass: 'border-amber-500/30', icon: ShieldAlert },
@@ -519,7 +577,8 @@ function ScoringMethodology() {
 /* ═══════════════════════════════════════════════════════════════
    MAIN EXPORT — DomainScanner
    ═══════════════════════════════════════════════════════════════ */
-export function DomainScanner() {
+// INMYBOX HERO ENHANCEMENT — Scanner with calculator tie-in
+export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?: (hasResult: boolean) => void; calcRevenueLost?: number } = {}) {
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -528,6 +587,18 @@ export function DomainScanner() {
   const [leadSubmitted, setLeadSubmitted] = useState(false)
   const [leadLoading, setLeadLoading] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
+
+  // ── Subdomain / multi-domain expansion state ──
+  const [expandMode, setExpandMode] = useState<'closed' | 'discover' | 'import'>('closed')
+  const [discovering, setDiscovering] = useState(false)
+  const [discoveredSubs, setDiscoveredSubs] = useState<DiscoveredSubdomain[]>([])
+  const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set())
+  const [importedDomains, setImportedDomains] = useState<string[]>([])
+  const [batchScanning, setBatchScanning] = useState(false)
+  const [batchResults, setBatchResults] = useState<MultiScanResult[] | null>(null)
+  const [aggregate, setAggregate] = useState<AggregateResult | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const aggregateRef = useRef<HTMLDivElement>(null)
 
   const handleScan = async () => {
     const d = domain.trim().toLowerCase()
@@ -556,6 +627,7 @@ export function DomainScanner() {
       }
 
       setResult(data)
+      onScanResult?.(true)
     } catch {
       setError('Network error. Please try again.')
     } finally {
@@ -580,12 +652,110 @@ export function DomainScanner() {
     }
   }
 
+  // ── Subdomain auto-discovery ──
+  const discoverSubdomains = async () => {
+    if (!result) return
+    setDiscovering(true)
+    setDiscoveredSubs([])
+    setSelectedDomains(new Set())
+    try {
+      const res = await fetch(`/api/scan/subdomains?domain=${encodeURIComponent(result.domain)}`)
+      const data = await res.json()
+      if (res.ok && data.discovered) {
+        setDiscoveredSubs(data.discovered)
+        // Auto-select all discovered
+        setSelectedDomains(new Set(data.discovered.map((s: DiscoveredSubdomain) => s.fqdn)))
+      }
+    } catch {
+      // non-critical
+    } finally {
+      setDiscovering(false)
+    }
+  }
+
+  // ── File import handler ──
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Only accept .txt files under 50KB
+    if (!file.name.endsWith('.txt') && !file.type.includes('text')) {
+      setError('Please upload a .txt file with one domain per line')
+      return
+    }
+    if (file.size > 50 * 1024) {
+      setError('File too large (max 50KB)')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const lines = text
+        .split(/[\r\n]+/)
+        .map(l => l.trim().toLowerCase())
+        .filter(l => l.length > 0 && /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/.test(l))
+
+      const unique = Array.from(new Set(lines)).slice(0, 20) // Cap at 20
+      setImportedDomains(unique)
+      setSelectedDomains(new Set(unique))
+      setError('')
+    }
+    reader.readAsText(file)
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  // ── Batch scan selected domains ──
+  const runBatchScan = async () => {
+    const domains = Array.from(selectedDomains)
+    if (domains.length === 0) return
+
+    setBatchScanning(true)
+    setBatchResults(null)
+    setAggregate(null)
+
+    try {
+      const res = await fetch('/api/scan/multi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domains }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setBatchResults(data.results)
+        setAggregate(data.aggregate)
+      }
+    } catch {
+      setError('Batch scan failed. Please try again.')
+    } finally {
+      setBatchScanning(false)
+    }
+  }
+
+  // Toggle domain selection
+  const toggleDomain = (fqdn: string) => {
+    setSelectedDomains(prev => {
+      const next = new Set(prev)
+      if (next.has(fqdn)) next.delete(fqdn)
+      else next.add(fqdn)
+      return next
+    })
+  }
+
   // Scroll to results when they load
   useEffect(() => {
     if (result && resultRef.current) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [result])
+
+  // Scroll to aggregate results when batch scan completes
+  useEffect(() => {
+    if (aggregate && aggregateRef.current) {
+      aggregateRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [aggregate])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleScan()
@@ -607,7 +777,7 @@ export function DomainScanner() {
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Enter your domain (e.g. acme.com)"
+            placeholder="yourdomain.com"
             className="flex-1 bg-transparent text-white text-sm placeholder:text-slate-500 outline-none py-2.5"
             disabled={loading}
           />
@@ -642,7 +812,7 @@ export function DomainScanner() {
 
       {/* ── Results Panel ── */}
       {result && (
-        <div ref={resultRef} className="max-w-5xl mx-auto lg:mx-0 scroll-mt-24">
+        <div ref={resultRef} className="w-full scroll-mt-24">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-brand-500/5">
             {/* Header */}
             <div className={`px-6 py-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
@@ -668,6 +838,21 @@ export function DomainScanner() {
             </div>
 
             <div className="p-6 space-y-8">
+              {/* INMYBOX HERO ENHANCEMENT — Calculator tie-in banner */}
+              {calcRevenueLost != null && calcRevenueLost > 0 && (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-red-300 font-medium">
+                      Based on your email volume above, you may be losing ~${calcRevenueLost.toLocaleString()}/mo in revenue.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Fix this in 2 minutes with Inmybox monitoring.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Charts Row */}
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Score Gauge */}
@@ -710,6 +895,168 @@ export function DomainScanner() {
                   ))}
                 </div>
               </div>
+
+              {/* ═══ Revenue Impact Section ═══ */}
+              {result.revenueImpact && (
+                <div>
+                  <h4 className="text-sm text-slate-400 font-medium mb-4 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Revenue Impact Analysis
+                  </h4>
+
+                  {/* Per-100 Emails Visual */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 mb-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Mail className="w-4 h-4 text-brand-400" />
+                      <span className="text-sm font-semibold text-white">For Every 100 Emails You Send</span>
+                    </div>
+
+                    {/* Email flow bars */}
+                    <div className="space-y-3 mb-5">
+                      {/* Delivered */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Reach Inbox
+                          </span>
+                          <span className="text-sm font-bold text-emerald-400">{result.revenueImpact.per100.delivered}</span>
+                        </div>
+                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000"
+                            style={{ width: `${result.revenueImpact.per100.delivered}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Spam */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-amber-400 font-medium flex items-center gap-1.5">
+                            <AlertTriangle className="w-3 h-3" />
+                            Land in Spam
+                          </span>
+                          <span className="text-sm font-bold text-amber-400">{result.revenueImpact.per100.spam}</span>
+                        </div>
+                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000"
+                            style={{ width: `${result.revenueImpact.per100.spam}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Rejected */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                            <XCircle className="w-3 h-3" />
+                            Rejected / Bounced
+                          </span>
+                          <span className="text-sm font-bold text-red-400">{result.revenueImpact.per100.rejected}</span>
+                        </div>
+                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-1000"
+                            style={{ width: `${result.revenueImpact.per100.rejected}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delivery rate badge */}
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${
+                      result.revenueImpact.per100.deliveryRate >= 90
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : result.revenueImpact.per100.deliveryRate >= 70
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                    }`}>
+                      <Zap className="w-3.5 h-3.5" />
+                      <span className="text-xs font-semibold">
+                        {result.revenueImpact.per100.deliveryRate}% Delivery Rate
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Monthly Revenue Impact Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-center">
+                      <div className="text-xs text-slate-500 mb-1">Monthly Volume</div>
+                      <div className="text-lg font-bold text-white">
+                        {result.revenueImpact.monthly.emailVolume.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500">emails</div>
+                    </div>
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
+                      <div className="text-xs text-slate-500 mb-1">Emails Lost</div>
+                      <div className="text-lg font-bold text-amber-400">
+                        {result.revenueImpact.monthly.emailsLost.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500">spam + rejected</div>
+                    </div>
+                    <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 text-center">
+                      <div className="text-xs text-slate-500 mb-1">Leads Lost</div>
+                      <div className="text-lg font-bold text-orange-400">
+                        {result.revenueImpact.monthly.potentialLeadsLost}
+                      </div>
+                      <div className="text-xs text-slate-500">@ {result.revenueImpact.assumptions.conversionRate}% conv.</div>
+                    </div>
+                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-center">
+                      <div className="text-xs text-slate-500 mb-1">Revenue at Risk</div>
+                      <div className="text-lg font-bold text-red-400">
+                        ${result.revenueImpact.monthly.revenueAtRisk.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500">/month</div>
+                    </div>
+                  </div>
+
+                  {/* Risk Factors */}
+                  {result.revenueImpact.riskFactors.length > 0 && (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingDown className="w-4 h-4 text-red-400" />
+                        <span className="text-sm font-semibold text-white">Deliverability Risk Factors</span>
+                      </div>
+                      <div className="space-y-3">
+                        {result.revenueImpact.riskFactors.map((rf, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
+                              rf.impact === 'critical' ? 'bg-red-400' :
+                              rf.impact === 'high' ? 'bg-orange-400' :
+                              rf.impact === 'medium' ? 'bg-amber-400' :
+                              'bg-emerald-400'
+                            }`} />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-white">{rf.factor}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                                  rf.impact === 'critical' ? 'bg-red-500/10 text-red-400' :
+                                  rf.impact === 'high' ? 'bg-orange-500/10 text-orange-400' :
+                                  rf.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
+                                  'bg-emerald-500/10 text-emerald-400'
+                                }`}>
+                                  {rf.impact}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rf.description}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assumptions footnote */}
+                  <p className="text-xs text-slate-600 mt-3 flex items-center gap-1.5">
+                    <BarChart3 className="w-3 h-3" />
+                    Based on {result.revenueImpact.assumptions.monthlyVolume.toLocaleString()} emails/mo,{' '}
+                    {result.revenueImpact.assumptions.conversionRate}% conversion, ${result.revenueImpact.assumptions.avgLeadValue} avg. lead value.
+                    Actual results depend on content, sender reputation, and recipient engagement.
+                  </p>
+                </div>
+              )}
 
               {/* BIMI Status */}
               {result.bimi && (
@@ -841,6 +1188,418 @@ export function DomainScanner() {
                   <div>
                     <p className="text-sm text-emerald-300 font-medium">Report sent!</p>
                     <p className="text-xs text-slate-400">Check your inbox for the full domain health report.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ Subdomain / Multi-Domain Expansion ═══ */}
+              <div className="rounded-xl border border-brand-500/20 bg-gradient-to-b from-brand-500/5 to-transparent overflow-hidden">
+                {/* Expansion Header */}
+                <button
+                  onClick={() => setExpandMode(expandMode === 'closed' ? 'discover' : 'closed')}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-800/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+                      <Layers className="w-4 h-4 text-brand-400" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm font-semibold text-white">Expand Your Scan</div>
+                      <div className="text-xs text-slate-400">Discover subdomains or import a domain list for full portfolio visibility</div>
+                    </div>
+                  </div>
+                  {expandMode === 'closed'
+                    ? <ChevronDown className="w-5 h-5 text-slate-500" />
+                    : <ChevronUp className="w-5 h-5 text-slate-500" />
+                  }
+                </button>
+
+                {expandMode !== 'closed' && (
+                  <div className="px-5 pb-5 border-t border-slate-800 pt-4">
+                    {/* Mode Tabs */}
+                    <div className="flex gap-2 mb-5">
+                      <button
+                        onClick={() => { setExpandMode('discover'); if (discoveredSubs.length === 0) discoverSubdomains() }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                          expandMode === 'discover'
+                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
+                            : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700/50'
+                        }`}
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        Auto-Discover Subdomains
+                      </button>
+                      <button
+                        onClick={() => setExpandMode('import')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+                          expandMode === 'import'
+                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
+                            : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700/50'
+                        }`}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Import Domain List
+                      </button>
+                    </div>
+
+                    {/* ── Auto-Discover Tab ── */}
+                    {expandMode === 'discover' && (
+                      <div>
+                        {discovering ? (
+                          <div className="flex items-center gap-3 py-6 justify-center">
+                            <Loader2 className="w-5 h-5 text-brand-400 animate-spin" />
+                            <span className="text-sm text-slate-400">Checking common subdomains for MX records...</span>
+                          </div>
+                        ) : discoveredSubs.length === 0 ? (
+                          <div className="text-center py-6">
+                            <Globe className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                            <p className="text-sm text-slate-400">No email-active subdomains found for <span className="text-white font-medium">{result.domain}</span></p>
+                            <p className="text-xs text-slate-500 mt-1">You can still import a custom domain list below</p>
+                            <button
+                              onClick={discoverSubdomains}
+                              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-all"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              Retry
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs text-slate-400">
+                                Found <span className="text-brand-400 font-semibold">{discoveredSubs.length}</span> email-active subdomain{discoveredSubs.length !== 1 ? 's' : ''}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  if (selectedDomains.size === discoveredSubs.length) setSelectedDomains(new Set())
+                                  else setSelectedDomains(new Set(discoveredSubs.map(s => s.fqdn)))
+                                }}
+                                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                              >
+                                {selectedDomains.size === discoveredSubs.length ? 'Deselect All' : 'Select All'}
+                              </button>
+                            </div>
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                              {discoveredSubs.map(sub => (
+                                <label
+                                  key={sub.fqdn}
+                                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+                                    selectedDomains.has(sub.fqdn)
+                                      ? 'bg-brand-500/5 border-brand-500/30'
+                                      : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedDomains.has(sub.fqdn)}
+                                    onChange={() => toggleDomain(sub.fqdn)}
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500/30"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-white font-medium">{sub.fqdn}</div>
+                                    <div className="flex items-center gap-3 mt-0.5">
+                                      {sub.hasMx && (
+                                        <span className="text-xs text-emerald-400 flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" /> MX
+                                        </span>
+                                      )}
+                                      {sub.hasSpf && (
+                                        <span className="text-xs text-emerald-400 flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" /> SPF
+                                        </span>
+                                      )}
+                                      {sub.hasDmarc && (
+                                        <span className="text-xs text-emerald-400 flex items-center gap-1">
+                                          <CheckCircle2 className="w-3 h-3" /> DMARC
+                                        </span>
+                                      )}
+                                      {!sub.hasDmarc && (
+                                        <span className="text-xs text-red-400 flex items-center gap-1">
+                                          <XCircle className="w-3 h-3" /> No DMARC
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Import Tab ── */}
+                    {expandMode === 'import' && (
+                      <div>
+                        <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/40 p-5 text-center mb-4">
+                          <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                          <p className="text-sm text-slate-300 mb-1">Upload a <span className="text-white font-medium">.txt</span> file</p>
+                          <p className="text-xs text-slate-500 mb-3">One domain per line · Max 20 domains · Example:</p>
+                          <div className="inline-block bg-slate-800/80 rounded-lg px-4 py-2 font-mono text-xs text-slate-400 text-left mb-4">
+                            mail.example.com<br />
+                            shop.example.com<br />
+                            blog.example.com<br />
+                            another-domain.io
+                          </div>
+                          <div>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept=".txt,text/plain"
+                              onChange={handleFileImport}
+                              className="hidden"
+                            />
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/20"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              Choose File
+                            </button>
+                          </div>
+                        </div>
+
+                        {importedDomains.length > 0 && (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs text-slate-400">
+                                Imported <span className="text-brand-400 font-semibold">{importedDomains.length}</span> domain{importedDomains.length !== 1 ? 's' : ''}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  if (selectedDomains.size === importedDomains.length) setSelectedDomains(new Set())
+                                  else setSelectedDomains(new Set(importedDomains))
+                                }}
+                                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                              >
+                                {selectedDomains.size === importedDomains.length ? 'Deselect All' : 'Select All'}
+                              </button>
+                            </div>
+                            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                              {importedDomains.map(d => (
+                                <label
+                                  key={d}
+                                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border cursor-pointer transition-all ${
+                                    selectedDomains.has(d)
+                                      ? 'bg-brand-500/5 border-brand-500/30'
+                                      : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedDomains.has(d)}
+                                    onChange={() => toggleDomain(d)}
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500/30"
+                                  />
+                                  <span className="text-sm text-white font-medium">{d}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Scan Selected Button ── */}
+                    {selectedDomains.size > 0 && (
+                      <div className="mt-5 flex items-center justify-between">
+                        <span className="text-xs text-slate-400">
+                          {selectedDomains.size} domain{selectedDomains.size !== 1 ? 's' : ''} selected
+                        </span>
+                        <button
+                          onClick={runBatchScan}
+                          disabled={batchScanning}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {batchScanning ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Scanning {selectedDomains.size} domain{selectedDomains.size !== 1 ? 's' : ''}...
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-4 h-4" />
+                              Scan {selectedDomains.size} Domain{selectedDomains.size !== 1 ? 's' : ''}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ═══ Aggregate Multi-Domain Results ═══ */}
+              {aggregate && batchResults && (
+                <div ref={aggregateRef} className="scroll-mt-24 space-y-6">
+                  {/* Aggregate Header */}
+                  <div className="rounded-xl border border-brand-500/30 bg-gradient-to-r from-brand-600/10 to-brand-500/5 p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-brand-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-bold text-white">Portfolio Health Summary</h4>
+                        <p className="text-xs text-slate-400">{aggregate.domainsScanned} domain{aggregate.domainsScanned !== 1 ? 's' : ''} scanned</p>
+                      </div>
+                    </div>
+
+                    {/* Risk Distribution */}
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      {([
+                        { key: 'critical', label: 'Critical', color: '#ef4444', bgCls: 'bg-red-500/10 border-red-500/30' },
+                        { key: 'high', label: 'High Risk', color: '#f97316', bgCls: 'bg-orange-500/10 border-orange-500/30' },
+                        { key: 'medium', label: 'Medium', color: '#f59e0b', bgCls: 'bg-amber-500/10 border-amber-500/30' },
+                        { key: 'healthy', label: 'Healthy', color: '#10b981', bgCls: 'bg-emerald-500/10 border-emerald-500/30' },
+                      ] as const).map(r => (
+                        <div key={r.key} className={`rounded-lg border p-3 text-center ${r.bgCls}`}>
+                          <div className="text-lg font-bold" style={{ color: r.color }}>
+                            {aggregate.riskDistribution[r.key]}
+                          </div>
+                          <div className="text-[11px] text-slate-400">{r.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Aggregate Revenue Impact */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="rounded-lg bg-slate-800/50 border border-slate-700/40 p-3 text-center">
+                        <div className="text-[11px] text-slate-500 mb-0.5">Avg. Score</div>
+                        <div className="text-lg font-bold text-white">{aggregate.averageScore}/100</div>
+                      </div>
+                      <div className="rounded-lg bg-slate-800/50 border border-amber-500/20 p-3 text-center">
+                        <div className="text-[11px] text-slate-500 mb-0.5">Total Emails Lost</div>
+                        <div className="text-lg font-bold text-amber-400">{aggregate.totalEmailsLost.toLocaleString()}</div>
+                      </div>
+                      <div className="rounded-lg bg-slate-800/50 border border-red-500/20 p-3 text-center">
+                        <div className="text-[11px] text-slate-500 mb-0.5">Revenue at Risk</div>
+                        <div className="text-lg font-bold text-red-400">${aggregate.totalRevenueAtRisk.toLocaleString()}/mo</div>
+                      </div>
+                      <div className="rounded-lg bg-slate-800/50 border border-red-500/20 p-3 text-center">
+                        <div className="text-[11px] text-slate-500 mb-0.5">Annual Risk</div>
+                        <div className="text-lg font-bold text-red-400">${aggregate.totalRevenueAtRiskYearly.toLocaleString()}/yr</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Per-Domain Results Table */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
+                    <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-white">Per-Domain Breakdown</span>
+                      <span className="text-xs text-slate-500">{batchResults.filter(r => r.result).length} successful</span>
+                    </div>
+                    <div className="divide-y divide-slate-800/50">
+                      {batchResults.map((br, i) => {
+                        if (!br.result) {
+                          return (
+                            <div key={i} className="px-5 py-3 flex items-center justify-between">
+                              <span className="text-sm text-slate-400">{br.domain}</span>
+                              <span className="text-xs text-red-400">Scan failed</span>
+                            </div>
+                          )
+                        }
+                        const r = br.result
+                        const cfg = RISK_CONFIG[r.riskLevel]
+                        const Icon = cfg.icon
+                        return (
+                          <div key={i} className="px-5 py-3 flex items-center gap-4">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgClass}`}>
+                              <Icon className={`w-4 h-4 ${cfg.textClass}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-white font-medium truncate">{r.domain}</div>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                <span className={`text-xs font-medium ${cfg.textClass}`}>{r.riskLabel}</span>
+                                <span className="text-xs text-slate-500">Score {r.score}/100</span>
+                              </div>
+                            </div>
+                            {/* Pillar mini badges */}
+                            <div className="hidden sm:flex items-center gap-1.5">
+                              {(Object.entries(r.pillars) as [string, PillarResult][]).map(([name, p]) => (
+                                <div
+                                  key={name}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                    p.status === 'pass' ? 'bg-emerald-500/10 text-emerald-400' :
+                                    p.status === 'partial' ? 'bg-amber-500/10 text-amber-400' :
+                                    'bg-red-500/10 text-red-400'
+                                  }`}
+                                >
+                                  {PILLAR_LABELS[name as keyof typeof PILLAR_LABELS]}
+                                </div>
+                              ))}
+                            </div>
+                            {/* Revenue at risk */}
+                            {r.revenueImpact && (
+                              <div className="text-right shrink-0">
+                                <div className="text-sm font-bold text-red-400">
+                                  ${r.revenueImpact.monthly.revenueAtRisk.toLocaleString()}
+                                </div>
+                                <div className="text-[10px] text-slate-500">/month at risk</div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Aggregate Risk Factors */}
+                  {aggregate.riskFactors.length > 0 && (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingDown className="w-4 h-4 text-red-400" />
+                        <span className="text-sm font-semibold text-white">Cross-Domain Risk Factors</span>
+                      </div>
+                      <div className="space-y-3">
+                        {aggregate.riskFactors.map((rf, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
+                              rf.impact === 'critical' ? 'bg-red-400' :
+                              rf.impact === 'high' ? 'bg-orange-400' :
+                              rf.impact === 'medium' ? 'bg-amber-400' :
+                              'bg-emerald-400'
+                            }`} />
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-white">{rf.factor}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                                  rf.impact === 'critical' ? 'bg-red-500/10 text-red-400' :
+                                  rf.impact === 'high' ? 'bg-orange-500/10 text-orange-400' :
+                                  rf.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
+                                  'bg-emerald-500/10 text-emerald-400'
+                                }`}>
+                                  {rf.impact}
+                                </span>
+                                <span className="text-xs text-slate-600">
+                                  — {rf.domains.length} domain{rf.domains.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-400 mt-0.5">{rf.description}</p>
+                              <p className="text-xs text-slate-600 mt-0.5">
+                                Affected: {rf.domains.join(', ')}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Full Monitoring CTA for multi-domain */}
+                  <div className="rounded-xl border border-brand-500/20 bg-gradient-to-r from-brand-600/10 to-brand-500/5 p-5 text-center">
+                    <h4 className="text-base font-bold text-white mb-1">
+                      Losing ${aggregate.totalRevenueAtRiskYearly.toLocaleString()}/year across {aggregate.domainsScanned} domains?
+                    </h4>
+                    <p className="text-sm text-slate-400 mb-4">
+                      Monitor all your domains in one dashboard. Get alerts, fix recommendations, and trend reports.
+                    </p>
+                    <Link
+                      href="/auth/signup"
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+                    >
+                      Start Monitoring All Domains
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
               )}

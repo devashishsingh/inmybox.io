@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   const format = new URL(req.url).searchParams.get('format') || 'csv'
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {

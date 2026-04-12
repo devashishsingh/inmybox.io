@@ -39,7 +39,13 @@ export default function BlogPostPage({ params }: Props) {
   const currentIndex = allPosts.findIndex(p => p.slug === params.slug)
   const related = allPosts.filter((p, i) => i !== currentIndex).slice(0, 3)
 
-  const html = marked(post.content, { gfm: true, breaks: true })
+  // INMYBOX ENHANCEMENT: C2 — sanitize markdown HTML output (defense-in-depth)
+  const rawHtml = marked(post.content, { gfm: true, breaks: true }) as string
+  const html = rawHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/javascript\s*:/gi, '')
 
   return (
     <main className="min-h-screen bg-slate-950">

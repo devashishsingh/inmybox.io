@@ -41,6 +41,31 @@ function resolveTxtFast(hostname: string): Promise<string[][]> {
 
    ═══════════════════════════════════════════════════════════════════════ */
 
+interface RevenueImpact {
+  per100: {
+    delivered: number
+    spam: number
+    rejected: number
+    deliveryRate: number
+  }
+  monthly: {
+    emailVolume: number
+    emailsLost: number
+    potentialLeadsLost: number
+    revenueAtRisk: number
+  }
+  assumptions: {
+    avgLeadValue: number
+    conversionRate: number
+    monthlyVolume: number
+  }
+  riskFactors: {
+    factor: string
+    impact: 'critical' | 'high' | 'medium' | 'low'
+    description: string
+  }[]
+}
+
 interface ScanResult {
   domain: string
   score: number
@@ -66,6 +91,7 @@ interface ScanResult {
     vmcUrl: string | null
     dmarcReady: boolean
   }
+  revenueImpact: RevenueImpact
 }
 
 interface PillarResult {
@@ -559,6 +585,178 @@ async function scoreBimi(domain: string, dmarcPolicy: string | null): Promise<{ 
   return { findings, rawRecord, status, hasRecord: true, logoUrl, vmcUrl, dmarcReady }
 }
 
+function calculateRevenueImpact(
+  totalScore: number,
+  pillars: ScanResult['pillars'],
+  dmarcTags: Record<string, string>,
+): RevenueImpact {
+  // ═══════════════════════════════════════════════════════════════
+  // DELIVERABILITY MODEL
+  //
+  // Based on real-world data from Google Postmaster Tools, Return
+  // Path studies, and Valimail industry research:
+  //
+  //  Missing DMARC + SPF     → ~25-40% spam placement
+  //  DMARC p=none            → ~10-20% spam (monitoring only)
+  //  DMARC p=quarantine      → ~5-10% spam (with proper SPF/DKIM)
+  //  DMARC p=reject + full   → ~1-3% spam (best case)
+  //
+  // Post Feb 2024 (Google/Yahoo bulk sender rules):
+  //  No DMARC at all         → increasingly rejected outright
+  //  No DKIM                 → Gmail penalizes heavily
+  //  SPF +all                → near-guaranteed spam
+  //
+  // We calculate per-pillar penalties and combine them.
+  // ═══════════════════════════════════════════════════════════════
+
+  // Base delivery rate starts at 99% (perfect auth)
+  let spamPenalty = 0      // percentage points pushed to spam
+  let rejectPenalty = 0    // percentage points outright rejected
+
+  // ── DMARC penalties ──
+  if (pillars.dmarc.score === 0) {
+    // No DMARC at all — post-2024, this is increasingly fatal
+    spamPenalty += 18
+    rejectPenalty += 8
+  } else {
+    const policy = dmarcTags.p?.toLowerCase()
+    if (policy === 'none') {
+      spamPenalty += 10    // monitoring only, no enforcement
+    } else if (policy === 'quarantine') {
+      spamPenalty += 3     // good but not best
+    }
+    // reject = no penalty (best)
+
+    if (!dmarcTags.rua) {
+      spamPenalty += 2     // no reporting = blind spot
+    }
+    if (!dmarcTags.sp) {
+      spamPenalty += 1     // subdomain gap
+    }
+  }
+
+  // ── SPF penalties ──
+  if (pillars.spf.score === 0) {
+    spamPenalty += 15
+    rejectPenalty += 5
+  } else if (pillars.spf.score < 15) {
+    // SPF exists but weak mechanism
+    spamPenalty += 8
+  } else if (pillars.spf.score < 25) {
+    spamPenalty += 3       // soft-fail or approaching lookup limit
+  }
+
+  // ── DKIM penalties ──
+  if (pillars.dkim.score === 0) {
+    // No DKIM — Gmail specifically penalizes this heavily
+    spamPenalty += 14
+    rejectPenalty += 4
+  }
+
+  // ── Config penalties ──
+  if (pillars.config.score < 4) {
+    spamPenalty += 3       // relaxed alignment + partial coverage
+  } else if (pillars.config.score < 8) {
+    spamPenalty += 1
+  }
+
+  // Cap penalties at reasonable bounds
+  spamPenalty = Math.min(spamPenalty, 55)
+  rejectPenalty = Math.min(rejectPenalty, 30)
+
+  // Calculate per-100 emails
+  const rejected = Math.round(rejectPenalty)
+  const spam = Math.round(spamPenalty)
+  const delivered = Math.max(100 - rejected - spam, 5) // At least 5% get through
+  const deliveryRate = delivered
+
+  // ── Revenue assumptions ──
+  // Conservative B2B SaaS/service values based on industry benchmarks:
+  //   - Average lead value: $25 (cost per lead for B2B email campaigns)
+  //   - Email-to-lead conversion: 2.5% (industry avg 1-5%)
+  //   - Monthly volume: 10,000 (SMB average cold/warm outreach)
+  const AVG_LEAD_VALUE = 25
+  const CONVERSION_RATE = 2.5
+  const MONTHLY_VOLUME = 10000
+
+  // Monthly projections
+  const emailsLostPer100 = spam + rejected
+  const monthlyEmailsLost = Math.round((emailsLostPer100 / 100) * MONTHLY_VOLUME)
+  const potentialLeadsLost = Math.round(monthlyEmailsLost * (CONVERSION_RATE / 100))
+  const revenueAtRisk = potentialLeadsLost * AVG_LEAD_VALUE
+
+  // ── Risk factors (specific, actionable) ──
+  const riskFactors: RevenueImpact['riskFactors'] = []
+
+  if (pillars.dmarc.score === 0) {
+    riskFactors.push({
+      factor: 'No DMARC Record',
+      impact: 'critical',
+      description: 'Google & Yahoo now require DMARC for bulk senders. Without it, up to 26% of your emails may land in spam or be rejected.',
+    })
+  } else if (dmarcTags.p?.toLowerCase() === 'none') {
+    riskFactors.push({
+      factor: 'DMARC Policy: Monitor Only',
+      impact: 'high',
+      description: 'p=none only monitors — it doesn\'t stop spoofing. Receivers give less trust to domains without enforcement, costing ~10% deliverability.',
+    })
+  }
+
+  if (pillars.spf.score === 0) {
+    riskFactors.push({
+      factor: 'Missing SPF Record',
+      impact: 'critical',
+      description: 'Without SPF, receiving servers cannot verify authorized senders. Expect ~20% of emails to be flagged or rejected.',
+    })
+  } else if (pillars.spf.percentage < 60) {
+    riskFactors.push({
+      factor: 'Weak SPF Configuration',
+      impact: 'high',
+      description: 'Soft-fail (~all) or neutral (?all) mechanisms provide limited protection. Hard-fail (-all) significantly improves deliverability.',
+    })
+  }
+
+  if (pillars.dkim.score === 0) {
+    riskFactors.push({
+      factor: 'No DKIM Signing',
+      impact: 'critical',
+      description: 'Gmail penalizes unsigned emails heavily. Without DKIM, ~18% of emails to Gmail users may go to spam or be rejected.',
+    })
+  }
+
+  if (pillars.config.score < 4 && pillars.dmarc.score > 0) {
+    riskFactors.push({
+      factor: 'Relaxed Alignment & Partial Coverage',
+      impact: 'medium',
+      description: 'Relaxed DKIM/SPF alignment and partial pct coverage weaken your DMARC enforcement effectiveness by ~3-5%.',
+    })
+  }
+
+  if (totalScore >= 85 && riskFactors.length === 0) {
+    riskFactors.push({
+      factor: 'Strong Email Authentication',
+      impact: 'low',
+      description: 'Your domain has robust email authentication. Minimal deliverability risk from DNS configuration.',
+    })
+  }
+
+  return {
+    per100: { delivered, spam, rejected, deliveryRate },
+    monthly: {
+      emailVolume: MONTHLY_VOLUME,
+      emailsLost: monthlyEmailsLost,
+      potentialLeadsLost,
+      revenueAtRisk,
+    },
+    assumptions: {
+      avgLeadValue: AVG_LEAD_VALUE,
+      conversionRate: CONVERSION_RATE,
+      monthlyVolume: MONTHLY_VOLUME,
+    },
+    riskFactors,
+  }
+}
+
 function classifyRisk(score: number): { level: ScanResult['riskLevel']; label: string } {
   if (score >= 85) return { level: 'healthy', label: 'Healthy' }
   if (score >= 60) return { level: 'medium', label: 'Needs Attention' }
@@ -615,17 +813,21 @@ export async function GET(req: NextRequest) {
       ...bimiResult.findings,
     ]
 
+    // 6. Calculate revenue impact
+    const pillars = {
+      dmarc: dmarcScore.pillar,
+      spf: spfScore.pillar,
+      dkim: dkimResult.pillar,
+      config: configScore.pillar,
+    }
+    const revenueImpact = calculateRevenueImpact(totalScore, pillars, dmarcTags)
+
     const result: ScanResult = {
       domain,
       score: totalScore,
       riskLevel: risk.level,
       riskLabel: risk.label,
-      pillars: {
-        dmarc: dmarcScore.pillar,
-        spf: spfScore.pillar,
-        dkim: dkimResult.pillar,
-        config: configScore.pillar,
-      },
+      pillars,
       findings,
       rawRecords: {
         dmarc: dmarcRaw,
@@ -640,6 +842,7 @@ export async function GET(req: NextRequest) {
         vmcUrl: bimiResult.vmcUrl,
         dmarcReady: bimiResult.dmarcReady,
       },
+      revenueImpact,
     }
 
     // Save scan to DB (fire-and-forget — don't slow down response)

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const userId = (session.user as any).id
+    const userId = session.user.id
     const ctx = await resolveTenantContext(userId)
 
     if (!ctx) {
@@ -47,9 +47,10 @@ export async function POST(req: NextRequest) {
       errors: result.errors,
     })
   } catch (error: any) {
-    console.error('Upload error:', error)
+    console.error('[upload] Report upload failed:', error.message)
+    // INMYBOX ENHANCEMENT: C5 — do not expose raw error details to client
     return NextResponse.json(
-      { error: error.message || 'Upload failed' },
+      { error: 'Upload failed. Please try again.' },
       { status: 500 }
     )
   }

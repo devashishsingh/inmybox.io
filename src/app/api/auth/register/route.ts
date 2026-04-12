@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Registration error:', error)
+    // INMYBOX ENHANCEMENT: H2 — log error type only, not full object (may contain PII)
+    console.error('[register] Registration failed:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
       { error: 'Registration failed. Please try again.' },
       { status: 500 }

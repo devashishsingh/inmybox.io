@@ -275,12 +275,40 @@ export async function validateBimiAssets(
     details: {},
   }
 
+  // INMYBOX ENHANCEMENT: C4 — SSRF protection: block private/internal URLs
+  const isBlockedUrl = (url: string): boolean => {
+    try {
+      const parsed = new URL(url)
+      const hostname = parsed.hostname.toLowerCase()
+      // Block localhost, private IPs, link-local, and metadata endpoints
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '0.0.0.0' ||
+        hostname === '[::1]' ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('169.254.') ||
+        hostname === 'metadata.google.internal' ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+      ) {
+        return true
+      }
+      return false
+    } catch {
+      return true // malformed URL
+    }
+  }
+
   // Validate logo
   if (logoUrl) {
     result.details.logoUrl = logoUrl
 
     if (!logoUrl.startsWith('https://')) {
       result.logoError = 'Logo URL must use HTTPS'
+      result.details.logoAccessible = false
+    } else if (isBlockedUrl(logoUrl)) {
+      result.logoError = 'Logo URL points to a private or internal address'
       result.details.logoAccessible = false
     } else {
       try {
@@ -335,6 +363,10 @@ export async function validateBimiAssets(
     if (!certificateUrl.startsWith('https://')) {
       result.certValid = false
       result.certError = 'Certificate URL must use HTTPS'
+      result.details.certAccessible = false
+    } else if (isBlockedUrl(certificateUrl)) {
+      result.certValid = false
+      result.certError = 'Certificate URL points to a private or internal address'
       result.details.certAccessible = false
     } else {
       try {

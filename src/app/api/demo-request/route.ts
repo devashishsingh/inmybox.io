@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Demo request error:', error)
+    // INMYBOX ENHANCEMENT: H2 — log error type only, not full object (may contain PII)
+    console.error('[demo-request] Failed:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
       { error: 'Something went wrong. Please try again.' },
       { status: 500 }

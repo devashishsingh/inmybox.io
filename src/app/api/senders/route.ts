@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Sender ID required' }, { status: 400 })
   }
 
-  const userId = (session.user as any).id
+  const userId = session.user.id
   const ctx = await resolveTenantContext(userId)
 
   if (!ctx) {
@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
     const enrichment = await enrichIp(ip, true) // force fresh lookup
     return NextResponse.json({ enrichment })
   } catch (err: any) {
-    return NextResponse.json({ error: 'Lookup failed', detail: err.message }, { status: 500 })
+    console.error('[senders] IP enrichment lookup failed:', err.message)
+    // INMYBOX ENHANCEMENT: C5 — do not expose raw error details to client
+    return NextResponse.json({ error: 'Lookup failed' }, { status: 500 })
   }
 }

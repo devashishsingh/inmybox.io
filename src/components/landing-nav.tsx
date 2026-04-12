@@ -1,26 +1,25 @@
 'use client'
 
+// INMYBOX HERO ENHANCEMENT — Scroll-based glassmorphism nav
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X, Mail, ArrowRight } from 'lucide-react'
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
+    const handleScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const isDarkHero = !scrolled
 
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm'
+          ? 'bg-[rgba(8,12,24,0.85)] backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-white/[0.07]'
           : 'bg-transparent'
       }`}
     >
@@ -31,7 +30,7 @@ export function Navbar() {
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center shadow-md shadow-brand-600/20">
               <Mail className="w-4 h-4 text-white" />
             </div>
-            <span className={`text-lg font-bold tracking-tight transition-colors ${isDarkHero ? 'text-white' : 'text-slate-900'}`}>
+            <span className="text-lg font-bold tracking-tight text-white">
               Inmybox
             </span>
           </Link>
@@ -45,7 +44,7 @@ export function Navbar() {
                 <Component
                   key={item.label}
                   href={item.href}
-                  className={`text-sm font-medium transition-colors ${isDarkHero ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-brand-600'}`}
+                  className="text-sm font-medium transition-colors text-slate-300 hover:text-white"
                 >
                   {item.label}
                 </Component>
@@ -57,13 +56,13 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/auth/signin"
-              className={`text-sm font-medium transition-colors ${isDarkHero ? 'text-slate-300 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
+              className="text-sm font-medium transition-colors text-slate-300 hover:text-white"
             >
               Sign In
             </Link>
             <Link
               href="/auth/signup"
-              className={`text-sm font-medium px-4 py-2 rounded-lg border transition-all ${isDarkHero ? 'border-slate-600 text-slate-300 hover:text-white hover:border-slate-500' : 'border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400'}`}
+              className="text-sm font-medium px-4 py-2 rounded-lg border transition-all border-slate-600 text-slate-300 hover:text-white hover:border-slate-500"
             >
               Start Free
             </Link>
@@ -79,7 +78,7 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className={`md:hidden p-2 rounded-lg transition-colors ${isDarkHero ? 'text-slate-300 hover:bg-white/10' : 'text-slate-500 hover:bg-slate-100'}`}
+            className="md:hidden p-2 rounded-lg transition-colors text-slate-300 hover:bg-white/10"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

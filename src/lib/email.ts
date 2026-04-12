@@ -106,7 +106,8 @@ export async function sendLeadNotification(lead: {
         </div>
       `,
     })
-    console.log(`[email] Lead notification sent for ${lead.email}`)
+    // INMYBOX ENHANCEMENT: H2 — mask email in log
+    console.log(`[email] Lead notification sent successfully`)
   } catch (err) {
     console.error('[email] Failed to send lead notification:', err)
   }

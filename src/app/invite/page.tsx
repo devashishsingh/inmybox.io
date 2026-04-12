@@ -100,18 +100,18 @@ function InviteContent() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
-                  <input type="email" disabled value={invitation.email}
+                  <label htmlFor="invite-email" className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+                  <input id="invite-email" type="email" disabled value={invitation.email}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Your Name *</label>
-                  <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  <label htmlFor="invite-name" className="block text-sm font-medium text-slate-300 mb-1.5">Your Name *</label>
+                  <input id="invite-name" type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="John Doe" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Password *</label>
-                  <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  <label htmlFor="invite-password" className="block text-sm font-medium text-slate-300 mb-1.5">Password *</label>
+                  <input id="invite-password" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="Min 6 characters" />
                 </div>
                 <button type="submit" disabled={state === 'accepting'}
