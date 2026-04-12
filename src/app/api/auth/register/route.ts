@@ -4,14 +4,41 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { createTenant, generateSlug } from '@/lib/services/tenant.service'
 
+// INMYBOX ENHANCEMENT — Phase 3: Rate limiter to prevent signup abuse (3 registrations per 15 min per IP)
+const registerRateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const REGISTER_RATE_WINDOW = 15 * 60_000 // 15 minutes
+const REGISTER_RATE_MAX = 3
+
+function isRegisterRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = registerRateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    registerRateLimitMap.set(ip, { count: 1, resetAt: now + REGISTER_RATE_WINDOW })
+    return false
+  }
+  entry.count++
+  return entry.count > REGISTER_RATE_MAX
+}
+
+// INMYBOX ENHANCEMENT — Phase 3: Server-side password complexity validation
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine((p) => /[A-Z]/.test(p), 'Password must contain at least one uppercase letter')
+    .refine((p) => /[0-9]/.test(p), 'Password must contain at least one number')
+    .refine((p) => /[^A-Za-z0-9]/.test(p), 'Password must contain at least one special character'),
   name: z.string().min(1, 'Name is required'),
   company: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
+  // INMYBOX ENHANCEMENT — Phase 3: Rate limit registration endpoint
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  if (isRegisterRateLimited(ip)) {
+    return NextResponse.json({ error: 'Too many registration attempts. Please try again later.' }, { status: 429 })
+  }
+
   try {
     const body = await req.json()
     const parsed = registerSchema.safeParse(body)

@@ -1,3 +1,4 @@
+// INMYBOX ENHANCEMENT — Phase 3 M9: Cookie consent via httpOnly server-side cookie (replaces localStorage)
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,20 +7,27 @@ export function CookieBanner() {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    const consent = localStorage.getItem('inmybox-cookie-consent')
-    if (!consent) {
+    // Check if consent cookie exists by looking for it in document.cookie
+    // (the httpOnly cookie won't be visible, so we check a companion non-httpOnly flag)
+    const hasConsent = document.cookie.split(';').some((c) => c.trim().startsWith('inmybox-consent-set='))
+    if (!hasConsent) {
       const timer = setTimeout(() => setShow(true), 1500)
       return () => clearTimeout(timer)
     }
   }, [])
 
-  const accept = () => {
-    localStorage.setItem('inmybox-cookie-consent', 'accepted')
-    setShow(false)
-  }
-
-  const decline = () => {
-    localStorage.setItem('inmybox-cookie-consent', 'declined')
+  const setConsent = async (value: 'accepted' | 'declined') => {
+    try {
+      await fetch('/api/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consent: value }),
+      })
+      // Set a visible companion cookie so we know consent was given (non-sensitive flag only)
+      document.cookie = `inmybox-consent-set=1; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax`
+    } catch {
+      // Fallback: still hide banner even if API fails
+    }
     setShow(false)
   }
 
@@ -36,13 +44,13 @@ export function CookieBanner() {
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={decline}
+            onClick={() => setConsent('declined')}
             className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
           >
             Decline
           </button>
           <button
-            onClick={accept}
+            onClick={() => setConsent('accepted')}
             className="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition-colors shadow-sm"
           >
             Accept

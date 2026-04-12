@@ -6,6 +6,7 @@ export default withAuth({
   },
 })
 
+// INMYBOX ENHANCEMENT — Phase 3: Added /api/bimi to consolidate auth at middleware layer
 export const config = {
   matcher: [
     '/dashboard/:path*',
@@ -18,5 +19,6 @@ export const config = {
     '/api/action-items/:path*',
     '/api/admin/:path*',
     '/api/onboarding/:path*',
+    '/api/bimi/:path*',
   ],
 }

@@ -14,10 +14,15 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(result)
 }
 
+// INMYBOX ENHANCEMENT — Phase 3: Server-side password complexity validation
 const acceptSchema = z.object({
   token: z.string().min(1),
   name: z.string().min(1, 'Name is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .refine((p) => /[A-Z]/.test(p), 'Password must contain at least one uppercase letter')
+    .refine((p) => /[0-9]/.test(p), 'Password must contain at least one number')
+    .refine((p) => /[^A-Za-z0-9]/.test(p), 'Password must contain at least one special character'),
 })
 
 // POST /api/invite/accept — accept invitation

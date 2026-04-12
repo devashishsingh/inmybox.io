@@ -110,9 +110,10 @@ function InviteContent() {
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="John Doe" />
                 </div>
                 <div>
+                  {/* INMYBOX ENHANCEMENT — Phase 3: minLength 6→8 to match backend Zod validation */}
                   <label htmlFor="invite-password" className="block text-sm font-medium text-slate-300 mb-1.5">Password *</label>
-                  <input id="invite-password" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="Min 6 characters" />
+                  <input id="invite-password" type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="Min 8 characters" />
                 </div>
                 <button type="submit" disabled={state === 'accepting'}
                   className="w-full px-4 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 disabled:opacity-50 transition-colors">
