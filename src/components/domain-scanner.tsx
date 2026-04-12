@@ -250,7 +250,7 @@ function PillarDonut({ pillars }: { pillars: ScanResult['pillars'] }) {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-sm text-slate-400">Breakdown</span>
         <span className="text-2xl font-bold text-white">{totalEarned}</span>
-        <span className="text-xs text-slate-500">/ 100</span>
+        <span className="text-xs text-slate-400">/ 100</span>
       </div>
     </div>
   )
@@ -310,11 +310,11 @@ function FindingsSection({ findings }: { findings: Finding[] }) {
           >
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-white">{group.category}</span>
-              <span className="text-xs text-slate-500">{group.items.length} finding{group.items.length > 1 ? 's' : ''}</span>
+              <span className="text-xs text-slate-400">{group.items.length} finding{group.items.length > 1 ? 's' : ''}</span>
             </div>
             {expanded === group.category
-              ? <ChevronUp className="w-4 h-4 text-slate-500" />
-              : <ChevronDown className="w-4 h-4 text-slate-500" />
+              ? <ChevronUp className="w-4 h-4 text-slate-400" />
+              : <ChevronDown className="w-4 h-4 text-slate-400" />
             }
           </button>
           {expanded === group.category && (
@@ -368,7 +368,7 @@ function RawRecords() {
     <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-sm font-semibold text-white">Raw DNS Records</span>
-        <span className="flex items-center gap-1.5 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5 text-xs text-slate-400">
           <Lock className="w-3 h-3" />
           Pro feature
         </span>
@@ -378,11 +378,11 @@ function RawRecords() {
           {/* Blurred preview */}
           <div className="space-y-3 select-none blur-[6px] pointer-events-none" aria-hidden>
             <div>
-              <div className="text-xs text-slate-500 mb-1">DMARC (_dmarc.)</div>
+              <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
               <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:...</div>
             </div>
             <div>
-              <div className="text-xs text-slate-500 mb-1">SPF (TXT)</div>
+              <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
               <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com ~all</div>
             </div>
           </div>
@@ -416,7 +416,7 @@ function ScoringMethodology() {
           <Info className="w-4 h-4 text-brand-400" />
           <span className="text-sm font-semibold text-white">How We Score Your Domain</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+        {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
       </button>
       {open && (
         <div className="px-4 pb-5 border-t border-slate-800 pt-4 space-y-5">
@@ -435,9 +435,9 @@ function ScoringMethodology() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left pb-2 text-slate-500 font-medium">Check</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Points</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Condition</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Check</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Points</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Condition</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-400 divide-y divide-slate-800/50">
@@ -460,9 +460,9 @@ function ScoringMethodology() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left pb-2 text-slate-500 font-medium">Check</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Points</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Condition</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Check</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Points</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Condition</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-400 divide-y divide-slate-800/50">
@@ -484,9 +484,9 @@ function ScoringMethodology() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left pb-2 text-slate-500 font-medium">Check</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Points</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Condition</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Check</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Points</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Condition</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-400 divide-y divide-slate-800/50">
@@ -509,9 +509,9 @@ function ScoringMethodology() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left pb-2 text-slate-500 font-medium">Check</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Points</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Condition</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Check</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Points</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Condition</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-400 divide-y divide-slate-800/50">
@@ -533,9 +533,9 @@ function ScoringMethodology() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left pb-2 text-slate-500 font-medium">Check</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Status</th>
-                    <th className="text-left pb-2 text-slate-500 font-medium">Requirement</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Check</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Status</th>
+                    <th className="text-left pb-2 text-slate-400 font-medium">Requirement</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-400 divide-y divide-slate-800/50">

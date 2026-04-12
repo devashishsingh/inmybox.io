@@ -24,6 +24,7 @@
     "framer-motion": "^11.2.6",
     "gray-matter": "^4.0.3",
     "imapflow": "^1.2.18",
+    "isomorphic-dompurify": "^3.8.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "jszip": "^3.10.1",

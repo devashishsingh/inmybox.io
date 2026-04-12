@@ -72,7 +72,7 @@ export default function BlogPage() {
                   <div className="w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto mb-3">
                     <Mail className="w-8 h-8 text-brand-400" />
                   </div>
-                  <span className="text-sm text-slate-500">Featured</span>
+                  <span className="text-sm text-slate-400">Featured</span>
                 </div>
               </div>
 
@@ -81,7 +81,7 @@ export default function BlogPage() {
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20">
                     {featured.category}
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-400">
                     {new Date(featured.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
@@ -94,7 +94,7 @@ export default function BlogPage() {
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <div className="flex items-center gap-4 text-xs text-slate-400">
                     <span>{featured.author}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -166,8 +166,8 @@ export default function BlogPage() {
                       </p>
 
                       <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800/50">
-                        <span className="text-xs text-slate-500">{post.author}</span>
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <span className="text-xs text-slate-400">{post.author}</span>
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {post.readingTime}
                         </span>
@@ -211,7 +211,7 @@ export default function BlogPage() {
             </div>
             <span className="text-sm font-semibold text-white">Inmybox</span>
           </div>
-          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} Inmybox. All rights reserved.</p>
+          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Inmybox. All rights reserved.</p>
         </div>
       </footer>
     </main>

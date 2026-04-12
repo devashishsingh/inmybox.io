@@ -53,7 +53,7 @@ export function AdminSidebar() {
           </div>
           <div>
             <span className="text-lg font-bold text-white tracking-tight">Admin</span>
-            <span className="text-xs text-slate-500 block -mt-0.5">Inmybox</span>
+            <span className="text-xs text-slate-400 block -mt-0.5">Inmybox</span>
           </div>
         </Link>
       </div>
@@ -73,7 +73,7 @@ export function AdminSidebar() {
                   : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <item.icon className={`w-[18px] h-[18px] ${active ? 'text-red-400' : 'text-slate-500'}`} />
+              <item.icon className={`w-[18px] h-[18px] ${active ? 'text-red-400' : 'text-slate-400'}`} />
               {item.label}
             </Link>
           )
@@ -86,7 +86,7 @@ export function AdminSidebar() {
           href="/dashboard"
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all"
         >
-          <Mail className="w-[18px] h-[18px] text-slate-500" />
+          <Mail className="w-[18px] h-[18px] text-slate-400" />
           Client Dashboard
         </Link>
       </div>
@@ -105,11 +105,11 @@ export function AdminSidebar() {
               <div className="text-sm font-medium text-white truncate">
                 {session?.user?.name || 'Admin'}
               </div>
-              <div className="text-xs text-slate-500 truncate">
+              <div className="text-xs text-slate-400 truncate">
                 Super Admin
               </div>
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
           </button>
 
           {userMenuOpen && (

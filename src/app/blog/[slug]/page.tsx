@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { marked } from 'marked'
+import DOMPurify from 'isomorphic-dompurify'
 import { getAllPosts, getPostBySlug } from '@/lib/blog'
 import { Navbar } from '@/components/landing-nav'
 import { Mail, ArrowLeft, Clock, Tag, ArrowRight } from 'lucide-react'
@@ -39,13 +40,13 @@ export default function BlogPostPage({ params }: Props) {
   const currentIndex = allPosts.findIndex(p => p.slug === params.slug)
   const related = allPosts.filter((p, i) => i !== currentIndex).slice(0, 3)
 
-  // INMYBOX ENHANCEMENT: C2 — sanitize markdown HTML output (defense-in-depth)
+  // INMYBOX ENHANCEMENT: C2 — Phase 6: DOMPurify sanitization (replaces regex)
   const rawHtml = marked(post.content, { gfm: true, breaks: true }) as string
-  const html = rawHtml
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/javascript\s*:/gi, '')
+  const html = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: ['h1','h2','h3','h4','h5','h6','p','a','ul','ol','li','strong','em','code','pre','blockquote','img','table','thead','tbody','tr','th','td','br','hr','div','span','sup','sub','del','ins'],
+    ALLOWED_ATTR: ['href','src','alt','title','class','id','target','rel','width','height'],
+    ALLOW_DATA_ATTR: false,
+  })
 
   return (
     <main className="min-h-screen bg-slate-950">
@@ -67,14 +68,14 @@ export default function BlogPostPage({ params }: Props) {
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20">
               {post.category}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               {new Date(post.date).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
               })}
             </span>
-            <span className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="text-xs text-slate-400 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {post.readingTime}
             </span>
@@ -96,7 +97,7 @@ export default function BlogPostPage({ params }: Props) {
             </div>
             <div>
               <div className="text-sm text-white font-medium">{post.author}</div>
-              <div className="text-xs text-slate-500">Inmybox</div>
+              <div className="text-xs text-slate-400">Inmybox</div>
             </div>
           </div>
         </div>
@@ -128,7 +129,7 @@ export default function BlogPostPage({ params }: Props) {
           {/* Tags */}
           {post.tags.length > 0 && (
             <div className="mt-12 pt-8 border-t border-slate-800 flex items-center gap-2 flex-wrap">
-              <Tag className="w-4 h-4 text-slate-500" />
+              <Tag className="w-4 h-4 text-slate-400" />
               {post.tags.map((tag) => (
                 <span
                   key={tag}
@@ -181,14 +182,14 @@ export default function BlogPostPage({ params }: Props) {
                       <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700/50">
                         {p.category}
                       </span>
-                      <span className="text-xs text-slate-600">
+                      <span className="text-xs text-slate-400">
                         {new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
                     <h4 className="text-base font-semibold text-white mb-2 group-hover:text-brand-400 transition-colors line-clamp-2">
                       {p.title}
                     </h4>
-                    <p className="text-sm text-slate-500 line-clamp-2">{p.excerpt}</p>
+                    <p className="text-sm text-slate-400 line-clamp-2">{p.excerpt}</p>
                   </article>
                 </Link>
               ))}
@@ -206,7 +207,7 @@ export default function BlogPostPage({ params }: Props) {
             </div>
             <span className="text-sm font-semibold text-white">Inmybox</span>
           </div>
-          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} Inmybox. All rights reserved.</p>
+          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Inmybox. All rights reserved.</p>
         </div>
       </footer>
     </main>

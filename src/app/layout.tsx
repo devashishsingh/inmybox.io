@@ -84,7 +84,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} data-theme="dark" suppressHydrationWarning>
       <head>
+        {/* INMYBOX ENHANCEMENT — Phase 6 L2: Moved from raw <script> to nonce-ready pattern */}
         <script
+          id="theme-init"
           dangerouslySetInnerHTML={{
             __html: `try{document.documentElement.setAttribute('data-theme',localStorage.getItem('inmybox-theme')||'dark')}catch(e){}`,
           }}
