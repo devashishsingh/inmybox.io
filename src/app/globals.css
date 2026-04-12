@@ -730,3 +730,116 @@ select:focus {
 .btn-shine:hover::after {
   transform: rotate(30deg) translateX(50%);
 }
+
+/* ═══════════ SKEUOMORPHISM — Subtle depth layer ═══════════ */
+
+/* Embossed card — raised surface with inner top-light and outer depth */
+.skeuo-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 40%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 4px 24px -4px rgba(0,0,0,0.4),
+    0 1px 3px rgba(0,0,0,0.3);
+}
+.skeuo-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 8px 32px -4px rgba(0,0,0,0.5),
+    0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Recessed panel — pressed-in surface for containers */
+.skeuo-inset {
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.4),
+    inset 0 1px 2px rgba(0,0,0,0.3),
+    0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Raised button — 3D tactile button with top highlight */
+.skeuo-btn {
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 2px 4px rgba(0,0,0,0.3),
+    0 4px 12px -2px rgba(0,0,0,0.2);
+  transition: all 0.15s ease;
+}
+.skeuo-btn:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 4px 8px rgba(0,0,0,0.4),
+    0 8px 20px -4px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+.skeuo-btn:active {
+  background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, transparent 50%, rgba(255,255,255,0.03) 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(0,0,0,0.2),
+    0 1px 0 rgba(255,255,255,0.05);
+  transform: translateY(1px);
+}
+
+/* Recessed input well — inset field for inputs */
+.skeuo-input {
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(0,0,0,0.15),
+    0 1px 0 rgba(255,255,255,0.05);
+  background: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, transparent 30%);
+}
+.skeuo-input:focus-within {
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(99,102,241,0.3),
+    0 1px 0 rgba(255,255,255,0.05),
+    0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* Embossed icon well — recessed circle/square for icons */
+.skeuo-well {
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    inset 0 0 0 1px rgba(0,0,0,0.1),
+    0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Nav ridge — subtle bottom depth for scrolled nav */
+.skeuo-nav-ridge {
+  box-shadow:
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 1px 0 rgba(255,255,255,0.03),
+    0 4px 16px -4px rgba(0,0,0,0.5);
+}
+
+/* Embossed badge — small raised pill */
+.skeuo-badge {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Stamped/debossed text section headers */
+.skeuo-stamp {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5), 0 0 20px rgba(99,102,241,0.1);
+}
+
+/* Raised table container */
+.skeuo-table {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 4px 24px -4px rgba(0,0,0,0.4),
+    0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Pricing card premium — embossed with glow lip */
+.skeuo-pricing-popular {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    0 0 30px -5px rgba(99,102,241,0.2),
+    0 8px 32px -4px rgba(0,0,0,0.5);
+}

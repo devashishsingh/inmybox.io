@@ -19,7 +19,7 @@ export function Navbar() {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-[rgba(8,12,24,0.85)] backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-white/[0.07]'
+          ? 'bg-[rgba(8,12,24,0.85)] backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-white/[0.07] skeuo-nav-ridge'
           : 'bg-transparent'
       }`}
     >
@@ -68,7 +68,7 @@ export function Navbar() {
             </Link>
             <Link
               href="/demo"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-500/25"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-500/25 skeuo-btn"
             >
               Request Demo
               <ArrowRight className="w-3.5 h-3.5" />

@@ -207,7 +207,7 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
   const displayRevYear = expanded ? revenueLostYear : animRevYear
 
   return (
-    <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm p-4 mb-3">
+    <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm p-4 mb-3 skeuo-inset">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <span className="text-sm">📧</span>
@@ -354,7 +354,7 @@ export default function LandingPage() {
             {/* Left — Copy + Calculator + Scanner */}
             <div className="text-center lg:text-left">
               {/* INMYBOX HERO ENHANCEMENT — Urgency badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold tracking-wide">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold tracking-wide skeuo-badge">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 Google &amp; Microsoft now enforcing DMARC — Is your domain ready?
               </div>
@@ -375,23 +375,23 @@ export default function LandingPage() {
 
               {/* Trust badges */}
               <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 skeuo-badge">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   <span className="text-[11px] text-emerald-300 font-medium">SOC 2 Ready</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 skeuo-badge">
                   <Star className="w-3 h-3 text-amber-400" />
                   <span className="text-[11px] text-amber-300 font-medium">4.8/5 Rating</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 skeuo-badge">
                   <Globe className="w-3 h-3 text-brand-400" />
                   <span className="text-[11px] text-brand-300 font-medium">130+ Countries</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30 skeuo-badge">
                   <CreditCard className="w-3 h-3 text-slate-400" />
                   <span className="text-[11px] text-slate-300 font-medium">No credit card</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30 skeuo-badge">
                   <Clock className="w-3 h-3 text-slate-400" />
                   <span className="text-[11px] text-slate-300 font-medium">Results in seconds</span>
                 </div>
@@ -438,7 +438,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="relative animate-float-sm dashboard-3d depth-shadow rounded-2xl">
+              <div className="relative animate-float-sm dashboard-3d depth-shadow rounded-2xl skeuo-card">
                 <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
                   {/* Window chrome */}
                   <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-900/80">
@@ -649,8 +649,8 @@ export default function LandingPage() {
               },
             ].map((item, i) => (
               <AnimateOnScroll key={item.title} delay={i * 100}>
-                <div className="card-hover bg-slate-900/50 rounded-2xl border border-slate-800 p-7 h-full text-center">
-                  <div className={`w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center mb-5 mx-auto`}>
+                <div className="card-hover skeuo-card bg-slate-900/50 rounded-2xl border border-slate-800 p-7 h-full text-center">
+                  <div className={`w-14 h-14 rounded-2xl skeuo-well ${item.bg} flex items-center justify-center mb-5 mx-auto`}>
                     <item.icon className={`w-7 h-7 ${item.color}`} />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-3">{item.title}</h3>
@@ -697,9 +697,9 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {/* Google */}
             <AnimateOnScroll delay={0}>
-              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover skeuo-card">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 skeuo-well flex items-center justify-center">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -736,9 +736,9 @@ export default function LandingPage() {
 
             {/* Yahoo */}
             <AnimateOnScroll delay={120}>
-              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover skeuo-card">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 skeuo-well flex items-center justify-center">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#7B1FA2">
                       <path d="M13.131 7.894l3.478-7.142h-3.478L10.96 5.27 8.791.752H5.097l3.675 7.142v5.054h1.29V7.894h3.069zM16.744 6.068h2.652v6.88h-2.652zM18.07 2.084c-.894 0-1.46.563-1.46 1.345 0 .775.548 1.337 1.44 1.337h.02c.913 0 1.463-.562 1.463-1.337-.02-.782-.55-1.345-1.463-1.345z"/>
                     </svg>
@@ -772,9 +772,9 @@ export default function LandingPage() {
 
             {/* Microsoft */}
             <AnimateOnScroll delay={240}>
-              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover">
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 h-full flex flex-col card-hover skeuo-card">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-cyan-500/10 skeuo-well flex items-center justify-center">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
                       <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
                       <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
@@ -823,7 +823,7 @@ export default function LandingPage() {
               <div className="mt-6">
                 <Link
                   href="/demo"
-                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-brand-600 text-white rounded-xl hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 hover:-translate-y-0.5 skeuo-btn"
                 >
                   Check Your DMARC Compliance
                   <ArrowRight className="w-4 h-4" />
@@ -861,8 +861,8 @@ export default function LandingPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25'
-                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/50'
+                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25 skeuo-btn'
+                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/50 skeuo-badge'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -902,7 +902,7 @@ export default function LandingPage() {
 
               {/* Right — Visual preview */}
               <div className="relative">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl skeuo-card">
                   <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-900/80">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
@@ -1034,7 +1034,7 @@ export default function LandingPage() {
           </AnimateOnScroll>
 
           <AnimateOnScroll>
-            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/50">
+            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/50 skeuo-table">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-800">
@@ -1096,7 +1096,7 @@ export default function LandingPage() {
               { ref: c3.ref, display: c3.display, label: 'Data Points Analyzed', sub: 'PER DAY' },
               { ref: c4.ref, display: c4.display, label: 'Domains Protected', sub: 'WORLDWIDE' },
             ].map((stat, i) => (
-              <div key={i} ref={stat.ref} className="text-center p-6 rounded-2xl bg-slate-900/50 border border-slate-800 card-hover">
+              <div key={i} ref={stat.ref} className="text-center p-6 rounded-2xl bg-slate-900/50 border border-slate-800 card-hover skeuo-card">
                 <div className="text-3xl md:text-4xl font-bold text-brand-400 mb-2">{stat.display}</div>
                 <div className="text-sm text-white font-medium">{stat.label}</div>
                 <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">{stat.sub}</div>
@@ -1150,7 +1150,7 @@ export default function LandingPage() {
             ].map((item, i) => (
               <AnimateOnScroll key={item.step} delay={i * 150}>
                 <div className="relative text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 border-2 border-brand-500/20 mb-6 relative">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 border-2 border-brand-500/20 mb-6 relative skeuo-well">
                     <item.icon className="w-7 h-7 text-brand-400" />
                     <span className="absolute -top-2 -right-2 w-6 h-6 bg-brand-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
                       {i + 1}
@@ -1197,7 +1197,7 @@ export default function LandingPage() {
                       : 'opacity-0 absolute inset-0 translate-y-4 pointer-events-none'
                   }`}
                 >
-                  <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-10 text-center">
+                  <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-10 text-center skeuo-card">
                     <Quote className="w-10 h-10 text-brand-500/30 mx-auto mb-6" />
                     <p className="text-lg md:text-xl text-slate-200 leading-relaxed mb-8 italic">
                       &ldquo;{t.quote}&rdquo;
@@ -1270,7 +1270,7 @@ export default function LandingPage() {
 
           <AnimateOnScroll>
             <div className="relative max-w-4xl mx-auto">
-              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-12">
+              <div className="bg-slate-900/50 rounded-2xl border border-slate-800 p-8 md:p-12 skeuo-card">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                   {[
                     { region: 'North America', domains: '62K+', offices: 'US HQ' },
@@ -1279,7 +1279,7 @@ export default function LandingPage() {
                     { region: 'Rest of World', domains: '20K+', offices: 'Remote' },
                   ].map((r) => (
                     <div key={r.region} className="p-4">
-                      <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-3 skeuo-well">
                         <Globe className="w-5 h-5 text-brand-400" />
                       </div>
                       <div className="text-xl font-bold text-white">{r.domains}</div>
@@ -1349,8 +1349,8 @@ export default function LandingPage() {
               <AnimateOnScroll key={plan.name} delay={i * 120}>
                 <div className={`relative rounded-2xl border p-8 h-full flex flex-col card-hover ${
                   plan.popular
-                    ? 'border-brand-500/50 bg-slate-900/80 shadow-xl shadow-brand-500/10'
-                    : 'border-slate-800 bg-slate-900/50'
+                    ? 'border-brand-500/50 bg-slate-900/80 skeuo-pricing-popular'
+                    : 'border-slate-800 bg-slate-900/50 skeuo-card'
                 }`}>
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-semibold bg-brand-600 text-white rounded-full">
@@ -1405,7 +1405,7 @@ export default function LandingPage() {
               Join thousands of domains that trust Inmybox to monitor email delivery health, identify sender risks, and protect their revenue pipeline.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white text-brand-700 hover:bg-brand-50 transition-all shadow-xl hover:-translate-y-0.5">
+              <Link href="/demo" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white text-brand-700 hover:bg-brand-50 transition-all shadow-xl hover:-translate-y-0.5 skeuo-btn">
                 Request a Demo
                 <ArrowRight className="w-4 h-4" />
               </Link>

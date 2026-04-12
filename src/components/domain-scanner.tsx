@@ -768,7 +768,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
     <div>
       {/* ── Scanner Input ── */}
       <div className="max-w-lg mx-auto lg:mx-0 mb-8">
-        <div className="glow-input flex items-center bg-slate-900/80 border border-slate-700 rounded-xl p-1.5 focus-within:border-brand-500/50 transition-all">
+        <div className="glow-input skeuo-input flex items-center bg-slate-900/80 border border-slate-700 rounded-xl p-1.5 focus-within:border-brand-500/50 transition-all">
           <div className="flex items-center gap-2 px-3 text-slate-500">
             <Search className="w-4 h-4" />
           </div>
@@ -784,7 +784,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
           <button
             onClick={handleScan}
             disabled={loading || !domain.trim()}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed skeuo-btn"
           >
             {loading ? (
               <>
