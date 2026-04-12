@@ -30,7 +30,7 @@ export default function TermsPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
-        <p className="text-sm text-slate-500 mb-10">Last updated: April 4, 2026</p>
+        <p className="text-sm text-slate-500 mb-10">Last updated: April 13, 2026</p>
 
         <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
           <h2>1. Acceptance of Terms</h2>
@@ -85,10 +85,17 @@ export default function TermsPage() {
             months.
           </p>
 
+          {/* INMYBOX ENHANCEMENT: L6 — lead/demo data retention specificity */}
           <h2>8. Termination</h2>
           <p>
             Either party may terminate this agreement at any time. Upon termination, we will delete
-            your data within 30 days unless retention is required by law.
+            your account and associated DMARC report data within 30 days unless retention is
+            required by law.
+          </p>
+          <p>
+            Demo requests and lead submissions from non-registered users are retained for up to
+            12 months for follow-up purposes and are then automatically purged. You may request
+            earlier deletion by contacting us.
           </p>
 
           <h2>9. Governing Law</h2>

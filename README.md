@@ -52,26 +52,32 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+See `.env.example` for all required variables. Key entries:
 
 ```env
 # Database (Supabase PostgreSQL)
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres"
+DATABASE_URL="postgresql://postgres:<PASSWORD>@db.<PROJECT>.supabase.co:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres:<PASSWORD>@db.<PROJECT>.supabase.co:5432/postgres"
 
 # Auth
-NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_SECRET=<generate with: openssl rand -base64 32>
 NEXTAUTH_URL="http://localhost:3000"
 
 # Gmail IMAP
 EMAIL_IMAP_HOST="imap.gmail.com"
 EMAIL_IMAP_PORT="993"
-EMAIL_IMAP_USER="your-email@gmail.com"
-EMAIL_IMAP_PASS="your-app-password"
+EMAIL_IMAP_USER=<your-gmail@gmail.com>
+EMAIL_IMAP_PASS=<your-app-password>
 EMAIL_FOLDER="dmarc_report"
 
 # Cron endpoint security
-CRON_SECRET="your-cron-secret"
+CRON_SECRET=<generate with: openssl rand -base64 32>
 ```
 
 ### Database Setup

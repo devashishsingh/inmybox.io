@@ -267,6 +267,8 @@ export default function RequestDemoPage() {
                     className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow"
                   />
                 </div>
+                {/* INMYBOX ENHANCEMENT: L7 — phone field purpose disclosure */}
+                <p className="text-xs text-slate-400 mt-1">Optional — used only to schedule your demo call</p>
               </div>
             </div>
 

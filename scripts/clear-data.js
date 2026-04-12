@@ -46,8 +46,14 @@ async function run() {
   await prisma.riskScore.deleteMany({ where: { domainId: { in: domainIds } } });
   console.log('  ✓ Risk scores cleared');
   
-  await prisma.ipEnrichment.deleteMany();
-  console.log('  ✓ IP enrichments cleared (global cache)');
+  // INMYBOX ENHANCEMENT: C3 — ipEnrichment is a shared cache (not tenant-scoped).
+  // Clearing here wipes cache for ALL tenants. Acceptable for dev; skip in production.
+  if (process.env.NODE_ENV !== 'production') {
+    await prisma.ipEnrichment.deleteMany();
+    console.log('  ✓ IP enrichments cleared (global cache — dev only)');
+  } else {
+    console.log('  ⏭ IP enrichments skipped (shared cache — production)');
+  }
   
   await prisma.ingestionLog.deleteMany({ where: { tenantId } });
   console.log('  ✓ Ingestion logs cleared');
