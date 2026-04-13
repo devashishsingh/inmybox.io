@@ -37,6 +37,7 @@ export default function TenantDetailPage() {
   const [pollInterval, setPollInterval] = useState('5')
   const [fetchingNow, setFetchingNow] = useState(false)
   const [fetchNowResult, setFetchNowResult] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const fetchTenant = () => {
     setLoading(true)
@@ -84,6 +85,7 @@ export default function TenantDetailPage() {
       fetchTenant()
     } catch (e) {
       console.error(e)
+      setError('Failed to save tenant changes.')
     } finally {
       setSaving(false)
     }
@@ -105,6 +107,7 @@ export default function TenantDetailPage() {
       fetchTenant()
     } catch (e) {
       console.error(e)
+      setError('Pipeline action failed. Please try again.')
     } finally {
       setPipelineAction(false)
     }
@@ -167,6 +170,15 @@ export default function TenantDetailPage() {
           </h1>
           <p className="text-sm text-slate-400">{tenant.slug} &middot; {tenant.plan} plan</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            {error}
+            <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">×</button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/inspect?tenantId=${tenant.id}`}

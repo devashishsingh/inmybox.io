@@ -50,6 +50,7 @@ export default function AdminLeadsPage() {
   const [riskFilter, setRiskFilter] = useState('')
   const [emailFilter, setEmailFilter] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [error, setError] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -65,6 +66,7 @@ export default function AdminLeadsPage() {
       if (res.ok) setData(await res.json())
     } catch (err) {
       console.error('Failed to fetch leads:', err)
+      setError('Failed to load leads data.')
     } finally {
       setLoading(false)
     }
@@ -107,6 +109,14 @@ export default function AdminLeadsPage() {
           Export CSV
         </button>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">×</button>
+        </div>
+      )}
 
       {/* Summary Cards */}
       {summary && (

@@ -1,9 +1,17 @@
+// INMYBOX MVP IMPROVEMENT — XML Extraction Hardening — 2026-04-13
 import { prisma } from '@/lib/prisma'
-import { extractFilesFromUpload, parseDmarcXml, validateDmarcReport } from '@/lib/dmarc-parser'
+import { extractFilesFromUpload, parseDmarcXml, validateDmarcReport, ExtractionError } from '@/lib/dmarc-parser'
 import { findOrCreateDomain } from './domain.service'
 import { updateSenderFromRecord } from './sender.service'
 import { generateActionItems } from './action-items.service'
 import type { IngestionResult, IngestionSource } from '@/types'
+
+// INMYBOX MVP IMPROVEMENT — Sanitize internal errors before exposing to client
+function sanitizeErrorForClient(err: any): string {
+  if (err instanceof ExtractionError) return err.message
+  // Generic message for unexpected errors — never expose raw stack traces/messages
+  return 'A processing error occurred'
+}
 
 interface IngestionParams {
   tenantId: string
@@ -119,7 +127,7 @@ export async function ingestReport(params: IngestionParams): Promise<IngestionRe
           null, domain.id, feedback.records.length, 1
         )
       } catch (err: any) {
-        errors.push(`${xmlFile.name}: ${err.message}`)
+        errors.push(`${xmlFile.name}: ${sanitizeErrorForClient(err)}`)
         await logIngestion(tenantId, xmlFile.name, fileSize, source, 'failed', err.message)
       }
     }
@@ -131,7 +139,8 @@ export async function ingestReport(params: IngestionParams): Promise<IngestionRe
     })
 
   } catch (err: any) {
-    errors.push(err.message)
+    const clientMsg = sanitizeErrorForClient(err)
+    errors.push(clientMsg)
     await logIngestion(tenantId, fileName, fileSize, source, 'failed', err.message)
   }
 

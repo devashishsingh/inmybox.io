@@ -12,6 +12,7 @@ import {
   Trash2,
   Building2,
   User,
+  AlertCircle,
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
@@ -29,6 +30,7 @@ export default function SettingsPage() {
   })
   const [domains, setDomains] = useState<{ id: string; domain: string }[]>([])
   const [newDomain, setNewDomain] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch('/api/settings')
@@ -66,6 +68,7 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 2000)
     } catch (e) {
       console.error('Failed to save settings', e)
+      setError('Failed to save settings. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -86,6 +89,7 @@ export default function SettingsPage() {
       }
     } catch (e) {
       console.error('Failed to add domain', e)
+      setError('Failed to add domain. Please try again.')
     }
   }
 
@@ -99,11 +103,19 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <h1 className="dash-heading">Settings</h1>
+        <p className="dash-subheading mt-0.5">
           Manage your workspace, domains, and analysis preferences
         </p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">×</button>
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Tabs */}
@@ -115,11 +127,11 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'dash-sidebar-item-active text-brand-400'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                 }`}
               >
-                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-brand-600' : 'text-slate-400'}`} />
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-brand-400' : 'text-slate-500'}`} />
                 {tab.label}
               </button>
             ))}
@@ -127,11 +139,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="flex-1 dash-card p-6">
           {activeTab === 'domains' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Domain Management</h2>
+                <h2 className="text-lg font-semibold text-slate-200 mb-1">Domain Management</h2>
                 <p className="text-sm text-slate-500">
                   Add and manage the domains you want to monitor
                 </p>
@@ -143,12 +155,12 @@ export default function SettingsPage() {
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
                   placeholder="example.com"
-                  className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   onKeyDown={(e) => e.key === 'Enter' && addDomain()}
                 />
                 <button
                   onClick={addDomain}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 dash-btn-primary text-sm"
                 >
                   <Plus className="w-4 h-4" />
                   Add Domain
@@ -164,7 +176,7 @@ export default function SettingsPage() {
                   domains.map((d) => (
                     <div
                       key={d.id}
-                      className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl"
+                      className="flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl"
                     >
                       <div className="flex items-center gap-3">
                         <Globe className="w-4 h-4 text-slate-400" />
@@ -185,7 +197,7 @@ export default function SettingsPage() {
           {activeTab === 'impact' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Business Impact Assumptions</h2>
+                <h2 className="text-lg font-semibold text-slate-200 mb-1">Business Impact Assumptions</h2>
                 <p className="text-sm text-slate-500">
                   Configure the formulas used to estimate business impact from delivery data
                 </p>
@@ -206,7 +218,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setSettings((s) => ({ ...s, conversionRate: parseFloat(e.target.value) || 0 }))
                       }
-                      className="w-full px-4 py-2.5 pr-8 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                      className="w-full px-4 py-2.5 pr-8 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
                   </div>
@@ -229,7 +241,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setSettings((s) => ({ ...s, avgLeadValue: parseFloat(e.target.value) || 0 }))
                       }
-                      className="w-full pl-8 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                      className="w-full pl-8 pr-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
@@ -251,7 +263,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setSettings((s) => ({ ...s, campaignBenchmark: parseFloat(e.target.value) || 0 }))
                       }
-                      className="w-full px-4 py-2.5 pr-8 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                      className="w-full px-4 py-2.5 pr-8 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
                   </div>
@@ -274,7 +286,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         setSettings((s) => ({ ...s, reportRetention: parseInt(e.target.value) || 90 }))
                       }
-                      className="w-full px-4 py-2.5 pr-12 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                      className="w-full px-4 py-2.5 pr-12 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">days</span>
                   </div>
@@ -284,11 +296,11 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-slate-100">
+              <div className="flex justify-end pt-4 border-t border-white/[0.06]">
                 <button
                   onClick={saveSettings}
                   disabled={saving}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-sm disabled:opacity-60"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 dash-btn-primary text-sm disabled:opacity-60"
                 >
                   {saved ? (
                     <>
@@ -309,7 +321,7 @@ export default function SettingsPage() {
           {activeTab === 'notifications' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Notification Preferences</h2>
+                <h2 className="text-lg font-semibold text-slate-200 mb-1">Notification Preferences</h2>
                 <p className="text-sm text-slate-500">
                   Control how and when you receive alerts
                 </p>
@@ -349,18 +361,18 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Profile</h2>
+                <h2 className="text-lg font-semibold text-slate-200 mb-1">Profile</h2>
                 <p className="text-sm text-slate-500">
                   Your account information
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+              <div className="flex items-center gap-4 p-4 bg-white/[0.03] border border-white/[0.06] rounded-xl">
                 <div className="w-14 h-14 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-700 text-xl font-bold">
                   {session?.user?.name?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <div>
-                  <div className="text-base font-semibold text-slate-900">
+                  <div className="text-base font-semibold text-slate-200">
                     {session?.user?.name || 'User'}
                   </div>
                   <div className="text-sm text-slate-500">{session?.user?.email || ''}</div>
@@ -373,7 +385,7 @@ export default function SettingsPage() {
                   <input
                     type="text"
                     defaultValue={session?.user?.name || ''}
-                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
                   />
                 </div>
                 <div>

@@ -1,6 +1,89 @@
 import { prisma } from '@/lib/prisma'
 import type { DmarcRecordParsed } from '@/types'
 
+// ─── SUBNET UTILITIES ───────────────────────────────────────────────
+
+function getSubnet(ip: string, mask: number = 24): string {
+  const parts = ip.split('.')
+  if (parts.length !== 4) return ip // IPv6 or invalid — return as-is
+  const fullBits = parts.map(Number)
+  const maskBlocks = Math.floor(mask / 8)
+  return fullBits.slice(0, maskBlocks).join('.') + '.0'.repeat(4 - maskBlocks)
+}
+
+/**
+ * Suggests tags for a sender based on subnet neighbors.
+ * If other senders on the same /24 share a tag, suggest it.
+ */
+export async function suggestTagsFromSubnet(ip: string, domainId: string): Promise<string[]> {
+  const subnet = getSubnet(ip)
+  const prefix = subnet.replace(/\.0$/, '.')
+  const neighbors = await prisma.sender.findMany({
+    where: { domainId, ip: { startsWith: prefix }, tags: { not: null } },
+    select: { tags: true },
+  })
+  const tagCounts = new Map<string, number>()
+  for (const n of neighbors) {
+    if (n.tags) {
+      for (const t of n.tags.split(',').map(s => s.trim()).filter(Boolean)) {
+        tagCounts.set(t, (tagCounts.get(t) || 0) + 1)
+      }
+    }
+  }
+  return Array.from(tagCounts.entries())
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag]) => tag)
+}
+
+/**
+ * Auto-classifies a sender based on enrichment data (provider, ASN, etc).
+ */
+export async function autoClassifyFromEnrichment(senderId: string): Promise<void> {
+  const sender = await prisma.sender.findUnique({ where: { id: senderId }, include: { classification: true } })
+  if (!sender) return
+  // Skip if already manually classified
+  if (sender.classification && !sender.classification.autoClassified) return
+
+  const { batchEnrichIps } = await import('./ip-enrichment.service')
+  const enrichments = await prisma.ipEnrichment.findMany({ where: { ip: sender.ip } })
+  const enrichment = enrichments[0]
+  if (!enrichment) return
+
+  let category = 'unknown'
+  let provider = enrichment.provider || enrichment.asnOrg || null
+  let confidence = 0.4
+
+  if (enrichment.isKnownSender) {
+    const providerLower = (provider || '').toLowerCase()
+    if (/mailchimp|sendgrid|constant contact|hubspot|campaign monitor/i.test(providerLower)) {
+      category = 'marketing'
+      confidence = 0.85
+    } else if (/postmark|sparkpost|mailgun|amazon ses/i.test(providerLower)) {
+      category = 'transactional'
+      confidence = 0.8
+    } else if (/google|microsoft|outlook/i.test(providerLower)) {
+      category = 'legitimate'
+      confidence = 0.9
+    } else {
+      category = 'legitimate'
+      confidence = 0.65
+    }
+  } else if (enrichment.providerType === 'hosting') {
+    category = 'unknown'
+    confidence = 0.3
+  }
+
+  // Only update if confidence is higher than existing
+  if (sender.classification && sender.classification.confidence >= confidence) return
+
+  await prisma.senderClassification.upsert({
+    where: { senderId },
+    create: { senderId, category, provider, confidence, autoClassified: true, isFirstPartySender: false },
+    update: { category, provider, confidence, autoClassified: true },
+  })
+}
+
 /**
  * Updates or creates a sender record based on a DMARC record.
  */
@@ -85,7 +168,7 @@ export async function listSenders(tenantId: string) {
 export async function updateSenderStatus(
   senderId: string,
   tenantId: string,
-  data: { status?: string; label?: string; notes?: string }
+  data: { status?: string; label?: string; notes?: string; tags?: string }
 ) {
   // Verify sender belongs to tenant
   const sender = await prisma.sender.findUnique({
@@ -104,6 +187,7 @@ export async function updateSenderStatus(
       ...(status && { status }),
       ...(data.label !== undefined && { label: data.label }),
       ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.tags !== undefined && { tags: data.tags }),
     },
   })
 }
@@ -162,4 +246,35 @@ export async function getSenderBreakdown(tenantId: string) {
     suspicious: senders.filter((s) => s.status === 'suspicious').length,
     trusted: senders.filter((s) => s.status === 'trusted').length,
   }
+}
+
+/**
+ * Bulk update status/tags for multiple senders. Verifies tenant ownership.
+ */
+export async function bulkUpdateSenders(
+  senderIds: string[],
+  tenantId: string,
+  data: { status?: string; tags?: string }
+): Promise<number> {
+  if (senderIds.length === 0 || senderIds.length > 100) return 0
+
+  const validStatuses = ['unknown', 'known', 'trusted', 'suspicious']
+  const status = data.status && validStatuses.includes(data.status) ? data.status : undefined
+
+  // Verify all senders belong to tenant
+  const domains = await prisma.domain.findMany({ where: { tenantId }, select: { id: true } })
+  const domainIds = domains.map((d) => d.id)
+
+  const result = await prisma.sender.updateMany({
+    where: {
+      id: { in: senderIds },
+      domainId: { in: domainIds },
+    },
+    data: {
+      ...(status && { status }),
+      ...(data.tags !== undefined && { tags: data.tags }),
+    },
+  })
+
+  return result.count
 }

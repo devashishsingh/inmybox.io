@@ -9,11 +9,13 @@ import {
   Loader2,
   CheckCircle2,
   Shield,
+  AlertCircle,
 } from 'lucide-react'
 
 export default function ExportPage() {
   const [exporting, setExporting] = useState<string | null>(null)
   const [analytics, setAnalytics] = useState<any>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetch('/api/analytics')
@@ -35,6 +37,7 @@ export default function ExportPage() {
       URL.revokeObjectURL(url)
     } catch (e) {
       console.error('CSV export failed', e)
+      setError('CSV export failed. Please try again.')
     } finally {
       setExporting(null)
     }
@@ -53,6 +56,7 @@ export default function ExportPage() {
       URL.revokeObjectURL(url)
     } catch (e) {
       console.error('PDF export failed', e)
+      setError('PDF export failed. Please try again.')
     } finally {
       setExporting(null)
     }
@@ -61,11 +65,19 @@ export default function ExportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Export &amp; Reports</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <h1 className="dash-heading">Export &amp; Reports</h1>
+        <p className="dash-subheading mt-0.5">
           Download reports and share insights with your team
         </p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">×</button>
+        </div>
+      )}
 
       {/* Export Options */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -99,10 +111,10 @@ export default function ExportPage() {
 
       {/* Executive Summary Preview */}
       {analytics && analytics.totalRecords > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <div className="dash-card p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Executive Summary</h2>
+              <h2 className="text-lg font-semibold text-slate-200">Executive Summary</h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Quick overview of your email delivery health
               </p>
@@ -140,10 +152,10 @@ export default function ExportPage() {
               },
             ].map((item) => {
               const colors: Record<string, string> = {
-                emerald: 'border-emerald-200 bg-emerald-50',
-                brand: 'border-brand-200 bg-brand-50',
-                amber: 'border-amber-200 bg-amber-50',
-                red: 'border-red-200 bg-red-50',
+                emerald: 'border-emerald-500/20 bg-emerald-500/10',
+                brand: 'border-brand-500/20 bg-brand-500/10',
+                amber: 'border-amber-500/20 bg-amber-500/10',
+                red: 'border-red-500/20 bg-red-500/10',
               }
               return (
                 <div
@@ -151,19 +163,19 @@ export default function ExportPage() {
                   className={`rounded-xl border p-4 ${colors[item.color] || colors.brand}`}
                 >
                   <div className="text-xs text-slate-500 mb-1">{item.label}</div>
-                  <div className="text-xl font-bold text-slate-900">{item.value}</div>
+                  <div className="text-xl font-bold text-slate-200">{item.value}</div>
                   <div className="text-xs text-slate-500 mt-0.5">{item.sub}</div>
                 </div>
               )
             })}
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-xl">
+          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
             <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-brand-600 mt-0.5 shrink-0" />
+              <Shield className="w-5 h-5 text-brand-400 mt-0.5 shrink-0" />
               <div>
-                <div className="text-sm font-medium text-slate-900 mb-1">Recommendation</div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <div className="text-sm font-medium text-slate-200 mb-1">Recommendation</div>
+                <p className="text-sm text-slate-400 leading-relaxed">
                   {analytics.delivery?.riskLevel === 'healthy'
                     ? 'Your email authentication is in good shape. Continue monitoring for any changes in sender behavior or new unauthorized senders.'
                     : 'Review failing senders and ensure SPF, DKIM, and DMARC are properly configured for all legitimate email services. Prioritize fixing high-volume failures first.'}
@@ -197,24 +209,24 @@ function ExportCard({
   accent?: string
 }) {
   const accentColors: Record<string, { bg: string; text: string; button: string }> = {
-    brand: { bg: 'bg-brand-50', text: 'text-brand-600', button: 'bg-brand-600 hover:bg-brand-700' },
-    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', button: 'bg-emerald-600 hover:bg-emerald-700' },
-    violet: { bg: 'bg-violet-50', text: 'text-violet-600', button: 'bg-violet-600 hover:bg-violet-700' },
+    brand: { bg: 'dash-icon-well', text: 'text-brand-400', button: 'dash-btn-primary' },
+    emerald: { bg: 'dash-icon-well-emerald', text: 'text-emerald-400', button: 'dash-btn-primary' },
+    violet: { bg: 'bg-violet-500/10 border border-violet-500/12', text: 'text-violet-400', button: 'dash-btn-primary' },
   }
 
   const colors = accentColors[accent] || accentColors.brand
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col card-hover">
+    <div className="dash-card p-6 flex flex-col">
       <div className={`w-12 h-12 rounded-xl ${colors.bg} flex items-center justify-center mb-4`}>
         <Icon className={`w-6 h-6 ${colors.text}`} />
       </div>
-      <h3 className="text-base font-semibold text-slate-900 mb-2">{title}</h3>
+      <h3 className="text-base font-semibold text-slate-200 mb-2">{title}</h3>
       <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">{description}</p>
       <button
         onClick={onClick}
         disabled={disabled || loading}
-        className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-semibold text-white rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${colors.button}`}
+        className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${colors.button}`}
       >
         {loading ? (
           <>

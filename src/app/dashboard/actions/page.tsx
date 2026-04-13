@@ -24,11 +24,11 @@ interface ActionItem {
 }
 
 const severityConfig: Record<string, { color: string; bg: string; border: string; icon: typeof AlertTriangle }> = {
-  critical: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', icon: XCircle },
-  high: { color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', icon: ShieldAlert },
-  medium: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: AlertTriangle },
-  low: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: Shield },
-  info: { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200', icon: Eye },
+  critical: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: XCircle },
+  high: { color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: ShieldAlert },
+  medium: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: AlertTriangle },
+  low: { color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: Shield },
+  info: { color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20', icon: Eye },
 }
 
 export default function ActionsPage() {
@@ -37,6 +37,7 @@ export default function ActionsPage() {
   const [statusFilter, setStatusFilter] = useState('open')
   const [severityFilter, setSeverityFilter] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const fetchItems = () => {
     setLoading(true)
@@ -47,7 +48,7 @@ export default function ActionsPage() {
     fetch(`/api/action-items?${params}`)
       .then((r) => r.json())
       .then((d) => setItems(d.actionItems || []))
-      .catch(console.error)
+      .catch(() => setError('Failed to load action items.'))
       .finally(() => setLoading(false))
   }
 
@@ -64,6 +65,7 @@ export default function ActionsPage() {
       fetchItems()
     } catch (e) {
       console.error(e)
+      setError('Failed to update action item.')
     } finally {
       setUpdating(null)
     }
@@ -77,44 +79,52 @@ export default function ActionsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Actions Required</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 className="dash-heading">Actions Required</h1>
+          <p className="dash-subheading mt-0.5">
             {statusFilter === 'open'
               ? `${items.length} open action${items.length !== 1 ? 's' : ''}`
               : `${items.length} action item${items.length !== 1 ? 's' : ''}`}
             {criticalCount > 0 && statusFilter === 'open' && (
-              <span className="text-red-600 font-medium"> &middot; {criticalCount} high priority</span>
+              <span className="text-red-400 font-medium"> &middot; {criticalCount} high priority</span>
             )}
           </p>
         </div>
       </div>
 
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          {error}
+          <button onClick={() => setError('')} className="ml-auto text-red-400 hover:text-red-300">×</button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
-        <div className="flex gap-1 bg-white rounded-xl border border-slate-200 p-1">
+        <div className="flex gap-1 dash-filter p-1">
           {['open', 'acknowledged', 'resolved', 'dismissed', ''].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 statusFilter === s
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'dash-date-active'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               {s || 'All'}
             </button>
           ))}
         </div>
-        <div className="flex gap-1 bg-white rounded-xl border border-slate-200 p-1">
+        <div className="flex gap-1 dash-filter p-1">
           {['', 'critical', 'high', 'medium', 'low'].map((s) => (
             <button
               key={s}
               onClick={() => setSeverityFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 severityFilter === s
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'dash-date-active'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               {s || 'All Severity'}
@@ -127,13 +137,13 @@ export default function ActionsPage() {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+            <div key={i} className="h-28 dash-skeleton animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900">All clear!</h3>
+        <div className="dash-empty p-12 text-center">
+          <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-slate-200">All clear!</h3>
           <p className="text-sm text-slate-500 mt-1">
             {statusFilter === 'open'
               ? 'No open action items. Your email authentication looks healthy.'
@@ -148,16 +158,16 @@ export default function ActionsPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-white rounded-2xl border ${item.status === 'open' ? config.border : 'border-slate-200'} p-5 transition-all`}
+                className={`dash-action-card ${item.status === 'open' ? config.border : 'border-white/[0.06]'} p-5 transition-all`}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.status === 'open' ? config.bg : 'bg-slate-100'}`}>
-                    <Icon className={`w-5 h-5 ${item.status === 'open' ? config.color : 'text-slate-400'}`} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.status === 'open' ? config.bg : 'bg-white/5'}`}>
+                    <Icon className={`w-5 h-5 ${item.status === 'open' ? config.color : 'text-slate-500'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className={`text-sm font-semibold ${item.status === 'resolved' || item.status === 'dismissed' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                        <h3 className={`text-sm font-semibold ${item.status === 'resolved' || item.status === 'dismissed' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
                           {item.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
@@ -174,11 +184,11 @@ export default function ActionsPage() {
                         {new Date(item.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 mt-2">{item.description}</p>
+                    <p className="text-sm text-slate-400 mt-2">{item.description}</p>
                     {item.recommendation && (
-                      <div className="mt-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                      <div className="mt-2 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
                         <p className="text-xs text-slate-500 font-medium mb-0.5">Recommendation</p>
-                        <p className="text-sm text-slate-700">{item.recommendation}</p>
+                        <p className="text-sm text-slate-300">{item.recommendation}</p>
                       </div>
                     )}
                     {/* Actions */}
@@ -187,14 +197,14 @@ export default function ActionsPage() {
                         <button
                           onClick={() => updateStatus(item.id, 'acknowledged')}
                           disabled={updating === item.id}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                          className="dash-btn-secondary text-xs px-3 py-1.5 disabled:opacity-50"
                         >
                           Acknowledge
                         </button>
                         <button
                           onClick={() => updateStatus(item.id, 'resolved')}
                           disabled={updating === item.id}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                          className="dash-btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
                         >
                           Mark Resolved
                         </button>

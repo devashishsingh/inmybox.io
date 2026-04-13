@@ -425,3 +425,31 @@ model DemoRequest {
   status    String   @default("pending") // pending, contacted, converted
   createdAt DateTime @default(now())
 }
+
+// ─── POLLING HISTORY ────────────────────────────────────────────────
+// INMYBOX MVP IMPROVEMENT — Polling Architecture Upgrade — 2026-04-13
+
+model PollingHistory {
+  id               String   @id @default(cuid())
+  tenantId         String
+  startedAt        DateTime @default(now())
+  completedAt      DateTime?
+  status           String   // success, failed, skipped
+  reportsFound     Int      @default(0)
+  reportsProcessed Int      @default(0)
+  errorMessage     String?
+  durationMs       Int?
+  createdAt        DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
+
+// ─── POLL LOCK ──────────────────────────────────────────────────────
+
+model PollLock {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique
+  lockedAt  DateTime @default(now())
+  expiresAt DateTime
+}

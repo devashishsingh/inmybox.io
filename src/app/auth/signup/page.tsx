@@ -75,12 +75,12 @@ export default function SignUpPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-slate-950 relative overflow-hidden items-center justify-center p-12">
         <div className="absolute inset-0 hero-glow opacity-30" />
         <div className="relative max-w-md">
-          <div className="flex items-center gap-2.5 mb-8">
+          <Link href="/" className="flex items-center gap-2.5 mb-8">
             <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center">
               <Mail className="w-5 h-5 text-white" />
             </div>
             <span className="text-2xl font-bold text-white">Inmybox</span>
-          </div>
+          </Link>
           <h2 className="text-3xl font-bold text-white mb-4">
             Start protecting your email reputation
           </h2>
@@ -108,12 +108,12 @@ export default function SignUpPage() {
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
+          <Link href="/" className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <Mail className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-slate-900">Inmybox</span>
-          </div>
+          </Link>
 
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Create your account</h1>
           <p className="text-sm text-slate-500 mb-8">

@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { resolveTenantContext } from '@/lib/services/tenant.service'
 import { computeAnalytics } from '@/lib/services/analytics.service'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,7 +17,22 @@ export async function GET() {
     return NextResponse.json(emptyAnalytics())
   }
 
-  const analytics = await computeAnalytics(ctx.tenantId)
+  // Parse optional date range params
+  const { searchParams } = new URL(req.url)
+  const fromParam = searchParams.get('from')
+  const toParam = searchParams.get('to')
+  const dateFrom = fromParam ? new Date(fromParam) : undefined
+  const dateTo = toParam ? new Date(toParam) : undefined
+
+  // Validate dates
+  if (dateFrom && isNaN(dateFrom.getTime())) {
+    return NextResponse.json({ error: 'Invalid from date' }, { status: 400 })
+  }
+  if (dateTo && isNaN(dateTo.getTime())) {
+    return NextResponse.json({ error: 'Invalid to date' }, { status: 400 })
+  }
+
+  const analytics = await computeAnalytics(ctx.tenantId, dateFrom, dateTo)
   return NextResponse.json(analytics)
 }
 

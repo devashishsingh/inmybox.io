@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useSession } from 'next-auth/react'
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   RadialBarChart, RadialBar,
@@ -195,24 +196,22 @@ function ScoreGauge({ score, riskLevel }: { score: number; riskLevel: ScanResult
 
 /* ─── Donut Chart for pillar breakdown ─── */
 function PillarDonut({ pillars }: { pillars: ScanResult['pillars'] }) {
-  const data = [
-    { name: 'DMARC', value: pillars.dmarc.score, max: pillars.dmarc.maxScore, color: PILLAR_COLORS.dmarc },
-    { name: 'SPF', value: pillars.spf.score, max: pillars.spf.maxScore, color: PILLAR_COLORS.spf },
-    { name: 'DKIM', value: pillars.dkim.score, max: pillars.dkim.maxScore, color: PILLAR_COLORS.dkim },
-    { name: 'Config', value: pillars.config.score, max: pillars.config.maxScore, color: PILLAR_COLORS.config },
-  ]
-
-  // For the pie chart, show earned scores
-  const pieData = data.map(d => ({ ...d, displayValue: d.value }))
-  // Fill remaining as "gap"
-  const totalEarned = data.reduce((a, d) => a + d.value, 0)
-  const totalPossible = 100
-  const gap = totalPossible - totalEarned
-
-  const chartData = [
-    ...pieData,
-    ...(gap > 0 ? [{ name: 'Unscored', displayValue: gap, color: '#1e293b', value: gap, max: gap }] : []),
-  ]
+  const { chartData, totalEarned } = useMemo(() => {
+    const data = [
+      { name: 'DMARC', value: pillars.dmarc.score, max: pillars.dmarc.maxScore, color: PILLAR_COLORS.dmarc },
+      { name: 'SPF', value: pillars.spf.score, max: pillars.spf.maxScore, color: PILLAR_COLORS.spf },
+      { name: 'DKIM', value: pillars.dkim.score, max: pillars.dkim.maxScore, color: PILLAR_COLORS.dkim },
+      { name: 'Config', value: pillars.config.score, max: pillars.config.maxScore, color: PILLAR_COLORS.config },
+    ]
+    const pieData = data.map(d => ({ ...d, displayValue: d.value }))
+    const totalEarned = data.reduce((a, d) => a + d.value, 0)
+    const gap = 100 - totalEarned
+    const chartData = [
+      ...pieData,
+      ...(gap > 0 ? [{ name: 'Unscored', displayValue: gap, color: '#1e293b', value: gap, max: gap }] : []),
+    ]
+    return { chartData, totalEarned }
+  }, [pillars])
 
   return (
     <div className="relative w-56 h-56 mx-auto">
@@ -291,14 +290,14 @@ function PillarBar({ name, pillar, color }: { name: string; pillar: PillarResult
 }
 
 /* ─── Findings Accordion (gated details) ─── */
-function FindingsSection({ findings }: { findings: Finding[] }) {
+function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked?: boolean }) {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const categories = ['DMARC', 'SPF', 'DKIM', 'Config', 'BIMI'] as const
-  const grouped = categories.map(cat => ({
+  const grouped = useMemo(() => categories.map(cat => ({
     category: cat,
     items: findings.filter(f => f.category === cat),
-  })).filter(g => g.items.length > 0)
+  })).filter(g => g.items.length > 0), [findings])
 
   return (
     <div className="space-y-3">
@@ -327,27 +326,42 @@ function FindingsSection({ findings }: { findings: Finding[] }) {
                     <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${colorCls}`} />
                     <div className="min-w-0">
                       <div className="text-sm text-white font-medium">{finding.title}</div>
-                      {/* Detail blurred — gated */}
+                      {/* Detail — gated unless unlocked */}
                       <div className="relative mt-1">
-                        <div className="text-xs text-slate-400 leading-relaxed select-none blur-[6px] pointer-events-none" aria-hidden>
-                          {finding.detail}
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Link
-                            href="/pricing"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-brand-300 hover:text-brand-200 hover:border-brand-500/40 transition-all"
-                          >
-                            <Lock className="w-3 h-3" />
-                            Unlock details
-                          </Link>
-                        </div>
+                        {unlocked ? (
+                          <div className="text-xs text-slate-400 leading-relaxed">
+                            {finding.detail}
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-xs text-slate-400 leading-relaxed select-none blur-[6px] pointer-events-none" aria-hidden>
+                              {finding.detail}
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Link
+                                href="/pricing"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-brand-300 hover:text-brand-200 hover:border-brand-500/40 transition-all"
+                              >
+                                <Lock className="w-3 h-3" />
+                                Unlock details
+                              </Link>
+                            </div>
+                          </>
+                        )}
                       </div>
                       {finding.recommendation && (
                         <div className="relative mt-2">
-                          <div className="flex gap-2 items-start select-none blur-[6px] pointer-events-none" aria-hidden>
-                            <ArrowRight className="w-3 h-3 text-brand-400 mt-0.5 shrink-0" />
-                            <span className="text-xs text-brand-300">{finding.recommendation}</span>
-                          </div>
+                          {unlocked ? (
+                            <div className="flex gap-2 items-start">
+                              <ArrowRight className="w-3 h-3 text-brand-400 mt-0.5 shrink-0" />
+                              <span className="text-xs text-brand-300">{finding.recommendation}</span>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 items-start select-none blur-[6px] pointer-events-none" aria-hidden>
+                              <ArrowRight className="w-3 h-3 text-brand-400 mt-0.5 shrink-0" />
+                              <span className="text-xs text-brand-300">{finding.recommendation}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -362,41 +376,75 @@ function FindingsSection({ findings }: { findings: Finding[] }) {
   )
 }
 
-/* ─── Raw Records Panel (locked) ─── */
-function RawRecords() {
+/* ─── Raw Records Panel (locked unless unlocked) ─── */
+function RawRecords({ unlocked, rawRecords }: { unlocked?: boolean; rawRecords?: ScanResult['rawRecords'] }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-sm font-semibold text-white">Raw DNS Records</span>
-        <span className="flex items-center gap-1.5 text-xs text-slate-400">
-          <Lock className="w-3 h-3" />
-          Pro feature
-        </span>
+        {!unlocked && (
+          <span className="flex items-center gap-1.5 text-xs text-slate-400">
+            <Lock className="w-3 h-3" />
+            Pro feature
+          </span>
+        )}
       </div>
       <div className="px-4 pb-4 border-t border-slate-800 pt-3">
-        <div className="relative">
-          {/* Blurred preview */}
-          <div className="space-y-3 select-none blur-[6px] pointer-events-none" aria-hidden>
-            <div>
-              <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
-              <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:...</div>
+        {unlocked && rawRecords ? (
+          <div className="space-y-3">
+            {rawRecords.dmarc && (
+              <div>
+                <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.dmarc}</div>
+              </div>
+            )}
+            {rawRecords.spf && (
+              <div>
+                <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.spf}</div>
+              </div>
+            )}
+            {rawRecords.dkim && (
+              <div>
+                <div className="text-xs text-slate-400 mb-1">DKIM</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.dkim}</div>
+              </div>
+            )}
+            {rawRecords.bimi && (
+              <div>
+                <div className="text-xs text-slate-400 mb-1">BIMI</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.bimi}</div>
+              </div>
+            )}
+            {!rawRecords.dmarc && !rawRecords.spf && !rawRecords.dkim && !rawRecords.bimi && (
+              <p className="text-xs text-slate-500">No DNS records found for this domain.</p>
+            )}
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Blurred preview */}
+            <div className="space-y-3 select-none blur-[6px] pointer-events-none" aria-hidden>
+              <div>
+                <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:...</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
+                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com ~all</div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
-              <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com ~all</div>
+            {/* Overlay CTA */}
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 rounded-xl">
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Upgrade to View Records
+              </Link>
             </div>
           </div>
-          {/* Overlay CTA */}
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 rounded-xl">
-            <Link
-              href="/pricing"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              Upgrade to View Records
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -579,6 +627,8 @@ function ScoringMethodology() {
    ═══════════════════════════════════════════════════════════════ */
 // INMYBOX HERO ENHANCEMENT — Scanner with calculator tie-in
 export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?: (hasResult: boolean) => void; calcRevenueLost?: number } = {}) {
+  const { data: session } = useSession()
+  const unlocked = !!session?.user
   const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -1135,11 +1185,11 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
               {/* Detailed Findings */}
               <div>
                 <h4 className="text-sm text-slate-400 font-medium mb-4">Detailed Findings</h4>
-                <FindingsSection findings={result.findings} />
+                <FindingsSection findings={result.findings} unlocked={unlocked} />
               </div>
 
               {/* Raw Records (locked) */}
-              <RawRecords />
+              <RawRecords unlocked={unlocked} rawRecords={result.rawRecords} />
 
               {/* Scoring Methodology */}
               <ScoringMethodology />

@@ -31,23 +31,23 @@ export function OnboardingChecklist() {
   if (loading || !progress || dismissed || progress.isComplete) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mb-6">
+    <div className="dash-card-glow overflow-hidden mb-6">
       {/* Header */}
-      <div className="px-6 py-4 bg-gradient-to-r from-brand-50 to-indigo-50 border-b border-slate-200">
+      <div className="px-6 py-4 bg-gradient-to-r from-brand-500/10 to-indigo-500/10 border-b border-white/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-brand-600" />
+            <div className="w-9 h-9 rounded-xl dash-icon-well flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-brand-400" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Setup Checklist</h3>
+              <h3 className="text-sm font-semibold text-slate-200">Setup Checklist</h3>
               <p className="text-xs text-slate-500">{progress.completedCount} of {progress.steps.length} steps complete</p>
             </div>
           </div>
-          <button onClick={() => setDismissed(true)} className="text-xs text-slate-400 hover:text-slate-600">Dismiss</button>
+          <button onClick={() => setDismissed(true)} className="text-xs text-slate-500 hover:text-slate-300">Dismiss</button>
         </div>
         {/* Progress Bar */}
-        <div className="mt-3 h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div className="mt-3 h-2 bg-white/[0.06] rounded-full overflow-hidden">
           <div
             className="h-full bg-brand-500 rounded-full transition-all duration-500"
             style={{ width: `${progress.percentage}%` }}
@@ -56,24 +56,24 @@ export function OnboardingChecklist() {
       </div>
 
       {/* Steps */}
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-white/[0.04]">
         {progress.steps.map((step: any) => {
           const meta = STEP_META[step.key] || { label: step.key, description: '' }
           return (
             <div key={step.key} className={`flex items-center gap-3 px-6 py-3 ${step.completed ? 'opacity-60' : ''}`}>
               {step.completed ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               ) : (
-                <Circle className="w-5 h-5 text-slate-300 shrink-0" />
+                <Circle className="w-5 h-5 text-slate-500 shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium ${step.completed ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                <div className={`text-sm font-medium ${step.completed ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
                   {meta.label}
                 </div>
                 <div className="text-xs text-slate-400 truncate">{meta.description}</div>
               </div>
               {!step.completed && meta.link && (
-                <a href={meta.link} className="text-brand-600 hover:text-brand-700 shrink-0">
+                <a href={meta.link} className="text-brand-400 hover:text-brand-300 shrink-0">
                   <ChevronRight className="w-4 h-4" />
                 </a>
               )}

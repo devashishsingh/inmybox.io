@@ -9,20 +9,27 @@ import type { AnalyticsSummary, TrendPoint } from '@/types'
 /**
  * Computes full analytics summary for a tenant.
  */
-export async function computeAnalytics(tenantId: string): Promise<AnalyticsSummary> {
+export async function computeAnalytics(tenantId: string, dateFrom?: Date, dateTo?: Date): Promise<AnalyticsSummary> {
   const domainIds = await getDomainIds(tenantId)
 
   if (domainIds.length === 0) return emptyAnalytics()
 
+  // Build date filter for reports
+  const reportDateFilter: any = {}
+  if (dateFrom) reportDateFilter.gte = dateFrom
+  if (dateTo) reportDateFilter.lte = dateTo
+  const reportWhere: any = { domainId: { in: domainIds } }
+  if (dateFrom || dateTo) reportWhere.dateBegin = reportDateFilter
+
   // Fetch all records for tenant's domains
   const records = await prisma.dmarcRecord.findMany({
-    where: { report: { domainId: { in: domainIds } } },
+    where: { report: reportWhere },
     include: { report: true },
     orderBy: { createdAt: 'desc' },
   })
 
   const reports = await prisma.dmarcReport.findMany({
-    where: { domainId: { in: domainIds } },
+    where: reportWhere,
     orderBy: { dateBegin: 'asc' },
   })
 

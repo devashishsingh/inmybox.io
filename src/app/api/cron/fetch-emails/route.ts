@@ -1,8 +1,81 @@
+// INMYBOX MVP IMPROVEMENT — Polling Architecture Upgrade — 2026-04-13
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { testConnection, fetchAndProcessEmails } from '@/lib/services/email-fetcher.service'
 import { prisma } from '@/lib/prisma'
+
+// ─── PLAN-BASED FREQUENCY TIERS ─────────────────────────────────────
+
+const PLAN_FREQUENCY_LIMITS: Record<string, number[]> = {
+  free:       [1440],                       // Daily only
+  starter:    [360, 1440],                  // 6h, Daily
+  pro:        [60, 360, 1440],              // 1h, 6h, Daily
+  enterprise: [15, 60, 360, 1440],          // 15m, 1h, 6h, Daily
+}
+
+function getAllowedFrequencies(plan: string): number[] {
+  return PLAN_FREQUENCY_LIMITS[plan] || PLAN_FREQUENCY_LIMITS.free
+}
+
+// ─── POLL LOCK (Database-backed) ─────────────────────────────────────
+
+const LOCK_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+async function acquireLock(tenantId: string): Promise<boolean> {
+  const now = new Date()
+  await prisma.pollLock.deleteMany({ where: { expiresAt: { lt: now } } })
+  try {
+    await prisma.pollLock.create({
+      data: { tenantId, lockedAt: now, expiresAt: new Date(now.getTime() + LOCK_TTL_MS) },
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function releaseLock(tenantId: string): Promise<void> {
+  await prisma.pollLock.deleteMany({ where: { tenantId } })
+}
+
+// ─── RETRY WITH BACKOFF ──────────────────────────────────────────────
+
+const RETRY_CONFIG = { maxAttempts: 3, backoffMs: [1000, 5000, 15000] }
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function fetchWithRetry() {
+  for (let attempt = 1; attempt <= RETRY_CONFIG.maxAttempts; attempt++) {
+    try {
+      return await fetchAndProcessEmails()
+    } catch (error) {
+      if (attempt === RETRY_CONFIG.maxAttempts) throw error
+      console.warn(`[cron] Poll attempt ${attempt} failed, retrying in ${RETRY_CONFIG.backoffMs[attempt - 1]}ms`)
+      await sleep(RETRY_CONFIG.backoffMs[attempt - 1])
+    }
+  }
+  throw new Error('All retry attempts exhausted')
+}
+
+// ─── POLLING HISTORY RECORDER ────────────────────────────────────────
+
+async function recordPollRun(
+  tenantId: string,
+  status: 'success' | 'failed' | 'skipped',
+  startedAt: Date,
+  reportsFound?: number,
+  reportsProcessed?: number,
+  errorMessage?: string,
+) {
+  const completedAt = new Date()
+  const durationMs = completedAt.getTime() - startedAt.getTime()
+  await prisma.pollingHistory.create({
+    data: { tenantId, startedAt, completedAt, status, reportsFound: reportsFound ?? 0, reportsProcessed: reportsProcessed ?? 0, errorMessage, durationMs },
+  })
+}
 
 /**
  * GET /api/cron/fetch-emails?action=test
@@ -77,7 +150,7 @@ export async function POST(req: NextRequest) {
       stoppedAt: null,
     },
     include: {
-      tenant: { select: { id: true, name: true } },
+      tenant: { select: { id: true, name: true, plan: true } },
     },
   })
 
@@ -104,8 +177,14 @@ export async function POST(req: NextRequest) {
       continue
     }
 
+    // Validate plan-gated frequency
+    const tenantPlan = (pipeline as any).tenant?.plan || 'free'
+    const allowed = getAllowedFrequencies(tenantPlan)
+    const requestedInterval = pipeline.pollIntervalMinutes || 1440
+    const effectiveInterval = allowed.includes(requestedInterval) ? requestedInterval : Math.max(...allowed)
+
     // Check if poll interval has elapsed
-    const intervalMs = (pipeline.pollIntervalMinutes || 1440) * 60 * 1000
+    const intervalMs = effectiveInterval * 60 * 1000
     const lastFetch = pipeline.lastFetchAt ? pipeline.lastFetchAt.getTime() : 0
     const nextDue = lastFetch + intervalMs
 
@@ -118,9 +197,23 @@ export async function POST(req: NextRequest) {
       continue
     }
 
-    // This pipeline is due — fetch emails
+    // Acquire poll lock to prevent concurrent runs
+    const locked = await acquireLock(pipeline.tenantId)
+    if (!locked) {
+      results.push({
+        tenantName: pipeline.tenant.name,
+        tenantId: pipeline.tenantId,
+        status: 'skipped_not_due',
+        detail: 'Another poll is already running',
+      })
+      await recordPollRun(pipeline.tenantId, 'skipped', now)
+      continue
+    }
+
+    // This pipeline is due — fetch emails with retry
+    const pollStart = new Date()
     try {
-      const fetchResult = await fetchAndProcessEmails()
+      const fetchResult = await fetchWithRetry()
       results.push({
         tenantName: pipeline.tenant.name,
         tenantId: pipeline.tenantId,
@@ -131,6 +224,7 @@ export async function POST(req: NextRequest) {
           skipped: fetchResult.skipped,
         },
       })
+      await recordPollRun(pipeline.tenantId, 'success', pollStart, fetchResult.processed + fetchResult.errors + fetchResult.skipped, fetchResult.processed)
     } catch (err: any) {
       results.push({
         tenantName: pipeline.tenant.name,
@@ -138,6 +232,9 @@ export async function POST(req: NextRequest) {
         status: 'error',
         detail: err.message,
       })
+      await recordPollRun(pipeline.tenantId, 'failed', pollStart, undefined, undefined, err.message)
+    } finally {
+      await releaseLock(pipeline.tenantId)
     }
   }
 

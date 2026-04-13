@@ -169,10 +169,18 @@ async function fetchEmailsFromImap(): Promise<{
 
       // Extract attachments (DMARC reports come as compressed archives or raw XML)
       const ALLOWED_EXTENSIONS = ['.xml', '.zip', '.gz', '.gzip', '.7z', '.tar.gz', '.tgz']
+      // INMYBOX MVP IMPROVEMENT — Attachment size gate: reject attachments over 10MB (matches upload limit)
+      const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024
       const attachments = (parsed.attachments || [])
         .filter(att => {
           const name = (att.filename || '').toLowerCase()
-          return ALLOWED_EXTENSIONS.some(ext => name.endsWith(ext))
+          const extOk = ALLOWED_EXTENSIONS.some(ext => name.endsWith(ext))
+          if (!extOk) return false
+          if (att.size > MAX_ATTACHMENT_SIZE) {
+            console.warn(`[email-fetcher] Skipping oversized attachment: ${att.filename} (${(att.size / 1024 / 1024).toFixed(1)}MB)`)
+            return false
+          }
+          return true
         })
         .map(att => ({
           filename: att.filename || `attachment_${Date.now()}`,
