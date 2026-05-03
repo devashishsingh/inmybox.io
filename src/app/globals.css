@@ -1313,3 +1313,382 @@ select:focus {
   background: rgba(254, 249, 239, 0.8);
   border-color: rgba(180, 165, 144, 0.15);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   INMYBOX REDESIGN — Spiritual Industrial Theme (2026-05-03)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ember-root {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  color: #e7e5e4;
+}
+.ember-root h1, .ember-root h2, .ember-root h3, .ember-root h4,
+.ember-root .font-display {
+  font-family: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+/* Body background — deep black with warm undertone */
+.ember-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(239,35,60,0.06), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,158,11,0.05), transparent 60%),
+    linear-gradient(180deg, #000000 0%, #0a0303 50%, #000000 100%);
+}
+
+/* Grid overlay with radial mask */
+.ember-grid {
+  background-image:
+    linear-gradient(rgba(212,168,67,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,168,67,0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, #000 20%, transparent 80%);
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, #000 20%, transparent 80%);
+}
+
+/* Starfield (two parallax layers) */
+.ember-stars-1, .ember-stars-2 {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 200%;
+  pointer-events: none;
+  background: transparent;
+}
+.ember-stars-1 {
+  box-shadow:
+    134px 873px #fff, 1583px 1247px #fff, 942px 89px #fff, 1789px 432px #fff,
+    342px 1456px #fff, 1234px 678px #fff, 87px 234px #fff, 1654px 1789px #fff,
+    523px 1123px #fff, 1432px 234px #fff, 234px 567px #fff, 1789px 1234px #fff,
+    876px 1567px #fff, 432px 234px #fff, 1234px 1456px #fff, 654px 789px #fff,
+    1567px 432px #fff, 234px 1123px #fff, 1432px 876px #fff, 765px 1234px #fff,
+    1654px 567px #fff, 432px 1567px #fff, 1234px 234px #fff, 876px 432px #fff,
+    1567px 1123px #fff, 234px 789px #fff, 1432px 1567px #fff, 654px 234px #fff,
+    1789px 876px #fff, 432px 1234px #fff, 1123px 567px #fff, 234px 1432px #fff,
+    1567px 234px #fff, 876px 1123px #fff, 432px 432px #fff, 1234px 789px #fff,
+    1654px 1234px #fff, 234px 1789px #fff, 1432px 432px #fff, 765px 567px #fff,
+    1567px 1789px #fff, 432px 876px #fff, 1234px 1234px #fff, 876px 234px #fff,
+    1789px 567px #fff, 234px 432px #fff, 1432px 1234px #fff, 654px 1567px #fff,
+    1567px 876px #fff, 432px 1789px #fff;
+  animation: animStar 50s linear infinite;
+}
+.ember-stars-1::after, .ember-stars-2::after {
+  content: '';
+  position: absolute;
+  top: 2000px;
+  inset-inline: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inherit;
+}
+.ember-stars-2 {
+  box-shadow:
+    523px 234px 0 0.5px #fff, 1432px 876px 0 0.5px #fff, 234px 1567px 0 0.5px #fff,
+    1789px 432px 0 0.5px #fff, 654px 1234px 0 0.5px #fff, 1567px 234px 0 0.5px #fff,
+    432px 876px 0 0.5px #fff, 1234px 1567px 0 0.5px #fff, 765px 432px 0 0.5px #fff,
+    1654px 1123px 0 0.5px #fff, 234px 567px 0 0.5px #fff, 1432px 1789px 0 0.5px #fff,
+    876px 234px 0 0.5px #fff, 1567px 567px 0 0.5px #fff, 432px 1234px 0 0.5px #fff,
+    1789px 876px 0 0.5px #fff, 234px 1432px 0 0.5px #fff, 1234px 432px 0 0.5px #fff;
+  animation: animStar 80s linear infinite;
+  background-size: 2px 2px;
+}
+@keyframes animStar {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2000px); }
+}
+
+/* Glassmorphism — black 60% + blur */
+.ember-glass {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ember-glass-strong {
+  background: rgba(10, 3, 3, 0.75);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Shiny CTA — spinning conic-gradient border */
+.ember-shiny-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 9999px;
+  background: #000;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  isolation: isolate;
+  transition: transform 0.2s ease;
+}
+.ember-shiny-cta::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  padding: 2px;
+  background: conic-gradient(from var(--spin, 0deg),
+    transparent 0%,
+    #ef233c 5%,
+    #f59e0b 12%,
+    #d4a843 18%,
+    transparent 25%,
+    transparent 50%,
+    #ef233c 55%,
+    #d4a843 65%,
+    transparent 75%,
+    transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: ember-spin 2.5s linear infinite;
+  z-index: -1;
+}
+@property --spin {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes ember-spin {
+  to { --spin: 360deg; }
+}
+/* Fallback for browsers without @property — rotate the pseudo wrapper */
+@supports not (background: conic-gradient(from var(--spin) , red, blue)) {
+  .ember-shiny-cta::before {
+    background: conic-gradient(from 0deg, transparent, #ef233c, #f59e0b, #d4a843, transparent, #ef233c, transparent);
+    animation: ember-rotate 2.5s linear infinite;
+  }
+}
+@keyframes ember-rotate {
+  to { transform: rotate(360deg); }
+}
+.ember-shiny-cta:hover {
+  transform: translateY(-1px);
+}
+.ember-shiny-cta:hover .ember-cta-icon {
+  transform: translateX(4px);
+}
+.ember-cta-icon {
+  transition: transform 0.25s ease;
+}
+
+/* Dark ghost button */
+.ember-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e7e5e4;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+.ember-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 168, 67, 0.4);
+}
+
+/* Pill statuses */
+.ember-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.ember-pill-saffron {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.ember-pill-emerald {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.ember-pill-red {
+  background: rgba(239, 35, 60, 0.1);
+  color: #fb7185;
+  border-color: rgba(239, 35, 60, 0.3);
+}
+.ember-pill-gold {
+  background: rgba(212, 168, 67, 0.1);
+  color: #d4a843;
+  border-color: rgba(212, 168, 67, 0.3);
+}
+
+/* Saffron underline squiggle for highlighted keyword */
+.ember-squiggle {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'><path d='M0 4 Q 12.5 0 25 4 T 50 4 T 75 4 T 100 4' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 8px;
+  padding-bottom: 8px;
+}
+
+/* Bento card with hover glow */
+.ember-bento {
+  position: relative;
+  background: #050505;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+.ember-bento::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(245,158,11,0.12), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.ember-bento:hover { border-color: rgba(212, 168, 67, 0.25); }
+.ember-bento:hover::before { opacity: 1; }
+.ember-bento-red:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(239,35,60,0.15), transparent 60%); }
+.ember-bento-emerald:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(16,185,129,0.12), transparent 60%); }
+
+/* Stats strip underline on hover */
+.ember-stat {
+  position: relative;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+.ember-stat::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d4a843, #f59e0b, transparent);
+  transform: translateX(-50%);
+  transition: width 0.4s ease;
+}
+.ember-stat:hover::after {
+  width: 70%;
+}
+
+/* Floating cards */
+.ember-float-card {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.875rem;
+  padding: 0.875rem 1rem;
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.6);
+}
+.ember-float-card-red {
+  border-color: rgba(239, 35, 60, 0.3);
+  background: linear-gradient(135deg, rgba(239,35,60,0.18), rgba(0,0,0,0.7));
+}
+.ember-float-card-emerald {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(0,0,0,0.7));
+}
+.ember-float-card-gold {
+  border-color: rgba(212, 168, 67, 0.3);
+  background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(0,0,0,0.7));
+}
+
+/* Feature line indicator */
+.ember-feature-line {
+  position: relative;
+  padding-left: 1.5rem;
+}
+.ember-feature-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, #f59e0b, #d4a843, transparent);
+  border-radius: 2px;
+}
+
+/* Heading gradient (white to gray) */
+.ember-heading {
+  background: linear-gradient(180deg, #ffffff 20%, #a8a29e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Massive watermark stroke text in footer */
+.ember-watermark {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 10vw;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.08);
+  white-space: nowrap;
+  text-align: center;
+  user-select: none;
+  pointer-events: none;
+  line-height: 0.9;
+}
+
+/* Pulse-glow utility */
+.ember-pulse-amber {
+  animation: ember-pulse-amber 2s ease-in-out infinite;
+}
+@keyframes ember-pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0); }
+  50% { box-shadow: 0 0 0 6px rgba(245,158,11,0.15); }
+}
+
+/* Float micro-anim (-8px) */
+.ember-float {
+  animation: ember-float 6s ease-in-out infinite;
+}
+@keyframes ember-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Avatar with saffron border */
+.ember-avatar {
+  width: 36px; height: 36px;
+  border-radius: 9999px;
+  border: 2px solid rgba(245,158,11,0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a0a05, #000);
+}
+
+/* Gradient text utilities */
+.ember-text-fire {
+  background: linear-gradient(135deg, #ef233c 0%, #f59e0b 50%, #d4a843 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .ember-stars-1, .ember-stars-2,
+  .ember-shiny-cta::before,
+  .ember-float,
+  .ember-pulse-amber {
+    animation: none !important;
+  }
+}

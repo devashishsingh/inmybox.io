@@ -817,7 +817,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
   return (
     <div>
       {/* ── Scanner Input ── */}
-      <div className="max-w-lg mx-auto lg:mx-0 mb-8">
+      <div className="max-w-lg mx-auto lg:mx-0 mb-3">
         <div className="glow-input skeuo-input flex items-center bg-slate-900/80 border border-slate-700 rounded-xl p-1.5 focus-within:border-brand-500/50 transition-all">
           <div className="flex items-center gap-2 px-3 text-slate-500">
             <Search className="w-4 h-4" />
