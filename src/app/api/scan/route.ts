@@ -6,6 +6,28 @@ import { prisma } from '@/lib/prisma'
 const resolver = new dns.Resolver()
 resolver.setServers(['8.8.8.8', '1.1.1.1'])
 
+/**
+ * Call the standalone Render scanner service. Returns the parsed body or
+ * throws (caller falls back to local DNS).
+ */
+async function fetchFromScanner(scannerUrl: string, domain: string): Promise<ScanResult> {
+  const ctrl = new AbortController()
+  const timeout = setTimeout(() => ctrl.abort(), 8000)
+  try {
+    const headers: Record<string, string> = { accept: 'application/json' }
+    if (process.env.SCANNER_TOKEN) headers.authorization = `Bearer ${process.env.SCANNER_TOKEN}`
+    const url = `${scannerUrl.replace(/\/$/, '')}/scan?domain=${encodeURIComponent(domain)}`
+    const res = await fetch(url, { headers, signal: ctrl.signal, cache: 'no-store' })
+    if (!res.ok) {
+      const text = await res.text().catch(() => '')
+      throw new Error(`scanner ${res.status}: ${text.slice(0, 200)}`)
+    }
+    return (await res.json()) as ScanResult
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 function resolveTxtFast(hostname: string): Promise<string[][]> {
   return new Promise((resolve, reject) => {
     resolver.resolveTxt(hostname, (err, records) => {
@@ -773,6 +795,45 @@ export async function GET(req: NextRequest) {
 
   if (!isValidDomain(domain)) {
     return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 })
+  }
+
+  // INMYBOX ENHANCEMENT — Render scanner backend.
+  // When SCANNER_URL is configured, delegate the DNS work to the standalone
+  // scanner service (./scanner-service). The Next.js route stays the public
+  // surface and continues to persist results. Remove SCANNER_URL to roll back
+  // to the in-process implementation below.
+  const scannerUrl = process.env.SCANNER_URL
+  if (scannerUrl) {
+    try {
+      const proxied = await fetchFromScanner(scannerUrl, domain)
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null
+      const ua = req.headers.get('user-agent') || null
+      let scanId: string | null = null
+      try {
+        const saved = await prisma.domainScan.create({
+          data: {
+            domain,
+            score: proxied.score,
+            riskLevel: proxied.riskLevel,
+            dmarcScore: proxied.pillars.dmarc.score,
+            spfScore: proxied.pillars.spf.score,
+            dkimScore: proxied.pillars.dkim.score,
+            configScore: proxied.pillars.config.score,
+            rawResult: JSON.stringify(proxied),
+            ipAddress: ip,
+            userAgent: ua,
+          },
+        })
+        scanId = saved.id
+      } catch (err) {
+        console.error(`[scan] Failed to save proxied scan: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      }
+      return NextResponse.json({ ...proxied, scanId })
+    } catch (err) {
+      // Scanner unreachable / timed out — fall through to local engine so the
+      // user always gets an answer. Logged for monitoring.
+      console.error(`[scan] Scanner backend failed, falling back local: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
   }
 
   try {

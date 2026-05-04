@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { CheckCircle2, AlertTriangle, Building2 } from 'lucide-react'
+import { EmberShell } from '@/components/ember-shell'
 
 function InviteContent() {
   const searchParams = useSearchParams()
@@ -51,7 +52,7 @@ function InviteContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -63,11 +64,11 @@ function InviteContent() {
           </div>
         </div>
 
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+        <div className="bg-white/[0.04] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
           {state === 'loading' && (
             <div className="p-8 text-center">
-              <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-slate-400">Validating invitation...</p>
+              <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-zinc-500">Validating invitation...</p>
             </div>
           )}
 
@@ -75,8 +76,8 @@ function InviteContent() {
             <div className="p-8 text-center">
               <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
               <h2 className="text-lg font-bold text-white mb-2">Invalid Invitation</h2>
-              <p className="text-slate-400 text-sm">{error || 'This invitation link is invalid or has expired.'}</p>
-              <button onClick={() => router.push('/auth/signin')} className="mt-6 px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500">
+              <p className="text-zinc-500 text-sm">{error || 'This invitation link is invalid or has expired.'}</p>
+              <button onClick={() => router.push('/auth/signin')} className="mt-6 px-6 py-2.5 rounded-xl bg-amber-500/90 text-white text-sm font-semibold hover:bg-amber-500/15">
                 Go to Login
               </button>
             </div>
@@ -84,12 +85,12 @@ function InviteContent() {
 
           {(state === 'valid' || state === 'accepting' || state === 'error') && invitation && (
             <>
-              <div className="px-6 py-4 border-b border-slate-800 bg-slate-800/30">
+              <div className="px-6 py-4 border-b border-white/10 bg-white/[0.04]">
                 <div className="flex items-center gap-3">
-                  <Building2 className="w-5 h-5 text-brand-400" />
+                  <Building2 className="w-5 h-5 text-amber-300" />
                   <div>
                     <div className="text-white font-medium">You&apos;re invited to join</div>
-                    <div className="text-brand-400 text-sm font-semibold">{invitation.tenantName || 'a team'}</div>
+                    <div className="text-amber-300 text-sm font-semibold">{invitation.tenantName || 'a team'}</div>
                   </div>
                 </div>
               </div>
@@ -100,23 +101,23 @@ function InviteContent() {
                 )}
 
                 <div>
-                  <label htmlFor="invite-email" className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+                  <label htmlFor="invite-email" className="block text-sm font-medium text-zinc-300 mb-1.5">Email</label>
                   <input id="invite-email" type="email" disabled value={invitation.email}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 text-sm" />
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/15 text-zinc-500 text-sm" />
                 </div>
                 <div>
-                  <label htmlFor="invite-name" className="block text-sm font-medium text-slate-300 mb-1.5">Your Name *</label>
+                  <label htmlFor="invite-name" className="block text-sm font-medium text-zinc-300 mb-1.5">Your Name *</label>
                   <input id="invite-name" type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="John Doe" />
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/15 text-white text-sm placeholder:text-zinc-400 outline-none focus:border-amber-500" placeholder="John Doe" />
                 </div>
                 <div>
                   {/* INMYBOX ENHANCEMENT — Phase 3: minLength 6→8 to match backend Zod validation */}
-                  <label htmlFor="invite-password" className="block text-sm font-medium text-slate-300 mb-1.5">Password *</label>
+                  <label htmlFor="invite-password" className="block text-sm font-medium text-zinc-300 mb-1.5">Password *</label>
                   <input id="invite-password" type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 outline-none focus:border-brand-500" placeholder="Min 8 characters" />
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/15 text-white text-sm placeholder:text-zinc-400 outline-none focus:border-amber-500" placeholder="Min 8 characters" />
                 </div>
                 <button type="submit" disabled={state === 'accepting'}
-                  className="w-full px-4 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 disabled:opacity-50 transition-colors">
+                  className="w-full px-4 py-2.5 rounded-xl bg-amber-500/90 text-white text-sm font-semibold hover:bg-amber-500/15 disabled:opacity-50 transition-colors">
                   {state === 'accepting' ? 'Setting up your account...' : 'Accept Invitation & Join'}
                 </button>
               </form>
@@ -127,7 +128,7 @@ function InviteContent() {
             <div className="p-8 text-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
               <h2 className="text-lg font-bold text-white mb-2">Welcome aboard!</h2>
-              <p className="text-slate-400 text-sm">Your account has been created. Redirecting to login...</p>
+              <p className="text-zinc-500 text-sm">Your account has been created. Redirecting to login...</p>
             </div>
           )}
         </div>
@@ -138,12 +139,14 @@ function InviteContent() {
 
 export default function InvitePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <InviteContent />
-    </Suspense>
+    <EmberShell withNav={false}>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <InviteContent />
+      </Suspense>
+    </EmberShell>
   )
 }

@@ -19,28 +19,31 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-            <Mail className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-slate-900">Inmybox</span>
-        </div>
+    <div className="ember-root min-h-screen ember-bg flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="ember-stars-1" />
+        <div className="ember-stars-2" />
+        <div className="absolute inset-0 ember-grid" />
+      </div>
+      <div className="w-full max-w-sm relative z-10">
+        <Link href="/" className="flex items-center gap-2.5 mb-8">
+          <span className="ember-avatar"><Mail className="w-4 h-4 text-amber-400" /></span>
+          <span className="font-display text-lg font-bold text-white tracking-tight">Inmybox</span>
+        </Link>
 
         {submitted ? (
           <div className="text-center">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-5">
-              <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto mb-5">
+              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Check your email</h1>
-            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
-              If an account exists for <strong className="text-slate-700">{email}</strong>, we&apos;ve sent
+            <h1 className="font-display text-2xl font-bold text-white mb-2">Check your email</h1>
+            <p className="text-sm text-zinc-400 mb-8 leading-relaxed">
+              If an account exists for <strong className="text-zinc-200">{email}</strong>, we&apos;ve sent
               password reset instructions.
             </p>
             <Link
               href="/auth/signin"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-amber-300 hover:text-amber-200"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to sign in
@@ -48,18 +51,18 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Reset your password</h1>
-            <p className="text-sm text-slate-500 mb-8">
+            <h1 className="font-display text-2xl font-bold text-white mb-2">Reset your password</h1>
+            <p className="text-sm text-zinc-400 mb-8">
               Enter the email associated with your account, and we&apos;ll send a reset link.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-1.5">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                   <input
                     id="email"
                     type="email"
@@ -67,7 +70,7 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
                     required
-                    className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-white/10 bg-white/[0.04] text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/40 outline-none transition"
                   />
                 </div>
               </div>
@@ -75,23 +78,23 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-md shadow-brand-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="ember-shiny-cta w-full justify-center !py-3 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    Send Reset Link
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Send Reset Link</span>
+                    <ArrowRight className="w-4 h-4 ember-cta-icon" />
                   </>
                 )}
               </button>
             </form>
 
-            <p className="text-sm text-slate-500 text-center mt-6">
+            <p className="text-sm text-zinc-400 text-center mt-6">
               <Link
                 href="/auth/signin"
-                className="inline-flex items-center gap-1.5 text-brand-600 hover:text-brand-700 font-medium"
+                className="inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-medium"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Back to sign in

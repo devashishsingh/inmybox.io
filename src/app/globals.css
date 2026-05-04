@@ -1346,55 +1346,33 @@ select:focus {
   mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, #000 20%, transparent 80%);
 }
 
-/* Starfield (two parallax layers) */
+/* Mail-icon flow (two parallax layers).
+   Two repeating SVG tiles drift upward at different speeds. Each tile contains
+   a few envelope glyphs at varied positions so the repeat doesn't look gridded. */
 .ember-stars-1, .ember-stars-2 {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 200%;
   pointer-events: none;
-  background: transparent;
+  background-repeat: repeat;
+  will-change: background-position;
 }
 .ember-stars-1 {
-  box-shadow:
-    134px 873px #fff, 1583px 1247px #fff, 942px 89px #fff, 1789px 432px #fff,
-    342px 1456px #fff, 1234px 678px #fff, 87px 234px #fff, 1654px 1789px #fff,
-    523px 1123px #fff, 1432px 234px #fff, 234px 567px #fff, 1789px 1234px #fff,
-    876px 1567px #fff, 432px 234px #fff, 1234px 1456px #fff, 654px 789px #fff,
-    1567px 432px #fff, 234px 1123px #fff, 1432px 876px #fff, 765px 1234px #fff,
-    1654px 567px #fff, 432px 1567px #fff, 1234px 234px #fff, 876px 432px #fff,
-    1567px 1123px #fff, 234px 789px #fff, 1432px 1567px #fff, 654px 234px #fff,
-    1789px 876px #fff, 432px 1234px #fff, 1123px 567px #fff, 234px 1432px #fff,
-    1567px 234px #fff, 876px 1123px #fff, 432px 432px #fff, 1234px 789px #fff,
-    1654px 1234px #fff, 234px 1789px #fff, 1432px 432px #fff, 765px 567px #fff,
-    1567px 1789px #fff, 432px 876px #fff, 1234px 1234px #fff, 876px 234px #fff,
-    1789px 567px #fff, 234px 432px #fff, 1432px 1234px #fff, 654px 1567px #fff,
-    1567px 876px #fff, 432px 1789px #fff;
-  animation: animStar 50s linear infinite;
-}
-.ember-stars-1::after, .ember-stars-2::after {
-  content: '';
-  position: absolute;
-  top: 2000px;
-  inset-inline: 0;
-  width: 100%;
-  height: 100%;
-  box-shadow: inherit;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='white' stroke-width='1.2' stroke-opacity='0.55' stroke-linejoin='round'%3E%3Cg transform='translate(40 90)'%3E%3Crect width='14' height='10' rx='1.5'/%3E%3Cpath d='M0 0l7 5 7-5'/%3E%3C/g%3E%3Cg transform='translate(300 140)'%3E%3Crect width='14' height='10' rx='1.5'/%3E%3Cpath d='M0 0l7 5 7-5'/%3E%3C/g%3E%3Cg transform='translate(170 260)'%3E%3Crect width='14' height='10' rx='1.5'/%3E%3Cpath d='M0 0l7 5 7-5'/%3E%3C/g%3E%3Cg transform='translate(340 330)'%3E%3Crect width='14' height='10' rx='1.5'/%3E%3Cpath d='M0 0l7 5 7-5'/%3E%3C/g%3E%3Cg transform='translate(90 360)'%3E%3Crect width='14' height='10' rx='1.5'/%3E%3Cpath d='M0 0l7 5 7-5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 400px 400px;
+  animation: ember-mail-rise-1 50s linear infinite;
 }
 .ember-stars-2 {
-  box-shadow:
-    523px 234px 0 0.5px #fff, 1432px 876px 0 0.5px #fff, 234px 1567px 0 0.5px #fff,
-    1789px 432px 0 0.5px #fff, 654px 1234px 0 0.5px #fff, 1567px 234px 0 0.5px #fff,
-    432px 876px 0 0.5px #fff, 1234px 1567px 0 0.5px #fff, 765px 432px 0 0.5px #fff,
-    1654px 1123px 0 0.5px #fff, 234px 567px 0 0.5px #fff, 1432px 1789px 0 0.5px #fff,
-    876px 234px 0 0.5px #fff, 1567px 567px 0 0.5px #fff, 432px 1234px 0 0.5px #fff,
-    1789px 876px 0 0.5px #fff, 234px 1432px 0 0.5px #fff, 1234px 432px 0 0.5px #fff;
-  animation: animStar 80s linear infinite;
-  background-size: 2px 2px;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Cg fill='none' stroke='white' stroke-width='1' stroke-opacity='0.4' stroke-linejoin='round'%3E%3Cg transform='translate(110 150)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3Cg transform='translate(480 80)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3Cg transform='translate(260 300)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3Cg transform='translate(550 420)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3Cg transform='translate(50 500)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3Cg transform='translate(380 540)'%3E%3Crect width='10' height='7' rx='1'/%3E%3Cpath d='M0 0l5 3.5 5-3.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 600px 600px;
+  animation: ember-mail-rise-2 80s linear infinite;
 }
-@keyframes animStar {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-2000px); }
+@keyframes ember-mail-rise-1 {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 -400px; }
+}
+@keyframes ember-mail-rise-2 {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 -600px; }
 }
 
 /* Glassmorphism — black 60% + blur */
@@ -1634,7 +1612,7 @@ select:focus {
 /* Massive watermark stroke text in footer */
 .ember-watermark {
   font-family: var(--font-manrope), system-ui, sans-serif;
-  font-size: 10vw;
+  font-size: clamp(48px, 10vw, 180px);
   font-weight: 800;
   letter-spacing: -0.05em;
   color: transparent;
@@ -1644,6 +1622,8 @@ select:focus {
   user-select: none;
   pointer-events: none;
   line-height: 0.9;
+  max-width: 100vw;
+  overflow: hidden;
 }
 
 /* Pulse-glow utility */

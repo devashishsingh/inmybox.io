@@ -339,7 +339,7 @@ function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked
                             </div>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <Link
-                                href="/pricing"
+                                href="/auth/signup"
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-brand-300 hover:text-brand-200 hover:border-brand-500/40 transition-all"
                               >
                                 <Lock className="w-3 h-3" />
@@ -436,7 +436,7 @@ function RawRecords({ unlocked, rawRecords }: { unlocked?: boolean; rawRecords?:
             {/* Overlay CTA */}
             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 rounded-xl">
               <Link
-                href="/pricing"
+                href="/auth/signup"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
               >
                 <Lock className="w-3.5 h-3.5" />
@@ -1665,10 +1665,10 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link
-                    href="/pricing"
+                    href="/auth/signup"
                     className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
                   >
-                    See Plans & Pricing
+                    Get Started Free
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <a

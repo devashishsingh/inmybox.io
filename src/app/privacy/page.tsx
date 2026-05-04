@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Mail, ArrowLeft } from 'lucide-react'
+import { EmberShell } from '@/components/ember-shell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -9,18 +10,19 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-slate-100">
+    <EmberShell withNav={false}>
+      <div className="min-h-screen">
+      <header className="border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/90 flex items-center justify-center">
               <Mail className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900">Inmybox</span>
+            <span className="text-lg font-bold text-white">Inmybox</span>
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+            className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -29,10 +31,10 @@ export default function PrivacyPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-slate-500 mb-10">Last updated: April 13, 2026</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+        <p className="text-sm text-zinc-400 mb-10">Last updated: April 13, 2026</p>
 
-        <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
+        <div className="prose prose-invert max-w-none prose-headings:font-semibold prose-headings:text-white prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300">
           <h2>1. Introduction</h2>
           <p>
             Inmybox (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) is committed to protecting
@@ -149,12 +151,13 @@ export default function PrivacyPage() {
           <h2>10. Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, contact us at{' '}
-            <a href="mailto:privacy@inmybox.io" className="text-brand-600 hover:underline">
+            <a href="mailto:privacy@inmybox.io" className="text-amber-300 hover:underline">
               privacy@inmybox.io
             </a>
           </p>
         </div>
       </main>
-    </div>
+      </div>
+    </EmberShell>
   )
 }

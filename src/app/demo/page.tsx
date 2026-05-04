@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next'
 import { RequestDemoForm } from '@/components/demo-form'
+import { EmberShell } from '@/components/ember-shell'
 
 export const metadata: Metadata = {
   title: 'Request a Demo',
@@ -15,5 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function RequestDemoPage() {
-  return <RequestDemoForm />
+  return (
+    <EmberShell>
+      <RequestDemoForm />
+    </EmberShell>
+  )
 }

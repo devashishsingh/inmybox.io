@@ -1,0 +1,31 @@
+# Render Blueprint — Inmybox Scanner Service
+# Deploy: connect repo on Render → "New" → "Blueprint" → select this file.
+services:
+  - type: web
+    name: inmybox-scanner
+    runtime: docker
+    plan: starter # bump to standard for >1 instance
+    region: oregon # pick closest to your Vercel region
+    rootDir: scanner-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: SCANNER_TOKEN
+        generateValue: true # Render generates a random secret; copy to Vercel as SCANNER_TOKEN
+      - key: CACHE_TTL_MS
+        value: 300000
+      - key: CACHE_MAX
+        value: 1000
+      - key: RATE_LIMIT_MAX
+        value: 60
+      - key: RATE_LIMIT_WINDOW
+        value: 1 minute
+      - key: CORS_ORIGIN
+        value: https://inmybox.io,https://www.inmybox.io
+      - key: LOG_LEVEL
+        value: info
