@@ -35,7 +35,7 @@ import { AnimateOnScroll } from '@/components/animate'
 import { CookieBanner } from '@/components/cookie-banner'
 import { DomainScanner } from '@/components/domain-scanner'
 
-/* ΓöÇΓöÇΓöÇ animated counter hook ΓöÇΓöÇΓöÇ */
+/* ——— animated counter hook ——— */
 function useCounter(target: number, duration = 2000, suffix = '') {
   const [count, setCount] = useState(0)
   const [started, setStarted] = useState(false)
@@ -68,7 +68,7 @@ function useCounter(target: number, duration = 2000, suffix = '') {
   return { ref, display: `${count.toLocaleString()}${suffix}` }
 }
 
-/* ΓöÇΓöÇΓöÇ feature tabs data ΓöÇΓöÇΓöÇ */
+/* ——— feature tabs data ——— */
 const featureTabs = [
   {
     id: 'aggregation',
@@ -88,7 +88,7 @@ const featureTabs = [
     icon: Eye,
     title: 'Know Every IP Sending As You',
     description: 'Identify every IP address and service sending email under your domain. Automatically classify trusted services, flag unknown senders, and track suspicious activity before it harms your reputation.',
-    highlights: ['Auto sender classification', 'Reverse DNS enrichment', 'Provider detection (Google, AWS, SendGridΓÇª)', 'Threat flagging'],
+    highlights: ['Auto sender classification', 'Reverse DNS enrichment', 'Provider detection (Google, AWS, SendGrid…)', 'Threat flagging'],
     stats: [
       { label: 'IPs Monitored', value: '12K+' },
       { label: 'Providers Detected', value: '200+' },
@@ -120,7 +120,7 @@ const featureTabs = [
   },
 ]
 
-/* ΓöÇΓöÇΓöÇ testimonials data ΓöÇΓöÇΓöÇ */
+/* ——— testimonials data ——— */
 const testimonials = [
   {
     quote: "Inmybox gave us instant visibility into email delivery issues we didn't even know we had. Within a week, our inbox rate jumped from 87% to 96%.",
@@ -135,14 +135,14 @@ const testimonials = [
     company: 'Commerce Cloud',
   },
   {
-    quote: "Setting up DMARC was always intimidating. Inmybox made it so simple ΓÇö we went from no authentication to full enforcement in under two weeks.",
+    quote: "Setting up DMARC was always intimidating. Inmybox made it so simple — we went from no authentication to full enforcement in under two weeks.",
     name: 'Priya Patel',
     role: 'IT Security Lead',
     company: 'FinSecure Partners',
   },
 ]
 
-// INMYBOX HERO ENHANCEMENT ΓÇö Revenue Loss Calculator
+// INMYBOX HERO ENHANCEMENT — Revenue Loss Calculator
 const INBOX_FAIL_RATE = 0.28 // 28% industry average fail-to-inbox
 
 function useAnimatedNumber(target: number, duration = 1500, active = true) {
@@ -210,7 +210,7 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
     <div className="rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-sm p-4 mb-3 skeuo-inset">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm">≡ƒôº</span>
+        <span className="text-sm">📧</span>
         <span className="text-xs text-slate-300 font-medium">
           Based on {emailsPerMonth.toLocaleString()} emails/month
         </span>
@@ -241,13 +241,13 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
         Assuming: {conversionRate}% lead rate ┬╖ ${leadValue} per lead ┬╖ 28% inbox failure rate
       </p>
 
-      {/* MODE B ΓÇö Sliders (expanded) */}
+      {/* MODE B — Sliders (expanded) */}
       {expanded && (
         <div className="border-t border-slate-700/50 pt-4 mt-2 space-y-4">
           {/* Emails per month */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400 flex items-center gap-1.5">≡ƒôº Emails you send per month</span>
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">📧 Emails you send per month</span>
               <span className="text-sm font-semibold text-white">{emailsPerMonth.toLocaleString()}</span>
             </div>
             <input
@@ -262,7 +262,7 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
           {/* Conversion rate */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400 flex items-center gap-1.5">≡ƒÄ» Email-to-lead conversion rate</span>
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">🎯 Email-to-lead conversion rate</span>
               <span className="text-sm font-semibold text-white">{conversionRate}%</span>
             </div>
             <input
@@ -277,7 +277,7 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
           {/* Lead value */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400 flex items-center gap-1.5">≡ƒÆ░ Average value per lead</span>
+              <span className="text-xs text-slate-400 flex items-center gap-1.5">💰 Average value per lead</span>
               <span className="text-sm font-semibold text-white">${leadValue.toLocaleString()}</span>
             </div>
             <input
@@ -297,12 +297,12 @@ function RevenueLossCalculator({ onRevenueChange }: { onRevenueChange?: (val: nu
           onClick={() => setExpanded(true)}
           className="w-full text-center text-sm font-medium text-brand-400 hover:text-brand-300 transition-colors py-2 border-t border-slate-700/50 mt-1"
         >
-          These are YOUR numbers? Customise them ΓåÆ
+          These are YOUR numbers? Customise them →
         </button>
       ) : (
         <div className="text-center mt-4">
           <p className="text-xs text-slate-400">
-            Fix this in 2 minutes ΓÇö scan your domain below Γåô
+            Fix this in 2 minutes — scan your domain below ↓
           </p>
         </div>
       )}
@@ -334,81 +334,48 @@ export function LandingPage() {
       <Navbar />
 
       {/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
-          HERO  ΓÇö Domain Scanner + Dashboard Mock
+          HERO  — Domain Scanner + Dashboard Mock
           ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */}
       <section className="relative min-h-screen flex items-center bg-slate-950 overflow-hidden z-0">
-        {/* ΓöÇΓöÇ Background layers ΓöÇΓöÇ */}
+        {/* —— Background layers —— */}
         <div className="absolute inset-0 hero-grid-fine" />
         <div className="absolute inset-0 hero-glow" />
         <div className="absolute inset-0 noise-overlay" />
 
-        {/* Animated gradient orbs ΓÇö INMYBOX HERO ENHANCEMENT */}
+        {/* Animated gradient orbs — INMYBOX HERO ENHANCEMENT */}
         <div className="orb w-[700px] h-[700px] bg-blue-700/[0.07] top-[-10%] left-[-5%] animate-orb-drift-1" />
         <div className="orb w-[600px] h-[600px] bg-indigo-600/[0.05] bottom-[-5%] right-[-5%] animate-orb-drift-2" />
         <div className="orb w-[400px] h-[400px] bg-cyan-600/[0.06] top-[30%] right-[10%] animate-orb-pulse" />
 
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 pb-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-8">
           <div className={`grid ${hasScanResults ? 'lg:grid-cols-1' : 'lg:grid-cols-[52%_48%]'} gap-6 lg:gap-8 items-center transition-all duration-500`}>
-            {/* Left ΓÇö Copy + Calculator + Scanner */}
+            {/* Left — Copy + Calculator + Scanner */}
             <div className="text-center lg:text-left">
-              {/* INMYBOX HERO ENHANCEMENT ΓÇö Urgency badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-semibold tracking-wide skeuo-badge">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                Google &amp; Microsoft now enforcing DMARC ΓÇö Is your domain ready?
-              </div>
-
-              {/* ΓÜá∩╕Å LOCKED ΓÇö DO NOT CHANGE THIS HEADLINE OR SUBHEADLINE */}
               <h1 className="text-3xl sm:text-4xl lg:text-4xl xl:text-5xl font-bold text-white tracking-tight leading-[1.1] mb-3">
-                Sent Doesn&apos;t Mean Delivered.{' '}
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Delivered Doesn&apos;t Mean Seen.</span>
+                You are losing revenue{' '}
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">every time your email lands in spam.</span>
               </h1>
 
               <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto lg:mx-0 mb-4 leading-relaxed">
-                Inmybox closes the gap ΓÇö and shows you the revenue you&apos;ve been missing.
+                Most companies don&apos;t know their emails aren&apos;t reaching the inbox. By the time they notice, leads have gone cold and revenue has quietly disappeared.
               </p>
-              {/* ΓÜá∩╕Å END LOCKED COPY */}
 
-              {/* ΓöÇΓöÇ Domain Scanner ΓÇö primary hero CTA ΓöÇΓöÇ */}
               <DomainScanner onScanResult={setHasScanResults} />
-
-              {/* Trust badges */}
-              <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 skeuo-badge">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  <span className="text-[11px] text-emerald-300 font-medium">SOC 2 Ready</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 skeuo-badge">
-                  <Star className="w-3 h-3 text-amber-400" />
-                  <span className="text-[11px] text-amber-300 font-medium">4.8/5 Rating</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 skeuo-badge">
-                  <Globe className="w-3 h-3 text-brand-400" />
-                  <span className="text-[11px] text-brand-300 font-medium">130+ Countries</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30 skeuo-badge">
-                  <CreditCard className="w-3 h-3 text-slate-400" />
-                  <span className="text-[11px] text-slate-300 font-medium">No credit card</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-600/30 skeuo-badge">
-                  <Clock className="w-3 h-3 text-slate-400" />
-                  <span className="text-[11px] text-slate-300 font-medium">Results in seconds</span>
-                </div>
-              </div>
             </div>
 
-            {/* Right ΓÇö Dashboard Mock with 3D depth */}
+            {/* Right — Dashboard Mock with 3D depth */}
             {!hasScanResults && (
             <div className="relative hidden lg:block overflow-hidden pr-2">
-              {/* Floating metric cards ΓÇö INMYBOX HERO ENHANCEMENT */}
+              {/* Floating metric cards — INMYBOX HERO ENHANCEMENT */}
               <div className="absolute -top-4 right-0 z-20 animate-float-card-1">
                 <div className="glass-float-green rounded-xl px-4 py-3 shadow-xl">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">≡ƒô¼</span>
+                    <span className="text-base">📊</span>
                     <div>
                       <div className="text-xs text-slate-400">Inbox Rate</div>
-                      <div className="text-sm font-bold text-emerald-400">94.1% <span className="text-emerald-300 text-xs">Γåæ 2.1%</span></div>
+                      <div className="text-sm font-bold text-emerald-400">94.1% <span className="text-emerald-300 text-xs">↑ 2.1%</span></div>
                     </div>
                   </div>
                 </div>
@@ -417,7 +384,7 @@ export function LandingPage() {
               <div className="absolute -bottom-2 left-0 z-20 animate-float-card-2">
                 <div className="glass-float-red rounded-xl px-4 py-3 shadow-xl">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">≡ƒÆ╕</span>
+                    <span className="text-base">💸</span>
                     <div>
                       <div className="text-xs text-slate-400">Revenue at Risk</div>
                       <div className="text-sm font-bold text-red-400">$1,240</div>
@@ -429,7 +396,7 @@ export function LandingPage() {
               <div className="absolute top-1/2 right-0 z-20 animate-float-card-3">
                 <div className="glass-float-blue rounded-xl px-4 py-3 shadow-xl">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">≡ƒöÆ</span>
+                    <span className="text-base">🔒</span>
                     <div>
                       <div className="text-xs text-slate-400">SPF Pass</div>
                       <div className="text-sm font-bold text-blue-400">98.2%</div>
@@ -533,12 +500,12 @@ export function LandingPage() {
       <section className="py-8 bg-slate-900/50 border-b border-slate-800/50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-xs text-slate-500 uppercase tracking-widest mb-6 font-medium">
-            Why email is the most powerful ΓÇö and most attacked ΓÇö channel in business
+            Why email is the most powerful — and most attacked — channel in business
           </p>
         </div>
 
         <div className="ticker-wrapper space-y-4">
-          {/* Row 1 ΓÇö Stats & Facts ΓÇö scrolls LEFT */}
+          {/* Row 1 — Stats & Facts — scrolls LEFT */}
           <div className="relative ticker-edge-fade">
             <div className="flex ticker-row-1">
               {[...Array(2)].map((_, setIdx) => (
@@ -549,12 +516,12 @@ export function LandingPage() {
                     '347 billion emails sent every single day',
                     'Email beats social ROI by 4x every year',
                     'Nobody sends a job offer over WhatsApp',
-                    'You sign contracts over email ΓÇö not Slack',
+                    'You sign contracts over email — not Slack',
                     'Email is legally admissible in court',
-                    'Your email list is yours forever ΓÇö Instagram can ban you tomorrow',
+                    'Your email list is yours forever — Instagram can ban you tomorrow',
                     'No algorithm between you and your recipient',
                     'Everything said over email is documented and provable',
-                    'One email scales to millions ΓÇö one call reaches one person',
+                    'One email scales to millions — one call reaches one person',
                     'Every platform on earth asks for your email to sign up',
                   ].map((text, i) => (
                     <div key={`${setIdx}-${i}`} className="flex items-center shrink-0">
@@ -567,7 +534,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Row 2 ΓÇö Urgency & Threat ΓÇö scrolls RIGHT */}
+          {/* Row 2 — Urgency & Threat — scrolls RIGHT */}
           <div className="relative ticker-edge-fade">
             <div className="flex ticker-row-2">
               {[...Array(2)].map((_, setIdx) => (
@@ -580,7 +547,7 @@ export function LandingPage() {
                     'Google now rejects unauthenticated bulk email',
                     'Microsoft enforcing DMARC from May 2025',
                     'Yahoo blocking non-compliant senders right now',
-                    'Your bank talks to you over email ΓÇö so do attackers',
+                    'Your bank talks to you over email — so do attackers',
                     'Email is the internet\u0027s only universal identity layer',
                     'Sent does not mean delivered',
                     'Delivered does not mean seen',
@@ -612,7 +579,7 @@ export function LandingPage() {
                 Protect Your Reputation, Ensure Compliance, Boost Deliverability
               </h2>
               <p className="text-lg text-slate-400 leading-relaxed">
-                Our platform simplifies your entire DMARC journey ΓÇö from first scan to full enforcement.
+                Our platform simplifies your entire DMARC journey — from first scan to full enforcement.
               </p>
             </div>
           </AnimateOnScroll>
@@ -874,7 +841,7 @@ export function LandingPage() {
           {/* Tab content */}
           <div key={activeTab} className="tab-reveal">
             <div className="grid lg:grid-cols-2 gap-10 items-center">
-              {/* Left ΓÇö Info */}
+              {/* Left — Info */}
               <div>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
                   {activeFeature.title}
@@ -900,7 +867,7 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Right ΓÇö Visual preview */}
+              {/* Right — Visual preview */}
               <div className="relative">
                 <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden shadow-2xl skeuo-card">
                   <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-900/80">
@@ -994,8 +961,8 @@ export function LandingPage() {
                           {[
                             { title: 'Enable DKIM for marketing.acme.com', severity: 'Critical', color: 'text-red-400', bg: 'bg-red-500/10' },
                             { title: 'Review 3 unknown senders on 198.51.x.x', severity: 'High', color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                            { title: 'Update SPF record ΓÇö near 10 lookup limit', severity: 'Medium', color: 'text-brand-400', bg: 'bg-brand-500/10' },
-                            { title: 'Move DMARC policy from none ΓåÆ quarantine', severity: 'Recommended', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                            { title: 'Update SPF record — near 10 lookup limit', severity: 'Medium', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+                            { title: 'Move DMARC policy from none → quarantine', severity: 'Recommended', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                           ].map((item, i) => (
                             <div key={i} className="flex items-center justify-between bg-slate-800 rounded-lg px-4 py-3 border border-slate-700/50">
                               <span className="text-xs text-slate-300">{item.title}</span>

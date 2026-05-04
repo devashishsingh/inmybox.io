@@ -1,219 +1,202 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { getAllPosts, getCategories } from '@/lib/blog'
-import { Navbar } from '@/components/landing-nav'
-import { Mail, ArrowRight, Clock, Tag, ChevronRight } from 'lucide-react'
+import { EmberShell } from '@/components/ember-shell'
+import { BlogList } from '@/components/blog/blog-list'
+import { Mail, ArrowRight, Clock, Sparkles, BookOpen, ChevronRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Blog — Email Security, DMARC & Deliverability',
-  description: 'Expert insights on email authentication, DMARC, SPF, DKIM, deliverability best practices, and domain protection.',
+  title: 'Blog — Email Security, DMARC & Deliverability Insights',
+  description: 'Long-form, expert insights on email authentication, DMARC, SPF, DKIM, deliverability, BIMI and domain protection — written by the team behind Inmybox.',
 }
 
 export default function BlogPage() {
   const posts = getAllPosts()
   const categories = getCategories()
   const featured = posts[0]
-  const rest = posts.slice(1)
+  const items = posts.map(p => ({
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    category: p.category,
+    author: p.author,
+    date: p.date,
+    tags: p.tags,
+    readingTime: p.readingTime,
+  }))
 
   return (
-    <main className="min-h-screen bg-slate-950">
-      <Navbar />
-
-      {/* ── Hero ── */}
-      <section className="relative pt-28 pb-16 border-b border-slate-800/50">
-        <div className="absolute inset-0 hero-glow opacity-30" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3">
-              The Inmybox Blog
-            </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-4">
-              Email Security{' '}
-              <span className="gradient-text">Insights</span>
-            </h1>
-            <p className="text-lg text-slate-400 leading-relaxed max-w-2xl">
-              Deep dives into DMARC, SPF, DKIM, email deliverability, and domain
-              protection. Written by the team building Inmybox.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Category Pills ── */}
-      <div className="border-b border-slate-800/50 bg-slate-950 sticky top-16 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 py-4 overflow-x-auto scrollbar-hide">
-            <Link
-              href="/blog"
-              className="px-4 py-2 rounded-full text-sm font-medium bg-brand-600 text-white shrink-0"
-            >
-              All Posts
-            </Link>
-            {categories.map((cat) => (
-              <span
-                key={cat}
-                className="px-4 py-2 rounded-full text-sm font-medium bg-slate-800/50 text-slate-400 border border-slate-700/50 shrink-0 cursor-default"
-              >
-                {cat}
+    <EmberShell>
+      <main className="min-h-screen">
+        {/* ── Hero ── */}
+        <section className="relative pt-36 pb-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 mb-6">
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-300">
+                The Inmybox Field Notes
               </span>
-            ))}
+            </div>
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold ember-heading tracking-tight leading-[1.05] mb-6">
+              Stories from the{' '}
+              <span className="ember-text-fire">edge of the inbox</span>.
+            </h1>
+            <p className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
+              Field notes, deep dives and battle-tested playbooks on DMARC, SPF, DKIM, BIMI
+              and the strange politics of getting an email delivered in 2026.
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-3 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                {posts.length} {posts.length === 1 ? 'article' : 'articles'}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-zinc-700" />
+              <span>{categories.length} categories</span>
+              <span className="w-1 h-1 rounded-full bg-zinc-700" />
+              <span>Updated weekly</span>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* ── Featured Post ── */}
+        {/* ── Featured spotlight ── */}
         {featured && (
-          <Link href={`/blog/${featured.slug}`} className="block group mb-16">
-            <div className="grid lg:grid-cols-2 gap-8 items-center rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-10 card-hover">
-              {/* Cover image placeholder */}
-              <div className="aspect-[16/9] rounded-xl bg-gradient-to-br from-brand-600/20 via-brand-500/10 to-violet-600/20 border border-slate-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center mx-auto mb-3">
-                    <Mail className="w-8 h-8 text-brand-400" />
+          <section className="relative pb-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-400 mb-4">
+                ★ Editor&apos;s pick
+              </p>
+              <Link
+                href={`/blog/${featured.slug}`}
+                className="group block ember-bento rounded-3xl overflow-hidden"
+              >
+                <div className="grid lg:grid-cols-[1.1fr_1fr] gap-0 items-stretch">
+                  {/* Cover */}
+                  <div className="relative aspect-[16/10] lg:aspect-auto min-h-[280px] overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_30%,rgba(245,158,11,0.28),transparent_55%),radial-gradient(circle_at_85%_75%,rgba(239,35,60,0.22),transparent_60%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.55))]" />
+                    <div className="absolute inset-0 grid place-items-center">
+                      <div className="w-20 h-20 rounded-3xl ember-glass-strong flex items-center justify-center shadow-2xl shadow-amber-500/10">
+                        <Mail className="w-9 h-9 text-amber-400" />
+                      </div>
+                    </div>
+                    <div
+                      className="absolute inset-0 opacity-30 mix-blend-screen"
+                      style={{
+                        backgroundImage:
+                          'radial-gradient(rgba(245,158,11,0.12) 1px, transparent 1px)',
+                        backgroundSize: '24px 24px',
+                      }}
+                    />
                   </div>
-                  <span className="text-sm text-slate-400">Featured</span>
+
+                  {/* Body */}
+                  <div className="p-8 md:p-10 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-5 flex-wrap">
+                      <span className="ember-pill ember-pill-saffron">{featured.category}</span>
+                      <span className="text-xs text-zinc-500">
+                        {new Date(featured.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      <span className="text-xs text-zinc-500 inline-flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {featured.readingTime}
+                      </span>
+                    </div>
+                    <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight mb-4 group-hover:text-amber-200 transition-colors">
+                      {featured.title}
+                    </h2>
+                    <p className="text-zinc-400 leading-relaxed mb-7">
+                      {featured.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="ember-avatar">
+                          <span className="text-[10px] font-bold text-amber-300">
+                            {featured.author.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </span>
+                        </span>
+                        <div>
+                          <div className="text-sm text-white font-medium leading-tight">{featured.author}</div>
+                          <div className="text-[11px] text-zinc-500">Inmybox</div>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-400 group-hover:translate-x-1 transition-transform">
+                        Read article
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Link>
+            </div>
+          </section>
+        )}
 
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/20">
-                    {featured.category}
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    {new Date(featured.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
+        {/* ── Filters + Grid ── */}
+        <section className="relative pb-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <BlogList
+              posts={items}
+              categories={categories}
+              featuredSlug={featured?.slug}
+            />
+          </div>
+        </section>
 
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 group-hover:text-brand-400 transition-colors">
-                  {featured.title}
-                </h2>
-                <p className="text-slate-400 leading-relaxed mb-5">
-                  {featured.excerpt}
-                </p>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-xs text-slate-400">
-                    <span>{featured.author}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {featured.readingTime}
+        {/* ── Newsletter ── */}
+        <section className="relative pb-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="ember-glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-red-500/10 blur-3xl pointer-events-none" />
+              <div className="relative grid md:grid-cols-[1.2fr_1fr] gap-8 items-center">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 mb-4">
+                    <Mail className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-amber-300">
+                      The Field Notes Newsletter
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-brand-400 group-hover:text-brand-300 transition-colors">
-                    Read article
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </span>
+                  <h3 className="font-display text-2xl md:text-3xl font-bold ember-heading mb-3 leading-tight">
+                    Get the next playbook before it ships.
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    One thoughtfully written deep-dive on email security every other Friday.
+                    No fluff, no spam, unsubscribe anytime.
+                  </p>
                 </div>
+                <form className="flex flex-col sm:flex-row gap-2 w-full">
+                  <input
+                    type="email"
+                    placeholder="you@company.com"
+                    className="flex-1 bg-black/40 border border-white/10 rounded-full px-5 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-amber-400/40 focus:ring-2 focus:ring-amber-400/20"
+                    required
+                  />
+                  <button type="submit" className="ember-shiny-cta !px-5 !py-3 !text-sm shrink-0">
+                    <span>Subscribe</span>
+                    <ArrowRight className="w-4 h-4 ember-cta-icon" />
+                  </button>
+                </form>
               </div>
             </div>
-          </Link>
-        )}
-
-        {/* ── Newsletter CTA ── */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-10 mb-16">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div>
-              <h3 className="text-xl font-bold text-white mb-1">We do newsletters, too</h3>
-              <p className="text-sm text-slate-400">
-                Get email security tips and product updates delivered to your inbox biweekly.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <input
-                type="email"
-                placeholder="you@company.com"
-                className="flex-1 md:w-64 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-brand-500/50"
-              />
-              <button className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shrink-0">
-                Subscribe
-              </button>
-            </div>
           </div>
-        </div>
-
-        {/* ── Latest Posts Grid ── */}
-        {rest.length > 0 && (
-          <div>
-            <h3 className="text-xl font-bold text-white mb-8">Latest</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rest.map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-                  <article className="rounded-2xl border border-slate-800 bg-slate-900/50 overflow-hidden h-full flex flex-col card-hover">
-                    {/* Cover placeholder */}
-                    <div className="aspect-[16/10] bg-gradient-to-br from-slate-800 via-slate-800/80 to-slate-900 flex items-center justify-center border-b border-slate-800">
-                      <div className="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
-                        <Tag className="w-5 h-5 text-brand-400" />
-                      </div>
-                    </div>
-
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700/50">
-                          {post.category}
-                        </span>
-                        <span className="text-xs text-slate-600">
-                          {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-
-                      <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-brand-400 transition-colors line-clamp-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 flex-1">
-                        {post.excerpt}
-                      </p>
-
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-800/50">
-                        <span className="text-xs text-slate-400">{post.author}</span>
-                        <span className="text-xs text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {post.readingTime}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        </section>
 
         {/* ── Bottom CTA ── */}
-        <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-xs font-semibold mb-6">
-            <Mail className="w-3.5 h-3.5" />
-            Free Domain Health Check
+        <section className="relative pb-28">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-bold ember-heading mb-4 tracking-tight">
+              Not sure where to start?
+            </h2>
+            <p className="text-zinc-400 mb-8 leading-relaxed">
+              Run a free domain health check. We&apos;ll score DMARC, SPF, DKIM and configuration health in seconds.
+            </p>
+            <Link href="/" className="ember-shiny-cta">
+              <span>Scan your domain</span>
+              <ChevronRight className="w-4 h-4 ember-cta-icon" />
+            </Link>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-3">
-            Not sure where to start?
-          </h2>
-          <p className="text-slate-400 mb-6 max-w-lg mx-auto">
-            Scan your domain for free and get an instant score across DMARC, SPF, DKIM, and configuration health.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
-          >
-            Scan Your Domain
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-slate-800 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-brand-600 flex items-center justify-center">
-              <Mail className="w-3 h-3 text-white" />
-            </div>
-            <span className="text-sm font-semibold text-white">Inmybox</span>
-          </div>
-          <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} Inmybox. All rights reserved.</p>
-        </div>
-      </footer>
-    </main>
+        </section>
+      </main>
+    </EmberShell>
   )
 }

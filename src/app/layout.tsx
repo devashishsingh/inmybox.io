@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Manrope } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SessionProvider } from '@/components/session-provider'
 import './globals.css'
@@ -8,6 +8,14 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+})
+
+// INMYBOX REDESIGN — Spiritual Industrial: Manrope for ceremonial headings
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+  weight: ['300', '400', '500', '600', '700', '800'],
 })
 
 export const metadata: Metadata = {
@@ -83,7 +91,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable} data-theme="dark" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`} data-theme="dark" suppressHydrationWarning>
       <head>
         {/* INMYBOX ENHANCEMENT — Phase 6 L2: Moved from raw <script> to nonce-ready pattern */}
         <script

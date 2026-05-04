@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next'
-import { LandingPage } from '@/components/landing-page'
+// INMYBOX REDESIGN — Spiritual Industrial. Rollback: swap import back to '@/components/landing-page'
+import { LandingPageV2 } from '@/components/landing-page-v2'
 
 export const metadata: Metadata = {
   title: 'Inmybox — Email Reputation Intelligence & DMARC Analytics',
@@ -15,5 +16,5 @@ export const metadata: Metadata = {
 }
 
 export default function HomePage() {
-  return <LandingPage />
+  return <LandingPageV2 />
 }

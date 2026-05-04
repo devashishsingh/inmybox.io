@@ -16,7 +16,7 @@ import {
   Star,
   ChevronDown,
 } from 'lucide-react'
-import { Navbar } from '@/components/landing-nav'
+import { EmberShell } from '@/components/ember-shell'
 import { AnimateOnScroll } from '@/components/animate'
 import { CookieBanner } from '@/components/cookie-banner'
 
@@ -602,7 +602,6 @@ function Footer() {
           <span className="text-sm font-semibold text-white">Inmybox</span>
         </div>
         <div className="flex items-center gap-6 text-sm text-slate-500">
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
           <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
           <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
@@ -618,18 +617,19 @@ function Footer() {
    ═══════════════════════════════════════════════════════════════ */
 export default function BlueTickPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <Navbar />
-      <Hero />
-      <WhatIsBimi />
-      <WhatsIncluded />
-      <HowItWorks />
-      <Pricing />
-      <WhyUs />
-      <FAQs />
-      <BottomCTA />
-      <Footer />
-      <CookieBanner />
-    </main>
+    <EmberShell>
+      <main className="min-h-screen text-white">
+        <Hero />
+        <WhatIsBimi />
+        <WhatsIncluded />
+        <HowItWorks />
+        <Pricing />
+        <WhyUs />
+        <FAQs />
+        <BottomCTA />
+        <Footer />
+        <CookieBanner />
+      </main>
+    </EmberShell>
   )
 }
