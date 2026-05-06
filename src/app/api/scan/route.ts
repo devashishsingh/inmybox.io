@@ -831,7 +831,8 @@ export async function GET(req: NextRequest) {
       const response = NextResponse.json({ ...proxied, scanId })
       // Forward CDN-friendly cache headers so Vercel edge can cache scan results
       response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-      if (proxied.durationMs) response.headers.set('x-scan-duration', String(proxied.durationMs))
+      const duration = (proxied as ScanResult & { durationMs?: number }).durationMs
+      if (duration) response.headers.set('x-scan-duration', String(duration))
       return response
     } catch (err) {
       // Scanner unreachable / timed out — fall through to local engine so the
