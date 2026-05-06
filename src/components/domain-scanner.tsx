@@ -744,6 +744,16 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
   const [showReportForm, setShowReportForm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const aggregateRef = useRef<HTMLDivElement>(null)
+  const [subExpandedRows, setSubExpandedRows] = useState<Set<string>>(new Set())
+
+  const toggleSubRow = (key: string) => {
+    setSubExpandedRows(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const handleScan = async () => {
     const d = domain.trim().toLowerCase()
@@ -902,6 +912,20 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
     }
   }, [aggregate])
 
+  // Auto-open subdomain discovery when a main scan completes
+  useEffect(() => {
+    if (result?.domain) {
+      setDiscoveredSubs([])
+      setSelectedDomains(new Set())
+      setBatchResults(null)
+      setAggregate(null)
+      setSubExpandedRows(new Set())
+      setExpandMode('discover')
+      discoverSubdomains()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.domain])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleScan()
   }
@@ -928,7 +952,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
           />
           <button
             onClick={handleScan}
-            disabled={loading || !domain.trim()}
+            disabled={loading}
             className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {loading ? (
@@ -945,8 +969,10 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
           </button>
         </div>
         <div className="flex items-center justify-between mt-2 px-1">
-          <p className="text-xs text-slate-500">Free · No signup · Results in ~2 seconds</p>
-          {loading && <p className="text-xs text-indigo-400 animate-pulse">Checking DNS records…</p>}
+          {domain.trim() && !/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.([a-z0-9]([a-z0-9-]*[a-z0-9])?))+\.[a-z]{2,}$/i.test(domain.trim()) && !error && (
+            <p className="text-xs text-slate-500">Enter a valid domain — e.g. example.com or mail.example.com</p>
+          )}
+          {loading && <p className="text-xs text-indigo-400 animate-pulse ml-auto">Checking DNS records…</p>}
         </div>
         {error && (
           <div className="mt-2 flex items-center gap-2 text-sm text-red-400 px-1">
@@ -1548,7 +1574,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
                     <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
                       <span className="text-sm font-semibold text-white">Per-Domain Breakdown</span>
-                      <span className="text-xs text-slate-500">{batchResults.filter(r => r.result).length} successful</span>
+                      <span className="text-xs text-slate-500">{batchResults.filter(r => r.result).length} scanned · click row to expand</span>
                     </div>
                     <div className="divide-y divide-slate-800/50">
                       {batchResults.map((br, i) => {
@@ -1563,40 +1589,110 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                         const r = br.result
                         const cfg = RISK_CONFIG[r.riskLevel]
                         const Icon = cfg.icon
+                        const isExpanded = subExpandedRows.has(r.domain)
                         return (
-                          <div key={i} className="px-5 py-3 flex items-center gap-4">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgClass}`}>
-                              <Icon className={`w-4 h-4 ${cfg.textClass}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm text-white font-medium truncate">{r.domain}</div>
-                              <div className="flex items-center gap-3 mt-0.5">
-                                <span className={`text-xs font-medium ${cfg.textClass}`}>{r.riskLabel}</span>
-                                <span className="text-xs text-slate-500">Score {r.score}/100</span>
+                          <div key={i}>
+                            {/* Clickable row header */}
+                            <button
+                              onClick={() => toggleSubRow(r.domain)}
+                              className="w-full px-5 py-3 flex items-center gap-4 hover:bg-slate-800/30 transition-colors text-left"
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgClass}`}>
+                                <Icon className={`w-4 h-4 ${cfg.textClass}`} />
                               </div>
-                            </div>
-                            {/* Pillar mini badges */}
-                            <div className="hidden sm:flex items-center gap-1.5">
-                              {(Object.entries(r.pillars) as [string, PillarResult][]).map(([name, p]) => (
-                                <div
-                                  key={name}
-                                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                    p.status === 'pass' ? 'bg-emerald-500/10 text-emerald-400' :
-                                    p.status === 'partial' ? 'bg-amber-500/10 text-amber-400' :
-                                    'bg-red-500/10 text-red-400'
-                                  }`}
-                                >
-                                  {PILLAR_LABELS[name as keyof typeof PILLAR_LABELS]}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white font-medium truncate">{r.domain}</div>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                  <span className={`text-xs font-medium ${cfg.textClass}`}>{r.riskLabel}</span>
+                                  <span className="text-xs text-slate-500">Score {r.score}/100</span>
                                 </div>
-                              ))}
-                            </div>
-                            {/* Revenue at risk */}
-                            {r.revenueImpact && (
-                              <div className="text-right shrink-0">
-                                <div className="text-sm font-bold text-red-400">
-                                  ${r.revenueImpact.monthly.revenueAtRisk.toLocaleString()}
+                              </div>
+                              {/* Pillar mini badges */}
+                              <div className="hidden sm:flex items-center gap-1.5">
+                                {(Object.entries(r.pillars) as [string, PillarResult][]).map(([name, p]) => (
+                                  <div
+                                    key={name}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                      p.status === 'pass' ? 'bg-emerald-500/10 text-emerald-400' :
+                                      p.status === 'partial' ? 'bg-amber-500/10 text-amber-400' :
+                                      'bg-red-500/10 text-red-400'
+                                    }`}
+                                  >
+                                    {PILLAR_LABELS[name as keyof typeof PILLAR_LABELS]}
+                                  </div>
+                                ))}
+                              </div>
+                              {/* Revenue at risk */}
+                              {r.revenueImpact && (
+                                <div className="text-right shrink-0">
+                                  <div className="text-sm font-bold text-red-400">
+                                    ${r.revenueImpact.monthly.revenueAtRisk.toLocaleString()}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500">/month at risk</div>
                                 </div>
-                                <div className="text-[10px] text-slate-500">/month at risk</div>
+                              )}
+                              {isExpanded
+                                ? <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                                : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                              }
+                            </button>
+
+                            {/* Expanded detail panel */}
+                            {isExpanded && (
+                              <div className="px-5 pb-5 pt-2 bg-slate-900/40 border-t border-slate-800/50 space-y-3">
+                                {/* Pillar breakdown */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                  {(Object.entries(r.pillars) as [string, PillarResult][]).map(([name, p]) => (
+                                    <div key={name} className={`rounded-lg border p-3 ${
+                                      p.status === 'pass' ? 'bg-emerald-500/5 border-emerald-500/20' :
+                                      p.status === 'partial' ? 'bg-amber-500/5 border-amber-500/20' :
+                                      'bg-red-500/5 border-red-500/20'
+                                    }`}>
+                                      <div className="text-[11px] text-slate-400 mb-1">{PILLAR_LABELS[name as keyof typeof PILLAR_LABELS]}</div>
+                                      <div className={`text-sm font-bold ${
+                                        p.status === 'pass' ? 'text-emerald-400' :
+                                        p.status === 'partial' ? 'text-amber-400' : 'text-red-400'
+                                      }`}>{p.score}/{p.maxScore}</div>
+                                      <div className={`text-[10px] capitalize ${
+                                        p.status === 'pass' ? 'text-emerald-500/60' :
+                                        p.status === 'partial' ? 'text-amber-500/60' : 'text-red-500/60'
+                                      }`}>{p.status}</div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Revenue impact */}
+                                {r.revenueImpact && (
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div className="rounded-lg bg-slate-800/50 p-2.5 text-center">
+                                      <div className="text-sm font-bold text-amber-400">{r.revenueImpact.monthly.emailsLost.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-500">emails lost/mo</div>
+                                    </div>
+                                    <div className="rounded-lg bg-slate-800/50 p-2.5 text-center">
+                                      <div className="text-sm font-bold text-orange-400">{r.revenueImpact.monthly.potentialLeadsLost}</div>
+                                      <div className="text-[10px] text-slate-500">leads lost/mo</div>
+                                    </div>
+                                    <div className="rounded-lg bg-slate-800/50 p-2.5 text-center">
+                                      <div className="text-sm font-bold text-red-400">${r.revenueImpact.monthly.revenueAtRisk.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-500">revenue at risk</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Top findings */}
+                                {r.findings && r.findings.filter(f => f.type === 'error' || f.type === 'warning').length > 0 && (
+                                  <div className="space-y-1.5">
+                                    {r.findings.filter(f => f.type === 'error' || f.type === 'warning').slice(0, 3).map((f, fi) => {
+                                      const FIcon = f.type === 'error' ? XCircle : AlertTriangle
+                                      return (
+                                        <div key={fi} className={`flex items-start gap-2 text-xs ${f.type === 'error' ? 'text-red-400' : 'text-amber-400'}`}>
+                                          <FIcon className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                                          <span className="text-slate-300"><span className="font-medium">{f.title}:</span> {f.detail}</span>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

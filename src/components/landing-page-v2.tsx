@@ -622,31 +622,42 @@ function FooterV2() {
             <ul className="space-y-3 text-sm text-zinc-400">
               <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
               <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
-              <li><Link href="/blue-tick" className="hover:text-white transition-colors">Blue Tick / BIMI</Link></li>
-              <li><Link href="/auth/signup" className="hover:text-white transition-colors">Start Free Audit</Link></li>
+              <li><Link href="/blue-tick" className="hover:text-white transition-colors">BIMI &amp; Blue Tick</Link></li>
             </ul>
 
             <p className="text-sm font-semibold text-white mt-8 mb-5">Resources</p>
             <ul className="space-y-3 text-sm text-zinc-400">
               <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
               <li><Link href="/demo" className="hover:text-white transition-colors">Request Demo</Link></li>
-              <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+              <li><Link href="/docs/setup" className="hover:text-white transition-colors">Setup Guide</Link></li>
+              <li>
+                <a href="/api/docs/onboarding-guide" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  Onboarding Guide
+                  <span className="text-[10px] text-indigo-400 font-medium px-1 py-0.5 bg-indigo-500/10 rounded">PDF</span>
+                </a>
+              </li>
             </ul>
           </div>
 
-          {/* Column 2 — Why Inmybox */}
+          {/* Column 2 — Why InMyBox? */}
           <div>
-            <p className="text-sm font-semibold text-white mb-5">Why Inmybox?</p>
+            <p className="text-sm font-semibold text-white mb-5">Why InMyBox?</p>
             <ul className="space-y-3 text-sm text-zinc-400">
               <li><Link href="/#features" className="hover:text-white transition-colors">DMARC Aggregation</Link></li>
               <li><Link href="/#features" className="hover:text-white transition-colors">Sender Intelligence</Link></li>
               <li><Link href="/#features" className="hover:text-white transition-colors">Revenue Impact</Link></li>
-              <li><Link href="/blue-tick" className="hover:text-white transition-colors">BIMI &amp; Blue Tick</Link></li>
+              <li>
+                <a href="/api/docs/app-workflow" className="hover:text-white transition-colors flex items-center gap-1.5">
+                  ROI Whitepaper
+                  <span className="text-[10px] text-indigo-400 font-medium px-1 py-0.5 bg-indigo-500/10 rounded">PDF</span>
+                </a>
+              </li>
             </ul>
 
             <p className="text-sm font-semibold text-white mt-8 mb-5">Help &amp; Support</p>
             <ul className="space-y-3 text-sm text-zinc-400">
               <li><a href="mailto:hello@inmybox.io" className="hover:text-white transition-colors">Contact Us</a></li>
+              <li><Link href="/docs/setup" className="hover:text-white transition-colors">Documentation</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
