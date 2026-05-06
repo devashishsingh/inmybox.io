@@ -44,7 +44,7 @@ function InviteContent() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setState('success')
-      setTimeout(() => router.push('/auth/signin'), 3000)
+      setTimeout(() => router.push('/auth/signin?new=1'), 3000)
     } catch (err: any) {
       setError(err.message)
       setState('error')
@@ -131,6 +131,7 @@ function InviteContent() {
               <p className="text-zinc-500 text-sm">Your account has been created. Redirecting to login...</p>
             </div>
           )}
+
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { testConnection, fetchAndProcessEmails } from '@/lib/services/email-fetcher.service'
+import { pollAllMailboxes } from '@/lib/services/mailbox-poller.service'
 import { prisma } from '@/lib/prisma'
 
 // ─── PLAN-BASED FREQUENCY TIERS ─────────────────────────────────────
@@ -246,11 +247,21 @@ export async function POST(req: NextRequest) {
     `[cron] Processed ${activePipelines.length} pipelines: ${fetched} fetched, ${expired} expired, ${durationMs}ms`
   )
 
+  // ── MailboxConnection polling (OAuth + IMAP per-tenant) ───────────
+  let mailboxResults: { tenantId: string; processed: number; errors: string[] }[] = []
+  try {
+    mailboxResults = await pollAllMailboxes()
+  } catch (err: any) {
+    console.error('[cron] pollAllMailboxes error:', err.message)
+  }
+
   return NextResponse.json({
     pipelines: activePipelines.length,
     fetched,
     expired,
     results,
+    mailboxConnections: mailboxResults.length,
+    mailboxResults,
     durationMs,
     timestamp: now.toISOString(),
   })

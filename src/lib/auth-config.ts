@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { triggerWelcomeSequence } from './services/onboarding.service'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -39,6 +40,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          totpEnabled: user.totpEnabled,
         }
       },
     }),
@@ -52,10 +54,28 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/signin',
   },
   callbacks: {
+    async signIn({ user }) {
+      // Fire welcome email sequence on first login (non-blocking)
+      try {
+        const membership = await prisma.tenantMembership.findFirst({
+          where: { userId: (user as any).id },
+          include: { tenant: true },
+        })
+        if (membership) {
+          await triggerWelcomeSequence(membership.tenantId, (user as any).id)
+        }
+      } catch {
+        // Never block sign-in on email failure
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = user.role
+        token.role = (user as any).role
+        token.totpEnabled = (user as any).totpEnabled ?? false
+        // Reset 2FA verification on every new sign-in — must re-verify each session
+        token.twoFactorVerified = false
       }
       return token
     },
@@ -63,6 +83,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.totpEnabled = token.totpEnabled as boolean
+        session.user.twoFactorVerified = token.twoFactorVerified as boolean
       }
       return session
     },

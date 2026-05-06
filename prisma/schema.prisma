@@ -11,16 +11,21 @@ generator client {
 // ─── MULTI-TENANT CORE ─────────────────────────────────────────────
 
 model User {
-  id           String             @id @default(cuid())
-  email        String             @unique
-  password     String
-  name         String?
-  role         String             @default("user") // super_admin, user
-  isActive     Boolean            @default(true)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  memberships  TenantMembership[]
-  invitations  Invitation[]
+  id               String             @id @default(cuid())
+  email            String             @unique
+  password         String
+  name             String?
+  role             String             @default("user") // super_admin, user
+  isActive         Boolean            @default(true)
+  // 2FA (TOTP — RFC 6238, Google Authenticator compatible)
+  totpSecret       String?            // AES-256-GCM encrypted base32 seed
+  totpEnabled      Boolean            @default(false)
+  totpEnrolledAt   DateTime?
+  backupCodes      String?            // AES-256-GCM encrypted JSON array of 8 single-use codes
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  memberships      TenantMembership[]
+  invitations      Invitation[]
 }
 
 model Tenant {
@@ -40,11 +45,13 @@ model Tenant {
   actionItems   ActionItem[]
   aliases       AliasMapping[]
   invitations   Invitation[]
-  onboarding    OnboardingChecklist?
-  pipeline      PipelineConfig?
-  bimiConfigs   BimiConfig[]
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  onboarding        OnboardingChecklist?
+  pipeline          PipelineConfig?
+  bimiConfigs       BimiConfig[]
+  mailboxConnection MailboxConnection?
+  emailSequences    EmailSequenceLog[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 // ─── PIPELINE CONTROL ───────────────────────────────────────────────
@@ -129,6 +136,10 @@ model OnboardingChecklist {
   assumptionsConfigured  Boolean   @default(false)
   dashboardReady         Boolean   @default(false)
   completedAt            DateTime?
+  // Wizard state
+  ingestionMethod        String?   // dns_rua | forwarding | imap_oauth
+  wizardStep             Int       @default(0) // 0-6
+  welcomeEmailSent       Boolean   @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 }
@@ -173,6 +184,7 @@ model DmarcReport {
   policyP      String?
   policySp     String?
   policyPct    Int?
+  isDemo      Boolean       @default(false)
   createdAt   DateTime      @default(now())
 
   @@unique([reportId, domainId])
@@ -194,6 +206,7 @@ model DmarcRecord {
   dkimDomain     String?
   ipEnrichment   IpEnrichment?  @relation(fields: [ipEnrichmentId], references: [id])
   ipEnrichmentId String?
+  isDemo         Boolean        @default(false)
   createdAt      DateTime       @default(now())
 }
 
@@ -231,6 +244,7 @@ model Sender {
   failCount       Int                   @default(0)
   lastSeen        DateTime?
   classification  SenderClassification?
+  isDemo          Boolean               @default(false)
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
@@ -289,6 +303,7 @@ model RiskScore {
   potentialLeadLoss     Int      @default(0)
   estimatedRevenueAtRisk Float   @default(0)
   campaignHealthScore   Int      @default(100)
+  isDemo                Boolean  @default(false)
   createdAt             DateTime @default(now())
 }
 
@@ -308,6 +323,7 @@ model ActionItem {
   status      String   @default("open") // open, acknowledged, resolved, dismissed
   resolvedAt  DateTime?
   metadata    String?  // JSON blob for extra context
+  isDemo      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -424,6 +440,42 @@ model DemoRequest {
   message   String?
   status    String   @default("pending") // pending, contacted, converted
   createdAt DateTime @default(now())
+}
+
+// ─── MAILBOX CONNECTION ────────────────────────────────────────────
+
+model MailboxConnection {
+  id           String    @id @default(cuid())
+  tenantId     String    @unique
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider     String    // google | microsoft | imap
+  email        String
+  accessToken  String?   // AES-256-GCM encrypted
+  refreshToken String?   // AES-256-GCM encrypted
+  tokenExpiry  DateTime?
+  imapHost     String?   // for manual IMAP
+  imapPort     Int?
+  imapUser     String?   // for manual IMAP
+  imapPass     String?   // AES-256-GCM encrypted
+  status       String    @default("active") // active | disconnected | error | expired
+  lastSyncAt   DateTime?
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ─── EMAIL SEQUENCE LOG ─────────────────────────────────────────────
+
+model EmailSequenceLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type      String   // welcome | setup_reminder | dns_reminder | first_report_celebration | setup_complete
+  status    String   // sent | failed | skipped
+  sentAt    DateTime @default(now())
+  metadata  String?  // JSON
+
+  @@index([tenantId, type])
 }
 
 // ─── POLLING HISTORY ────────────────────────────────────────────────
