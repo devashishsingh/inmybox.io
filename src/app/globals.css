@@ -1328,19 +1328,19 @@ select:focus {
   letter-spacing: -0.03em;
 }
 
-/* Body background — deep black with warm undertone */
+/* Body background — deep navy, refined */
 .ember-bg {
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(239,35,60,0.06), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,158,11,0.05), transparent 60%),
-    linear-gradient(180deg, #000000 0%, #0a0303 50%, #000000 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99,102,241,0.05), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(148,163,184,0.02), transparent 60%),
+    linear-gradient(180deg, #06070f 0%, #080c18 50%, #06070f 100%);
 }
 
 /* Grid overlay with radial mask */
 .ember-grid {
   background-image:
-    linear-gradient(rgba(212,168,67,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(212,168,67,0.06) 1px, transparent 1px);
+    linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px);
   background-size: 40px 40px;
   -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, #000 20%, transparent 80%);
   mask-image: radial-gradient(ellipse 60% 50% at 50% 30%, #000 20%, transparent 80%);
@@ -1407,24 +1407,14 @@ select:focus {
 .ember-shiny-cta::before {
   content: '';
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: 9999px;
-  padding: 2px;
-  background: conic-gradient(from var(--spin, 0deg),
-    transparent 0%,
-    #ef233c 5%,
-    #f59e0b 12%,
-    #d4a843 18%,
-    transparent 25%,
-    transparent 50%,
-    #ef233c 55%,
-    #d4a843 65%,
-    transparent 75%,
-    transparent 100%);
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.14);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: ember-spin 2.5s linear infinite;
+  animation: none;
   z-index: -1;
 }
 @property --spin {
@@ -1436,12 +1426,7 @@ select:focus {
   to { --spin: 360deg; }
 }
 /* Fallback for browsers without @property — rotate the pseudo wrapper */
-@supports not (background: conic-gradient(from var(--spin) , red, blue)) {
-  .ember-shiny-cta::before {
-    background: conic-gradient(from 0deg, transparent, #ef233c, #f59e0b, #d4a843, transparent, #ef233c, transparent);
-    animation: ember-rotate 2.5s linear infinite;
-  }
-}
+/* conic-gradient fallback not needed — static border used */
 @keyframes ember-rotate {
   to { transform: rotate(360deg); }
 }
@@ -1471,7 +1456,7 @@ select:focus {
 }
 .ember-ghost:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(212, 168, 67, 0.4);
+  border-color: rgba(99, 102, 241, 0.35);
 }
 
 /* Pill statuses */
@@ -1510,7 +1495,7 @@ select:focus {
 
 /* Saffron underline squiggle for highlighted keyword */
 .ember-squiggle {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'><path d='M0 4 Q 12.5 0 25 4 T 50 4 T 75 4 T 100 4' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'><path d='M0 4 Q 12.5 0 25 4 T 50 4 T 75 4 T 100 4' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round'/></svg>");
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: 100% 8px;
@@ -1530,15 +1515,15 @@ select:focus {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(245,158,11,0.12), transparent 60%);
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(99,102,241,0.09), transparent 60%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
-.ember-bento:hover { border-color: rgba(212, 168, 67, 0.25); }
+.ember-bento:hover { border-color: rgba(99, 102, 241, 0.2); }
 .ember-bento:hover::before { opacity: 1; }
-.ember-bento-red:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(239,35,60,0.15), transparent 60%); }
-.ember-bento-emerald:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(16,185,129,0.12), transparent 60%); }
+.ember-bento-red:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(99,102,241,0.1), transparent 60%); }
+.ember-bento-emerald:hover::before { background: radial-gradient(circle at var(--mx,50%) var(--my,0%), rgba(99,102,241,0.09), transparent 60%); }
 
 /* Stats strip underline on hover */
 .ember-stat {
@@ -1554,7 +1539,7 @@ select:focus {
   left: 50%;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #d4a843, #f59e0b, transparent);
+  background: linear-gradient(90deg, transparent, #818cf8, #6366f1, transparent);
   transform: translateX(-50%);
   transition: width 0.4s ease;
 }
@@ -1581,8 +1566,8 @@ select:focus {
   background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(0,0,0,0.7));
 }
 .ember-float-card-gold {
-  border-color: rgba(212, 168, 67, 0.3);
-  background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(0,0,0,0.7));
+  border-color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(6,7,15,0.85));
 }
 
 /* Feature line indicator */
@@ -1597,7 +1582,7 @@ select:focus {
   top: 0.4rem;
   bottom: 0.4rem;
   width: 2px;
-  background: linear-gradient(180deg, transparent, #f59e0b, #d4a843, transparent);
+  background: linear-gradient(180deg, transparent, #818cf8, #6366f1, transparent);
   border-radius: 2px;
 }
 
@@ -1657,7 +1642,7 @@ select:focus {
 
 /* Gradient text utilities */
 .ember-text-fire {
-  background: linear-gradient(135deg, #ef233c 0%, #f59e0b 50%, #d4a843 100%);
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1671,4 +1656,30 @@ select:focus {
   .ember-pulse-amber {
     animation: none !important;
   }
+}
+
+/* ═══════════ 3D APP ICONS ═══════════ */
+.icon-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.25),
+    0 4px 12px -2px rgba(0,0,0,0.5),
+    0 1px 3px rgba(0,0,0,0.3);
+}
+.icon-3d-indigo {
+  background: linear-gradient(145deg, #6366f1 0%, #4338ca 60%, #312e81 100%);
+}
+.icon-3d-emerald {
+  background: linear-gradient(145deg, #34d399 0%, #10b981 55%, #065f46 100%);
+}
+.icon-3d-red {
+  background: linear-gradient(145deg, #f87171 0%, #ef4444 55%, #991b1b 100%);
+}
+.icon-3d-slate {
+  background: linear-gradient(145deg, #94a3b8 0%, #64748b 55%, #334155 100%);
 }

@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { EmberShell } from '@/components/ember-shell'
 import { Mail, ArrowRight, Heart, Compass, Flame, Quote } from 'lucide-react'
 
@@ -16,15 +17,15 @@ export default function AboutPage() {
         {/* ── Hero ── */}
         <section className="relative pt-36 pb-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 mb-6">
-              <Flame className="w-3 h-3 text-amber-400" />
-              <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-300">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-400/30 mb-6">
+              <Flame className="w-3 h-3 text-indigo-400" />
+              <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-indigo-300">
                 Our story
               </span>
             </div>
             <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold ember-heading tracking-tight leading-[1.05] mb-6">
               We started Inmybox because{' '}
-              <span className="ember-text-fire">trust was breaking</span>.
+              <span className="text-indigo-400">trust was breaking</span>.
             </h1>
             <p className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
               Email is the most important channel a business owns — and the most quietly broken.
@@ -37,11 +38,11 @@ export default function AboutPage() {
         <section className="relative pb-20">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="ember-glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden">
-              <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-red-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-slate-500/10 blur-3xl pointer-events-none" />
               <div className="relative">
-                <Quote className="w-10 h-10 text-amber-400/50 mb-6" />
-                <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-300 mb-4">
+                <Quote className="w-10 h-10 text-indigo-400/50 mb-6" />
+                <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-indigo-400 mb-4">
                   Founder&apos;s note
                 </p>
                 <h2 className="font-display text-3xl md:text-4xl font-bold ember-heading tracking-tight leading-tight mb-6">
@@ -62,10 +63,19 @@ export default function AboutPage() {
                     teams who need them most. Email security shouldn&apos;t require a PhD in DNS.
                     It should feel like turning on a light.
                   </p>
-                  <p className="text-zinc-400 italic border-l-2 border-amber-400/60 pl-5">
-                    &mdash; Founder, Inmybox.{' '}
-                    <span className="text-zinc-600">(Full story coming soon.)</span>
-                  </p>
+                  <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+                    <Image
+                      src="/potrait.jpg.png"
+                      alt="Devashish Singh"
+                      width={56}
+                      height={56}
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-indigo-500/30 shrink-0"
+                    />
+                    <div>
+                      <p className="font-semibold text-white text-sm">Devashish Singh</p>
+                      <p className="text-xs text-zinc-500">Founder, Inmybox</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -76,7 +86,7 @@ export default function AboutPage() {
         <section className="relative pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-400 mb-3">
+              <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-indigo-400 mb-3">
                 What we believe
               </p>
               <h2 className="font-display text-3xl md:text-5xl font-bold ember-heading tracking-tight leading-tight">
@@ -85,17 +95,17 @@ export default function AboutPage() {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <Value
-                icon={<Heart className="w-5 h-5 text-red-400" />}
+                icon={<Heart className="w-5 h-5 text-indigo-400" />}
                 title="Inboxes are sacred"
                 body="The inbox is the last quiet channel between a business and the humans who trust it. We protect that quietness like it&apos;s ours."
               />
               <Value
-                icon={<Compass className="w-5 h-5 text-amber-400" />}
+                icon={<Compass className="w-5 h-5 text-indigo-400" />}
                 title="Clarity beats configuration"
                 body="If you can&apos;t explain a security control to a CFO, it doesn&apos;t belong in production. Every screen we ship answers a question someone actually asked."
               />
               <Value
-                icon={<Flame className="w-5 h-5 text-amber-300" />}
+                icon={<Flame className="w-5 h-5 text-slate-400" />}
                 title="Quietly relentless"
                 body="No noise, no theatrics. Just continuous, monitored, reported, fixed. Email security should be a background hum, not a fire drill."
               />
@@ -157,7 +167,7 @@ function Value({ icon, title, body }: { icon: React.ReactNode; title: string; bo
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="ember-stat">
-      <div className="font-display text-3xl md:text-4xl font-bold ember-text-fire tracking-tight mb-1">
+      <div className="font-display text-3xl md:text-4xl font-bold text-indigo-400 tracking-tight mb-1">
         {value}
       </div>
       <div className="text-[10px] uppercase tracking-[0.22em] font-semibold text-zinc-500">

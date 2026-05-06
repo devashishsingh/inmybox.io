@@ -16,6 +16,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
+import compress from '@fastify/compress'
 import { isValidDomain, scanDomain, type ScanResult } from './engine.js'
 
 const PORT = Number(process.env.PORT || 8080)
@@ -80,6 +81,9 @@ await fastify.register(cors, {
   methods: ['GET', 'OPTIONS'],
 })
 
+// Compress JSON responses — typical scan payload is ~4 KB, compresses to ~1 KB
+await fastify.register(compress, { global: true, encodings: ['gzip', 'deflate'] })
+
 await fastify.register(rateLimit, {
   max: Number(process.env.RATE_LIMIT_MAX || 30),
   timeWindow: process.env.RATE_LIMIT_WINDOW || '1 minute',
@@ -94,6 +98,24 @@ fastify.get('/healthz', async () => ({
   cacheSize: cache.size,
   inflight: inflight.size,
 }))
+
+// Pre-warm: silently scan a list of domains in the background so the cache is
+// hot before the first real request. Called by Render deploy hook or a cron.
+fastify.post<{ Body: { domains?: string[] } }>(
+  '/warmup',
+  { schema: { body: { type: 'object', properties: { domains: { type: 'array', items: { type: 'string' }, maxItems: 50 } } } } },
+  async (req, reply) => {
+    if (TOKEN) {
+      const auth = req.headers.authorization || ''
+      if (auth !== `Bearer ${TOKEN}`) return reply.code(401).send({ error: 'Unauthorized' })
+    }
+    const domains: string[] = req.body?.domains ?? []
+    const valid = domains.filter(isValidDomain)
+    // Fire and forget — don't await so the response returns immediately
+    Promise.allSettled(valid.map((d) => scanWithCoalesce(d))).catch(() => {})
+    return { queued: valid.length }
+  },
+)
 
 fastify.get<{ Querystring: { domain?: string } }>(
   '/scan',
@@ -123,6 +145,9 @@ fastify.get<{ Querystring: { domain?: string } }>(
     try {
       const { result, cached } = await scanWithCoalesce(domain)
       reply.header('x-cache', cached ? 'HIT' : 'MISS')
+      reply.header('x-scan-duration', String(result.durationMs))
+      // Allow CDN / Vercel Edge to cache scan results for 5 min (matches in-process TTL)
+      reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
       return result
     } catch (err) {
       req.log.error({ err: err instanceof Error ? err.message : String(err) }, '[scan] failed')

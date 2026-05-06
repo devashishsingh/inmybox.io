@@ -12,9 +12,9 @@ resolver.setServers(['8.8.8.8', '1.1.1.1'])
  */
 async function fetchFromScanner(scannerUrl: string, domain: string): Promise<ScanResult> {
   const ctrl = new AbortController()
-  const timeout = setTimeout(() => ctrl.abort(), 8000)
+  const timeout = setTimeout(() => ctrl.abort(), 4500) // scanner target p95 < 2s; 4.5s is generous
   try {
-    const headers: Record<string, string> = { accept: 'application/json' }
+    const headers: Record<string, string> = { accept: 'application/json', 'accept-encoding': 'gzip' }
     if (process.env.SCANNER_TOKEN) headers.authorization = `Bearer ${process.env.SCANNER_TOKEN}`
     const url = `${scannerUrl.replace(/\/$/, '')}/scan?domain=${encodeURIComponent(domain)}`
     const res = await fetch(url, { headers, signal: ctrl.signal, cache: 'no-store' })
@@ -828,7 +828,11 @@ export async function GET(req: NextRequest) {
       } catch (err) {
         console.error(`[scan] Failed to save proxied scan: ${err instanceof Error ? err.message : 'Unknown error'}`)
       }
-      return NextResponse.json({ ...proxied, scanId })
+      const response = NextResponse.json({ ...proxied, scanId })
+      // Forward CDN-friendly cache headers so Vercel edge can cache scan results
+      response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+      if (proxied.durationMs) response.headers.set('x-scan-duration', String(proxied.durationMs))
+      return response
     } catch (err) {
       // Scanner unreachable / timed out — fall through to local engine so the
       // user always gets an answer. Logged for monitoring.

@@ -15,7 +15,7 @@ export default function TermsPage() {
       <header className="border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/90 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <Mail className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-white">Inmybox</span>

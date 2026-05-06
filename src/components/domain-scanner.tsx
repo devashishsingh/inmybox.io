@@ -326,42 +326,26 @@ function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked
                     <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${colorCls}`} />
                     <div className="min-w-0">
                       <div className="text-sm text-white font-medium">{finding.title}</div>
-                      {/* Detail — gated unless unlocked */}
+                      {/* Detail — blurred with contact CTA */}
                       <div className="relative mt-1">
-                        {unlocked ? (
-                          <div className="text-xs text-slate-400 leading-relaxed">
-                            {finding.detail}
-                          </div>
-                        ) : (
-                          <>
-                            <div className="text-xs text-slate-400 leading-relaxed select-none blur-[6px] pointer-events-none" aria-hidden>
-                              {finding.detail}
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Link
-                                href="/auth/signup"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-brand-300 hover:text-brand-200 hover:border-brand-500/40 transition-all"
-                              >
-                                <Lock className="w-3 h-3" />
-                                Unlock details
-                              </Link>
-                            </div>
-                          </>
-                        )}
+                        <div className="text-xs text-slate-400 leading-relaxed select-none blur-[5px] pointer-events-none" aria-hidden>
+                          {finding.detail}
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-start">
+                          <a
+                            href="mailto:hello@inmybox.io?subject=Full domain report request"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-slate-300 hover:text-white hover:border-indigo-500/40 transition-all"
+                          >
+                            Contact us for full details
+                          </a>
+                        </div>
                       </div>
                       {finding.recommendation && (
-                        <div className="relative mt-2">
-                          {unlocked ? (
-                            <div className="flex gap-2 items-start">
-                              <ArrowRight className="w-3 h-3 text-brand-400 mt-0.5 shrink-0" />
-                              <span className="text-xs text-brand-300">{finding.recommendation}</span>
-                            </div>
-                          ) : (
-                            <div className="flex gap-2 items-start select-none blur-[6px] pointer-events-none" aria-hidden>
-                              <ArrowRight className="w-3 h-3 text-brand-400 mt-0.5 shrink-0" />
-                              <span className="text-xs text-brand-300">{finding.recommendation}</span>
-                            </div>
-                          )}
+                        <div className="mt-2">
+                          <div className="flex gap-2 items-start select-none blur-[5px] pointer-events-none" aria-hidden>
+                            <ArrowRight className="w-3 h-3 text-indigo-400 mt-0.5 shrink-0" />
+                            <span className="text-xs text-indigo-300">{finding.recommendation}</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -422,8 +406,8 @@ function RawRecords({ unlocked, rawRecords }: { unlocked?: boolean; rawRecords?:
           </div>
         ) : (
           <div className="relative">
-            {/* Blurred preview */}
-            <div className="space-y-3 select-none blur-[6px] pointer-events-none" aria-hidden>
+            {/* Blurred preview — always visible */}
+            <div className="space-y-3 select-none blur-[5px] pointer-events-none" aria-hidden>
               <div>
                 <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
                 <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:...</div>
@@ -433,15 +417,15 @@ function RawRecords({ unlocked, rawRecords }: { unlocked?: boolean; rawRecords?:
                 <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com ~all</div>
               </div>
             </div>
-            {/* Overlay CTA */}
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 rounded-xl">
-              <Link
-                href="/auth/signup"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+            {/* Contact overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <a
+                href="mailto:hello@inmybox.io?subject=DNS records report request"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-semibold hover:border-indigo-500/40 transition-all shadow-lg"
               >
-                <Lock className="w-3.5 h-3.5" />
-                Upgrade to View Records
-              </Link>
+                <Mail className="w-3.5 h-3.5 text-indigo-400" />
+                Contact us for full report
+              </a>
             </div>
           </div>
         )}
@@ -878,13 +862,13 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   </div>
                 </div>
               </div>
-              <Link
-                href="/auth/signup"
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 shrink-0"
+              <a
+                href="mailto:hello@inmybox.io?subject=Full domain monitoring inquiry"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 shrink-0"
               >
-                Get Full Monitoring
+                Get Full Report
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
             </div>
 
             <div className="p-6 space-y-8">

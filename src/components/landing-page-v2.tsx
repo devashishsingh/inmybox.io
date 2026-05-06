@@ -113,32 +113,29 @@ function Hero() {
             {/* Pulsing badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-7 rounded-full ember-glass">
               <span className="relative flex w-2 h-2">
-                <span className="absolute inset-0 rounded-full bg-amber-400 animate-ping opacity-75" />
-                <span className="relative inline-flex rounded-full w-2 h-2 bg-amber-400" />
+                <span className="absolute inset-0 rounded-full bg-indigo-400 animate-ping opacity-50" />
+                <span className="relative inline-flex rounded-full w-2 h-2 bg-indigo-400" />
               </span>
-              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-amber-300/90">
-                Email Reputation Intelligence
+              <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-300/80">
+                Email Delivery Intelligence
               </span>
             </div>
 
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.02] mb-6 tracking-[-0.04em]">
-              <span className="ember-heading">You are losing revenue every time your email lands in </span>
-              <span className="text-[#ef233c] ember-squiggle">spam.</span>
+              <span className="ember-heading">Know exactly where </span>
+              <span className="ember-heading">every email lands &mdash; </span>
+              <span className="text-indigo-400">own the inbox.</span>
             </h1>
 
             <p className="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-              Most companies don&apos;t know their emails aren&apos;t reaching the inbox. By the time
-              they notice, leads have gone cold and revenue has quietly disappeared. Inmybox closes
-              the gap between sent and seen.
+              Inmybox gives growth teams complete visibility into DMARC reports, sender
+              reputation, and inbox placement &mdash; so you always know the gap between sent and seen.
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-10">
-              <Link href="/auth/signup" className="ember-shiny-cta">
-                <span>Start Free Audit</span>
-                <ArrowRight className="w-4 h-4 ember-cta-icon" />
-              </Link>
-              <Link href="/demo" className="ember-ghost">
+              <Link href="/demo" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/30">
                 <span>Request a Demo</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -162,13 +159,13 @@ function HeroDashboardMock() {
       {/* Floating card: Inbox Rate (top-right) */}
       <div className="absolute -top-2 -right-4 z-30 ember-float" style={{ animationDelay: '0s' }}>
         <div className="ember-float-card ember-float-card-emerald flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-            <Inbox className="w-4 h-4 text-emerald-400" />
+          <div className="icon-3d icon-3d-emerald">
+            <Inbox className="w-4 h-4 text-emerald-300" />
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-400">Inbox Rate</div>
             <div className="text-sm font-bold text-emerald-400">
-              94.1% <span className="text-emerald-300/80 text-[10px] font-medium">↑ 2.1%</span>
+              94.1% <span className="text-emerald-300/80 text-[10px] font-medium">&uarr; 2.1%</span>
             </div>
           </div>
         </div>
@@ -177,12 +174,12 @@ function HeroDashboardMock() {
       {/* Floating card: SPF Pass (mid-right) */}
       <div className="absolute top-1/2 -right-6 z-30 ember-float" style={{ animationDelay: '1.5s' }}>
         <div className="ember-float-card ember-float-card-gold flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
+          <div className="icon-3d icon-3d-indigo">
+            <ShieldCheck className="w-4 h-4 text-indigo-300" />
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-400">SPF Pass</div>
-            <div className="text-sm font-bold text-amber-400">98.2%</div>
+            <div className="text-sm font-bold text-indigo-400">98.2%</div>
           </div>
         </div>
       </div>
@@ -190,8 +187,8 @@ function HeroDashboardMock() {
       {/* Floating card: Revenue at Risk (bottom-left) */}
       <div className="absolute -bottom-4 -left-4 z-30 ember-float" style={{ animationDelay: '3s' }}>
         <div className="ember-float-card ember-float-card-red flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center">
-            <DollarSign className="w-4 h-4 text-red-400" />
+          <div className="icon-3d icon-3d-red">
+            <DollarSign className="w-4 h-4 text-red-300" />
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-zinc-400">Revenue at Risk</div>
@@ -213,8 +210,8 @@ function HeroDashboardMock() {
         <div className="flex">
           {/* Sidebar */}
           <div className="w-12 border-r border-white/5 bg-black/30 py-4 flex flex-col items-center gap-3">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-amber-500 to-red-500/80 flex items-center justify-center">
-              <Mail className="w-3.5 h-3.5 text-black" />
+            <div className="icon-3d icon-3d-indigo w-7 h-7 rounded-md">
+              <Mail className="w-3.5 h-3.5 text-indigo-200" />
             </div>
             <div className="w-6 h-6 rounded bg-white/5" />
             <div className="w-6 h-6 rounded bg-white/5" />
@@ -331,14 +328,14 @@ function FeaturesBento() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header pill */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 mb-5">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-amber-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-5">
+            <Sparkles className="w-3 h-3 text-indigo-400" />
+            <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-indigo-300/80">
               Core Capabilities
             </span>
           </div>
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold ember-heading max-w-3xl mx-auto leading-tight">
-            Everything you need to <span className="text-[#ef233c]">protect</span> your sender reputation
+            Everything you need to <span className="text-indigo-400">own</span> your sender reputation
           </h2>
           <p className="text-zinc-400 mt-5 max-w-2xl mx-auto">
             Aggregate DMARC reports, identify every sender, and translate failures into the only
@@ -350,9 +347,9 @@ function FeaturesBento() {
         <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-[auto_auto] gap-5">
           {/* LARGE 2x2 — Issued Asset Preview re-themed as Active Reports */}
           <div ref={big} className="ember-bento md:col-span-2 md:row-span-2 p-7">
-            <div className="flex items-center gap-2 mb-4">
-              <FileBarChart className="w-4 h-4 text-amber-400" />
-              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-amber-300/90">
+          <div className="flex items-center gap-2 mb-4">
+              <FileBarChart className="w-4 h-4 text-indigo-400" />
+              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-indigo-300/90">
                 Unified DMARC Aggregation
               </span>
             </div>
@@ -402,12 +399,12 @@ function FeaturesBento() {
 
           {/* WIDE 2x1 — Sender Intelligence */}
           <div ref={wide} className="ember-bento ember-bento-emerald md:col-span-2 p-7">
-            <div className="flex items-center gap-2 mb-3">
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-emerald-300/90">
-                Sender Intelligence
-              </span>
-            </div>
+          <div className="flex items-center gap-2 mb-3">
+            <Eye className="w-4 h-4 text-emerald-400" />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-emerald-300/80">
+              Sender Intelligence
+            </span>
+          </div>
             <h3 className="font-display text-xl md:text-2xl font-bold text-white mb-2 tracking-tight">
               Know every IP sending as you.
             </h3>
@@ -420,8 +417,8 @@ function FeaturesBento() {
 
           {/* SMALL 1x1 — Business Impact */}
           <div ref={a} className="ember-bento ember-bento-red p-6">
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-4">
-              <TrendingUp className="w-5 h-5 text-red-400" />
+            <div className="icon-3d icon-3d-red w-10 h-10 rounded-xl mb-4">
+              <TrendingUp className="w-5 h-5 text-red-300" />
             </div>
             <h3 className="font-display text-lg font-bold text-white mb-1.5">Revenue Impact</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
@@ -431,8 +428,8 @@ function FeaturesBento() {
 
           {/* SMALL 1x1 — Action Items */}
           <div ref={b} className="ember-bento p-6">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4">
-              <Zap className="w-5 h-5 text-amber-400" />
+            <div className="icon-3d icon-3d-indigo w-10 h-10 rounded-xl mb-4">
+              <Zap className="w-5 h-5 text-indigo-300" />
             </div>
             <h3 className="font-display text-lg font-bold text-white mb-1.5">Action Items</h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
@@ -471,14 +468,14 @@ function DashboardSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-start">
         {/* Left — feature lines */}
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 mb-5">
-            <Activity className="w-3 h-3 text-red-400" />
-            <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-red-300">
-              Asset Tracking — DMARC Reports
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 mb-5">
+            <Activity className="w-3 h-3 text-slate-400" />
+            <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-300/80">
+              DMARC Report Intelligence
             </span>
           </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold ember-heading mb-5 tracking-tight leading-tight">
-            From raw XML to <span className="text-[#ef233c]">CFO-ready</span> insight.
+            From raw XML to <span className="text-indigo-400">board-ready</span> insight.
           </h2>
           <p className="text-zinc-400 mb-10 leading-relaxed">
             Inmybox ingests, parses, attributes and enriches every DMARC report — then turns it
@@ -581,19 +578,19 @@ function TestimonialBanner() {
           className="rounded-3xl p-12 md:p-16 text-center relative overflow-hidden"
           style={{
             background:
-              'linear-gradient(135deg, #ef233c 0%, #f59e0b 55%, #d4a843 100%)',
-          }}
-        >
+              'linear-gradient(135deg, #0d1120 0%, #141c35 50%, #0d1120 100%)',
+            border: '1px solid rgba(99,102,241,0.15)',
+          }}>
           <div className="flex justify-center gap-1 mb-6">
             {[0, 1, 2, 3, 4].map((i) => (
-              <Star key={i} className="w-5 h-5 fill-black text-black" />
+              <Star key={i} className="w-5 h-5 fill-indigo-400 text-indigo-400" />
             ))}
           </div>
-          <blockquote className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-black tracking-tight leading-tight max-w-4xl mx-auto">
-            “Inmybox gave us instant visibility into email delivery issues we didn&apos;t even know
-            we had. Within a week, our inbox rate jumped from 87% to 96%.”
+          <blockquote className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight max-w-4xl mx-auto">
+            &ldquo;Inmybox gave us instant visibility into email delivery issues we didn&apos;t even know
+            we had. Within a week, our inbox rate jumped from 87% to 96%.&rdquo;
           </blockquote>
-          <div className="mt-8 text-black/70 font-medium">
+          <div className="mt-8 text-slate-400 font-medium">
             <div className="text-sm">Sarah Chen</div>
             <div className="text-xs uppercase tracking-[0.18em]">Head of Growth, ScaleUp SaaS</div>
           </div>
@@ -605,100 +602,158 @@ function TestimonialBanner() {
 
 /* ═══ FOOTER ══════════════════════════════════════════════════════ */
 function FooterV2() {
+  const [email, setEmail] = useState('')
+  const [subscribed, setSubscribed] = useState(false)
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    if (email) setSubscribed(true)
+  }
+
   return (
-    <footer className="relative z-10 border-t border-white/[0.06] pt-20 pb-10 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-12 mb-16">
-        {/* Branding */}
-        <div>
-          <Link href="/" className="flex items-center gap-2.5 mb-4">
-            <span className="ember-avatar">
-              <Mail className="w-4 h-4 text-amber-400" />
+    <footer className="relative z-10 border-t border-white/[0.06] pt-16 pb-0 overflow-hidden">
+      {/* Main grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1fr_1.4fr] gap-x-8 gap-y-12 pb-14 border-b border-white/[0.06]">
+
+          {/* Column 1 — Product */}
+          <div>
+            <p className="text-sm font-semibold text-white mb-5">Product</p>
+            <ul className="space-y-3 text-sm text-zinc-400">
+              <li><Link href="/#features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
+              <li><Link href="/blue-tick" className="hover:text-white transition-colors">Blue Tick / BIMI</Link></li>
+              <li><Link href="/auth/signup" className="hover:text-white transition-colors">Start Free Audit</Link></li>
+            </ul>
+
+            <p className="text-sm font-semibold text-white mt-8 mb-5">Resources</p>
+            <ul className="space-y-3 text-sm text-zinc-400">
+              <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+              <li><Link href="/demo" className="hover:text-white transition-colors">Request Demo</Link></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 2 — Why Inmybox */}
+          <div>
+            <p className="text-sm font-semibold text-white mb-5">Why Inmybox?</p>
+            <ul className="space-y-3 text-sm text-zinc-400">
+              <li><Link href="/#features" className="hover:text-white transition-colors">DMARC Aggregation</Link></li>
+              <li><Link href="/#features" className="hover:text-white transition-colors">Sender Intelligence</Link></li>
+              <li><Link href="/#features" className="hover:text-white transition-colors">Revenue Impact</Link></li>
+              <li><Link href="/blue-tick" className="hover:text-white transition-colors">BIMI &amp; Blue Tick</Link></li>
+            </ul>
+
+            <p className="text-sm font-semibold text-white mt-8 mb-5">Help &amp; Support</p>
+            <ul className="space-y-3 text-sm text-zinc-400">
+              <li><a href="mailto:hello@inmybox.io" className="hover:text-white transition-colors">Contact Us</a></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 3 — Company */}
+          <div>
+            <p className="text-sm font-semibold text-white mb-5">Company</p>
+            <ul className="space-y-3 text-sm text-zinc-400">
+              <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+              <li><a href="mailto:hello@inmybox.io" className="hover:text-white transition-colors">Careers</a></li>
+              <li><a href="mailto:hello@inmybox.io" className="hover:text-white transition-colors">Partners</a></li>
+              <li><Link href="/auth/signin" className="hover:text-white transition-colors">Sign In</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 4 — Newsletter + Socials */}
+          <div>
+            <p className="text-sm font-semibold text-white mb-2">Stay in the loop</p>
+            <p className="text-sm text-zinc-400 leading-relaxed mb-5">
+              Get a curated digest of email deliverability insights, DMARC best practices, and
+              inbox placement tips — straight to your inbox.
+            </p>
+
+            {subscribed ? (
+              <div className="flex items-center gap-2 text-sm text-indigo-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>You&apos;re subscribed. Talk soon.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-2 mb-4">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 min-w-0 px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.1] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/60 transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors whitespace-nowrap"
+                >
+                  Subscribe
+                </button>
+              </form>
+            )}
+
+            <p className="text-[11px] text-zinc-600 leading-relaxed mb-7">
+              No spam. Unsubscribe any time. By subscribing you agree to our{' '}
+              <Link href="/privacy" className="text-zinc-500 hover:text-white underline underline-offset-2 transition-colors">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+
+            {/* Social icons */}
+            <div className="flex items-center gap-2.5">
+              <SocialIcon href="https://linkedin.com/company/inmybox" label="LinkedIn">
+                <LinkedInLogo />
+              </SocialIcon>
+              <SocialIcon href="https://twitter.com/inmybox" label="X (Twitter)">
+                <XLogo />
+              </SocialIcon>
+              <SocialIcon href="mailto:hello@inmybox.io" label="Email" external={false}>
+                <Mail className="w-3.5 h-3.5" />
+              </SocialIcon>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="flex flex-wrap justify-between items-center gap-4 py-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
+              <Mail className="w-3.5 h-3.5 text-indigo-400" />
             </span>
-            <span className="font-display font-bold text-white text-lg">Inmybox</span>
+            <span className="font-display font-bold text-white text-sm">Inmybox</span>
           </Link>
-          <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">
-            Email reputation intelligence for growth teams. Closing the gap between sent and seen.
-          </p>
-        </div>
-
-        {/* Platform */}
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-300/80 mb-4">
-            Platform
+          <div className="text-[12px] text-zinc-600">
+            © {new Date().getFullYear()} Inmybox. All rights reserved.
           </div>
-          <ul className="space-y-2.5 text-sm text-zinc-400">
-            <li><Link href="/#features" className="hover:text-white">Features</Link></li>
-            <li><Link href="/#how-it-works" className="hover:text-white">How It Works</Link></li>
-            <li><Link href="/blue-tick" className="hover:text-white">Blue Tick / BIMI</Link></li>
-            <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
-            <li><Link href="/about" className="hover:text-white">About</Link></li>
-            <li><Link href="/demo" className="hover:text-white">Request Demo</Link></li>
-          </ul>
-        </div>
-
-        {/* Legal & resources */}
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-amber-300/80 mb-4">
-            Resources
-          </div>
-          <ul className="space-y-2.5 text-sm text-zinc-400">
-            <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-            <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
-            <li><Link href="/auth/signin" className="hover:text-white">Sign In</Link></li>
-            <li><Link href="/auth/signup" className="hover:text-white">Get Started</Link></li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Watermark */}
-      <div className="ember-watermark mb-10 overflow-hidden">INMYBOX</div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-white/[0.06] flex flex-wrap justify-between items-center gap-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-          © {new Date().getFullYear()} Inmybox · All rights reserved
-        </div>
-        <div className="flex items-center gap-2">
-          <SocialLink href="https://twitter.com/inmybox" label="X (Twitter)" tone="x">
-            <XLogo />
-          </SocialLink>
-          <SocialLink href="https://linkedin.com/company/inmybox" label="LinkedIn" tone="linkedin">
-            <LinkedInLogo />
-          </SocialLink>
-          <SocialLink href="mailto:hello@inmybox.io" label="Email" tone="mail">
-            <Mail className="w-4 h-4" />
-          </SocialLink>
         </div>
       </div>
     </footer>
   )
 }
 
-/* ─── Social link wrapper + brand SVGs ───────────────────────────── */
-function SocialLink({
+/* ─── Social icon pill ───────────────────────────────────────────── */
+function SocialIcon({
   href,
   label,
-  tone,
+  external = true,
   children,
 }: {
   href: string
   label: string
-  tone: 'x' | 'linkedin' | 'mail'
+  external?: boolean
   children: React.ReactNode
 }) {
-  const external = href.startsWith('http')
-  const toneClass =
-    tone === 'x'
-      ? 'text-white hover:bg-white/10 border-white/20'
-      : tone === 'linkedin'
-        ? 'text-[#0A66C2] hover:bg-[#0A66C2]/15 border-[#0A66C2]/40'
-        : 'text-amber-400 hover:bg-amber-400/15 border-amber-400/40'
   return (
     <a
       href={href}
       aria-label={label}
       title={label}
       {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className={`w-9 h-9 rounded-full border bg-white/[0.02] flex items-center justify-center transition-colors ${toneClass}`}
+      className="w-9 h-9 rounded-full border border-white/[0.12] bg-white/[0.03] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/25 hover:bg-white/[0.07] transition-all"
     >
       {children}
     </a>

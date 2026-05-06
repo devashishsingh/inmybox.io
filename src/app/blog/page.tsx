@@ -31,15 +31,15 @@ export default function BlogPage() {
         {/* ── Hero ── */}
         <section className="relative pt-36 pb-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 mb-6">
-              <Sparkles className="w-3 h-3 text-amber-400" />
-              <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-300">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-400/30 mb-6">
+              <Sparkles className="w-3 h-3 text-indigo-400" />
+              <span className="text-[11px] uppercase tracking-[0.22em] font-bold text-indigo-300">
                 The Inmybox Field Notes
               </span>
             </div>
             <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold ember-heading tracking-tight leading-[1.05] mb-6">
               Stories from the{' '}
-              <span className="ember-text-fire">edge of the inbox</span>.
+              <span className="text-indigo-400">edge of the inbox</span>.
             </h1>
             <p className="text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
               Field notes, deep dives and battle-tested playbooks on DMARC, SPF, DKIM, BIMI
@@ -47,7 +47,7 @@ export default function BlogPage() {
             </p>
             <div className="mt-8 flex items-center justify-center gap-3 text-xs text-zinc-500">
               <span className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
                 {posts.length} {posts.length === 1 ? 'article' : 'articles'}
               </span>
               <span className="w-1 h-1 rounded-full bg-zinc-700" />
@@ -62,7 +62,7 @@ export default function BlogPage() {
         {featured && (
           <section className="relative pb-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-amber-400 mb-4">
+              <p className="text-[11px] uppercase tracking-[0.22em] font-bold text-indigo-400 mb-4">
                 ★ Editor&apos;s pick
               </p>
               <Link
@@ -72,18 +72,18 @@ export default function BlogPage() {
                 <div className="grid lg:grid-cols-[1.1fr_1fr] gap-0 items-stretch">
                   {/* Cover */}
                   <div className="relative aspect-[16/10] lg:aspect-auto min-h-[280px] overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_30%,rgba(245,158,11,0.28),transparent_55%),radial-gradient(circle_at_85%_75%,rgba(239,35,60,0.22),transparent_60%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_30%,rgba(99,102,241,0.22),transparent_55%),radial-gradient(circle_at_85%_75%,rgba(79,70,229,0.18),transparent_60%)]" />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.55))]" />
                     <div className="absolute inset-0 grid place-items-center">
-                      <div className="w-20 h-20 rounded-3xl ember-glass-strong flex items-center justify-center shadow-2xl shadow-amber-500/10">
-                        <Mail className="w-9 h-9 text-amber-400" />
+                      <div className="w-20 h-20 rounded-3xl ember-glass-strong flex items-center justify-center shadow-2xl shadow-indigo-500/10">
+                        <Mail className="w-9 h-9 text-indigo-400" />
                       </div>
                     </div>
                     <div
                       className="absolute inset-0 opacity-30 mix-blend-screen"
                       style={{
                         backgroundImage:
-                          'radial-gradient(rgba(245,158,11,0.12) 1px, transparent 1px)',
+                          'radial-gradient(rgba(99,102,241,0.10) 1px, transparent 1px)',
                         backgroundSize: '24px 24px',
                       }}
                     />
@@ -101,7 +101,7 @@ export default function BlogPage() {
                         {featured.readingTime}
                       </span>
                     </div>
-                    <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight mb-4 group-hover:text-amber-200 transition-colors">
+                    <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight mb-4 group-hover:text-indigo-200 transition-colors">
                       {featured.title}
                     </h2>
                     <p className="text-zinc-400 leading-relaxed mb-7">
@@ -110,7 +110,7 @@ export default function BlogPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="ember-avatar">
-                          <span className="text-[10px] font-bold text-amber-300">
+                          <span className="text-[10px] font-bold text-indigo-300">
                             {featured.author.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </span>
                         </span>
@@ -119,7 +119,7 @@ export default function BlogPage() {
                           <div className="text-[11px] text-zinc-500">Inmybox</div>
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-400 group-hover:translate-x-1 transition-transform">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-400 group-hover:translate-x-1 transition-transform">
                         Read article
                         <ArrowRight className="w-4 h-4" />
                       </span>
@@ -146,13 +146,13 @@ export default function BlogPage() {
         <section className="relative pb-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="ember-glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-red-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-slate-500/10 blur-3xl pointer-events-none" />
               <div className="relative grid md:grid-cols-[1.2fr_1fr] gap-8 items-center">
                 <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 mb-4">
-                    <Mail className="w-3 h-3 text-amber-400" />
-                    <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-amber-300">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-400/30 mb-4">
+                    <Mail className="w-3 h-3 text-indigo-400" />
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-indigo-300">
                       The Field Notes Newsletter
                     </span>
                   </div>
@@ -168,7 +168,7 @@ export default function BlogPage() {
                   <input
                     type="email"
                     placeholder="you@company.com"
-                    className="flex-1 bg-black/40 border border-white/10 rounded-full px-5 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-amber-400/40 focus:ring-2 focus:ring-amber-400/20"
+                    className="flex-1 bg-black/40 border border-white/10 rounded-full px-5 py-3 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-indigo-400/40 focus:ring-2 focus:ring-indigo-400/20"
                     required
                   />
                   <button type="submit" className="ember-shiny-cta !px-5 !py-3 !text-sm shrink-0">
