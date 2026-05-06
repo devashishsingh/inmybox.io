@@ -12,7 +12,7 @@ services:
   - type: web
     name: inmybox-scanner
     runtime: docker
-    plan: standard          # standard = 1 CPU, 2 GB RAM, no cold starts on paid tier
+    plan: starter           # free tier — no card required; upgrade to standard later for no cold starts
     region: oregon          # pick the region closest to your Vercel deployment
     rootDir: scanner-service
     dockerfilePath: ./Dockerfile
@@ -29,7 +29,7 @@ services:
       - key: CACHE_TTL_MS
         value: 300000        # 5 min in-process LRU cache
       - key: CACHE_MAX
-        value: 2000          # up from 1000 — standard plan has more RAM
+        value: 1000          # starter has 512 MB RAM; keep cache smaller
       - key: RATE_LIMIT_MAX
         value: 60
       - key: RATE_LIMIT_WINDOW
