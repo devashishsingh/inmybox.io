@@ -1192,7 +1192,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                 </div>{/* /RIGHT col */}
               </div>{/* /2-col grid */}
 
-              {/* BIMI Status */}}
+              {/* BIMI Status */}
               {result.bimi && (
                 <div>
                   <h4 className="text-sm text-slate-400 font-medium mb-4">BIMI (Brand Logo in Email)</h4>
