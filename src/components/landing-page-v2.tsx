@@ -139,7 +139,7 @@ function Hero() {
               </Link>
             </div>
 
-            <div className="max-w-2xl">
+            <div className={hasScan ? 'w-full' : 'max-w-2xl'}>
               <DomainScanner onScanResult={setHasScan} />
             </div>
           </div>
