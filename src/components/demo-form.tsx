@@ -1,4 +1,4 @@
-'use client'
+ï»¿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -91,7 +91,7 @@ export function RequestDemoForm() {
               {[
                 { step: '1', text: 'Our team reviews your request and confirms your demo slot via email' },
                 { step: '2', text: 'A 20-minute live walkthrough tailored to your email infrastructure' },
-                { step: '3', text: 'Upload your first DMARC report during the demo GÇö see real results instantly' },
+                { step: '3', text: 'Upload your first DMARC report during the demo GÃ‡Ã¶ see real results instantly' },
               ].map((item) => (
                 <div key={item.step} className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -125,7 +125,7 @@ export function RequestDemoForm() {
 
   return (
     <div className="min-h-screen bg-transparent flex">
-      {/* Left panel GÇö value props */}
+      {/* Left panel GÃ‡Ã¶ value props */}
       <div className="hidden lg:flex lg:w-1/2 bg-transparent relative overflow-hidden items-center justify-center p-12">
         <div className="absolute inset-0 hero-glow opacity-30" />
         <div className="relative max-w-md">
@@ -136,7 +136,7 @@ export function RequestDemoForm() {
             <span className="text-2xl font-bold text-white">Inmybox</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-4">
-            See what&apos;s happening to your emails GÇö before revenue is lost
+            See what&apos;s happening to your emails GÃ‡Ã¶ before revenue is lost
           </h2>
           <p className="text-zinc-500 leading-relaxed mb-10">
             Get a personalized demo of Inmybox and discover how DMARC intelligence
@@ -148,7 +148,7 @@ export function RequestDemoForm() {
               { icon: Shield, text: 'Full DMARC report analytics at a glance' },
               { icon: Eye, text: 'Identify every sender using your domain' },
               { icon: BarChart3, text: 'Quantify revenue at risk from delivery failures' },
-              { icon: Zap, text: 'Actionable fixes GÇö not just raw data' },
+              { icon: Zap, text: 'Actionable fixes GÃ‡Ã¶ not just raw data' },
             ].map((item) => (
               <div key={item.text} className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
@@ -166,7 +166,7 @@ export function RequestDemoForm() {
                 <p className="text-sm font-semibold text-white mb-1">Personalized walkthrough</p>
                 <p className="text-xs text-zinc-500 leading-relaxed">
                   Every demo is customized to your domain, your email stack, and your goals.
-                  No generic slide decks GÇö just your data, your insights.
+                  No generic slide decks GÃ‡Ã¶ just your data, your insights.
                 </p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export function RequestDemoForm() {
         </div>
       </div>
 
-      {/* Right panel GÇö form */}
+      {/* Right panel GÃ‡Ã¶ form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-2 mb-8">
@@ -267,8 +267,8 @@ export function RequestDemoForm() {
                     className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-white/10 bg-white/[0.04] focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/40 outline-none transition-shadow"
                   />
                 </div>
-                {/* INMYBOX ENHANCEMENT: L7 GÇö phone field purpose disclosure */}
-                <p className="text-xs text-zinc-500 mt-1">Optional GÇö used only to schedule your demo call</p>
+                {/* INMYBOX ENHANCEMENT: L7 GÃ‡Ã¶ phone field purpose disclosure */}
+                <p className="text-xs text-zinc-500 mt-1">Optional GÃ‡Ã¶ used only to schedule your demo call</p>
               </div>
             </div>
 
@@ -283,7 +283,7 @@ export function RequestDemoForm() {
                   value={form.message}
                   onChange={update('message')}
                   rows={3}
-                  placeholder="We're struggling with inbox placement on our marketing campaignsGÇª"
+                  placeholder="We're struggling with inbox placement on our marketing campaignsGÃ‡Âª"
                   className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-white/10 bg-white/[0.04] focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/40 outline-none transition-shadow resize-none"
                 />
               </div>
