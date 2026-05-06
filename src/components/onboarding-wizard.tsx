@@ -382,7 +382,7 @@ function StepSetupInstructions({ state, copied, verifying, verifyResult, onCopy,
         <ol className="text-zinc-400 text-sm leading-relaxed list-decimal pl-5 space-y-1.5 mb-6">
           <li>Open your current DMARC report inbox (e.g. dmarc-reports@yourdomain.com)</li>
           <li>Go to Settings → Filters / Auto-forward</li>
-          <li>Create a rule: <em>forward all messages from *@* with subject containing "DMARC"</em></li>
+          <li>Create a rule: <em>forward all messages from *@* with subject containing &quot;DMARC&quot;</em></li>
           <li>Set the forward destination to the alias above</li>
         </ol>
         <button onClick={onContinue} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">

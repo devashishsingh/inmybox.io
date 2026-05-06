@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
 import { OnboardingGuidePDF, AppWorkflowPDF } from '@/lib/pdf/documents'
 
 export const dynamic = 'force-dynamic'
 
-// Utility to sidestep react-pdf's strict DocumentProps typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const render = renderToBuffer as (el: React.ReactElement<any>) => Promise<Buffer>
+// Cast renderToBuffer to avoid react-pdf's strict DocumentProps typing
+const render = renderToBuffer as (_el: React.ReactElement) => Promise<Buffer>
 
 const ALLOWED_DOCS = ['onboarding-guide', 'app-workflow'] as const
 type DocType = typeof ALLOWED_DOCS[number]
