@@ -937,23 +937,20 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
     <div>
       {/* ── Scanner Input ── */}
       <div className="w-full mb-4">
-        <div className="flex items-center bg-[#0b0f1e] border border-slate-700/60 rounded-2xl p-2 shadow-xl shadow-black/30 focus-within:border-indigo-500/40 focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.08)] transition-all duration-200">
-          <div className="flex items-center gap-2 px-3 text-slate-500">
-            <Globe className="w-4 h-4" />
-          </div>
+        <div className="flex gap-2">
           <input
             type="text"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="yourcompany.com"
-            className="flex-1 bg-transparent text-white text-sm placeholder:text-slate-500 outline-none py-3 pr-2"
+            className="flex-1 min-w-0 px-4 py-2.5 rounded-lg bg-white/[0.05] border border-white/[0.1] text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500/60 transition-colors"
             disabled={loading}
           />
           <button
             onClick={handleScan}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {loading ? (
               <>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
 import { OnboardingGuidePDF, AppWorkflowPDF } from '@/lib/pdf/documents'
@@ -18,7 +18,7 @@ export async function GET(
   const type = params.type as DocType
 
   if (!ALLOWED_DOCS.includes(type)) {
-    return new NextResponse('Not found', { status: 404 })
+    return new Response('Not found', { status: 404 })
   }
 
   const date = new Date().toLocaleDateString('en-GB', {
@@ -36,7 +36,7 @@ export async function GET(
     filename = 'inmybox-application-workflow.pdf'
   }
 
-  return new NextResponse(buffer as unknown as BodyInit, {
+  return new Response(new Uint8Array(buffer), {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
