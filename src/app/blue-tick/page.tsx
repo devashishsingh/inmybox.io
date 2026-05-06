@@ -75,10 +75,10 @@ function Hero() {
               <ArrowRight className="w-5 h-5" />
             </a>
             <Link
-              href="#pricing"
+              href="#contact"
               className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:border-brand-500/40 transition-all"
             >
-              See Pricing
+              Talk to Us
               <ChevronDown className="w-4 h-4" />
             </Link>
           </div>
@@ -305,136 +305,73 @@ function HowItWorks() {
   )
 }
 
-/* ─── Pricing ─── */
+/* ─── Get in Touch ─── */
 function Pricing() {
-  const tiers = [
-    {
-      name: 'One-Time Setup',
-      price: '$499',
-      period: 'one-time',
-      description: 'Perfect for businesses that want blue tick verification and can manage DNS updates themselves going forward.',
-      popular: false,
-      features: [
-        'Full DMARC readiness audit',
-        'SPF / DKIM alignment fixes',
-        'Trademark logo eligibility check',
-        'SVG BIMI conversion',
-        'VMC coordination with CA',
-        'DNS record publishing',
-        'Inbox verification testing',
-        'Handoff documentation',
-      ],
-      cta: 'Get Started',
-      href: 'mailto:hello@inmybox.io?subject=Blue%20Tick%20—%20One-Time%20Setup',
-    },
-    {
-      name: 'Managed Service',
-      price: '$49',
-      period: '/month',
-      description: 'We handle everything — setup, monitoring, certificate renewals, and ongoing DMARC compliance. Set it and forget it.',
-      popular: true,
-      features: [
-        'Everything in One-Time Setup',
-        'Ongoing DMARC monitoring',
-        'Annual VMC certificate renewal',
-        'Logo updates & re-certification',
-        'New sending source alignment',
-        'Priority support (24h response)',
-        'Quarterly compliance reports',
-        'Dedicated account manager',
-      ],
-      cta: 'Start Managed Service',
-      href: 'mailto:hello@inmybox.io?subject=Blue%20Tick%20—%20Managed%20Service',
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'For organizations with multiple domains, complex sending infrastructure, or volume needs.',
-      popular: false,
-      features: [
-        'Unlimited domains',
-        'Bulk VMC procurement',
-        'Custom SLA & response times',
-        'Dedicated implementation team',
-        'White-glove onboarding',
-        'API access & integrations',
-        'Compliance & audit trails',
-        'Executive reporting',
-      ],
-      cta: 'Talk to Sales',
-      href: 'mailto:hello@inmybox.io?subject=Blue%20Tick%20—%20Enterprise',
-    },
+  const inclusions = [
+    'Full DMARC readiness audit',
+    'SPF / DKIM alignment fixes',
+    'Trademark logo eligibility check',
+    'SVG BIMI conversion',
+    'VMC coordination with CA',
+    'DNS record publishing',
+    'Inbox verification testing',
+    'Ongoing DMARC monitoring',
+    'Logo re-certification & updates',
+    'Quarterly compliance reports',
+    'Priority support',
+    'Dedicated implementation team',
   ]
 
   return (
-    <section id="pricing" className="py-20 bg-gradient-to-b from-slate-950 to-brand-950/20">
-      <div className="max-w-5xl mx-auto px-6">
+    <section id="contact" className="py-20 bg-gradient-to-b from-slate-950 to-brand-950/20">
+      <div className="max-w-4xl mx-auto px-6">
         <AnimateOnScroll>
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Simple, Transparent Pricing
+              Let&apos;s Talk About Your Setup
             </h2>
-            <p className="text-slate-400 max-w-xl mx-auto">
-              Choose one-time setup or let us manage your email verification end-to-end.
-              VMC certificate cost is billed separately at issuer rates.
+            <p className="text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Every business has a different sending footprint, brand profile, and compliance need.
+              Tell us what you&apos;re trying to achieve and we&apos;ll scope the right engagement &mdash; one-time, managed, or enterprise.
             </p>
           </div>
         </AnimateOnScroll>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {tiers.map((tier, i) => (
-            <AnimateOnScroll key={i} delay={i * 100}>
-              <div className={`relative rounded-2xl border p-6 h-full flex flex-col ${
-                tier.popular
-                  ? 'border-brand-500/40 bg-brand-500/5 shadow-lg shadow-brand-500/10'
-                  : 'border-slate-800 bg-slate-900/50'
-              }`}>
-                {tier.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-brand-600 text-white text-xs font-semibold px-4 py-1 rounded-full shadow-lg shadow-brand-600/30">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-1">{tier.name}</h3>
-                  <div className="flex items-baseline gap-1 mb-3">
-                    <span className="text-3xl font-bold text-white">{tier.price}</span>
-                    {tier.period && <span className="text-sm text-slate-400">{tier.period}</span>}
-                  </div>
-                  <p className="text-sm text-slate-400 leading-relaxed">{tier.description}</p>
-                </div>
-                <ul className="space-y-2.5 mb-8 flex-1">
-                  {tier.features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span className="text-sm text-slate-300">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={tier.href}
-                  className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all ${
-                    tier.popular
-                      ? 'bg-brand-600 text-white hover:bg-brand-500 shadow-lg shadow-brand-600/25'
-                      : 'border border-slate-700 text-slate-300 hover:text-white hover:border-brand-500/40'
-                  }`}
-                >
-                  {tier.cta}
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </div>
-            </AnimateOnScroll>
-          ))}
-        </div>
+        <AnimateOnScroll delay={100}>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 sm:p-10">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">What&apos;s included</p>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3 mb-8">
+              {inclusions.map((f, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span className="text-sm text-slate-300">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-800">
+              <Link
+                href="/demo"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+              >
+                Request a Consultation
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="mailto:hello@inmybox.io?subject=Blue%20Tick%20Verification%20Inquiry"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:border-brand-500/40 transition-all"
+              >
+                Email hello@inmybox.io
+              </a>
+            </div>
+          </div>
+        </AnimateOnScroll>
 
         {/* VMC note */}
-        <AnimateOnScroll delay={400}>
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-center">
+        <AnimateOnScroll delay={300}>
+          <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/40 p-5 text-center">
             <p className="text-sm text-slate-400">
-              <strong className="text-white">VMC Certificate:</strong> ~$1,000–$1,500/year billed by the Certificate Authority (DigiCert / Entrust).
-              We handle procurement and renewal for managed service clients. One-time clients get setup guidance.
+              <strong className="text-white">Note on VMC Certificates:</strong> Issued by Certificate Authorities (DigiCert / Entrust) at issuer-set rates. We handle procurement and renewal as part of the engagement.
             </p>
           </div>
         </AnimateOnScroll>
