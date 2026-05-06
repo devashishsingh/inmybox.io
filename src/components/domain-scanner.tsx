@@ -983,206 +983,168 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
-              {/* Calculator tie-in banner */}
+            <div className="p-6 space-y-4">
+
+              {/* ── ALERT BANNER ── */}
               {calcRevenueLost != null && calcRevenueLost > 0 && (
-                <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-red-300 font-medium">
-                      Based on your email volume above, you may be losing ~${calcRevenueLost.toLocaleString()}/mo in revenue.
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Fix this in 2 minutes with Inmybox monitoring.
-                    </p>
-                  </div>
+                <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 flex items-center gap-3">
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                  <p className="text-sm text-red-300">
+                    Based on your email volume, you may be losing <span className="font-semibold">~${calcRevenueLost.toLocaleString()}/mo</span> in revenue.
+                  </p>
                 </div>
               )}
 
-              {/* ── Row 1: Score gauge + Pillar donut (2-col) ── */}
-              <div className="grid sm:grid-cols-2 gap-5">
-                {/* Score gauge */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-center">
-                  <p className="text-xs text-slate-400 font-medium mb-3">Domain Health Score</p>
+              {/* ══ ROW 1 — 3 overview cards ══ */}
+              <div className="grid lg:grid-cols-3 gap-4">
+
+                {/* Card A: Health Score */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col items-center justify-center text-center">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Health Score</p>
                   <ScoreGauge score={result.score} riskLevel={result.riskLevel} />
-                  <div className={`inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full ${risk!.bgClass} border ${risk!.borderClass}`}>
-                    <RiskIcon className={`w-4 h-4 ${risk!.textClass}`} />
-                    <span className={`text-sm font-semibold ${risk!.textClass}`}>{result.riskLabel}</span>
+                  <div className={`inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full text-sm font-semibold ${risk!.bgClass} border ${risk!.borderClass} ${risk!.textClass}`}>
+                    <RiskIcon className="w-3.5 h-3.5" />
+                    {result.riskLabel}
                   </div>
                 </div>
 
-                {/* Pillar donut */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-center">
-                  <p className="text-xs text-slate-400 font-medium mb-3">Score Breakdown</p>
-                  <PillarDonut pillars={result.pillars} />
-                  <div className="flex flex-wrap justify-center gap-3 mt-3">
-                    {Object.entries(PILLAR_COLORS).map(([key, color]) => (
-                      <div key={key} className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: color }} />
-                        <span className="text-xs text-slate-400">{PILLAR_LABELS[key as keyof typeof PILLAR_LABELS]}</span>
+                {/* Card B: Auth Pillars */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Authentication</p>
+                  <div className="space-y-2">
+                    {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => {
+                      const PIcon = PILLAR_ICONS[name as keyof typeof PILLAR_ICONS]
+                      const color = PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]
+                      const label = PILLAR_LABELS[name as keyof typeof PILLAR_LABELS]
+                      const { textCls, bgCls, borderCls, badgeText } = {
+                        pass:    { textCls: 'text-emerald-400', bgCls: 'bg-emerald-500/10', borderCls: 'border-emerald-500/20', badgeText: 'Pass' },
+                        partial: { textCls: 'text-amber-400',   bgCls: 'bg-amber-500/10',   borderCls: 'border-amber-500/20',   badgeText: 'Partial' },
+                        fail:    { textCls: 'text-red-400',     bgCls: 'bg-red-500/10',     borderCls: 'border-red-500/20',     badgeText: 'Fail' },
+                      }[pillar.status]
+                      return (
+                        <div key={name} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800/50">
+                          <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}20` }}>
+                            <PIcon className="w-3.5 h-3.5" style={{ color }} />
+                          </div>
+                          <span className="text-sm text-white font-medium flex-1 min-w-0">{label}</span>
+                          <div className="text-right shrink-0">
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${bgCls} ${borderCls} ${textCls}`}>{badgeText}</span>
+                            <div className="text-[10px] text-slate-600 mt-0.5">{pillar.score}/{pillar.maxScore} pts</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Card C: Delivery Impact snapshot */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Delivery Impact</p>
+                  {result.revenueImpact ? (
+                    <>
+                      <div className="text-center mb-5">
+                        <div className={`text-5xl font-bold tabular-nums leading-none ${
+                          result.revenueImpact.per100.deliveryRate >= 90 ? 'text-emerald-400' :
+                          result.revenueImpact.per100.deliveryRate >= 70 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {result.revenueImpact.per100.deliveryRate}%
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1.5">of emails reach the inbox</div>
+                        <div className="mt-2.5 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all duration-1000 ${
+                            result.revenueImpact.per100.deliveryRate >= 90 ? 'bg-emerald-400' :
+                            result.revenueImpact.per100.deliveryRate >= 70 ? 'bg-amber-400' : 'bg-red-400'
+                          }`} style={{ width: `${result.revenueImpact.per100.deliveryRate}%` }} />
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="grid grid-cols-3 border-t border-slate-800/80 pt-4">
+                        <div className="text-center pr-3 border-r border-slate-800/60">
+                          <div className="text-base font-bold text-amber-400 tabular-nums">{result.revenueImpact.monthly.emailsLost.toLocaleString()}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">emails lost<br/>/ month</div>
+                        </div>
+                        <div className="text-center px-3 border-r border-slate-800/60">
+                          <div className="text-base font-bold text-orange-400 tabular-nums">{result.revenueImpact.monthly.potentialLeadsLost}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">leads lost<br/>/ month</div>
+                        </div>
+                        <div className="text-center pl-3">
+                          <div className="text-base font-bold text-red-400 tabular-nums">${result.revenueImpact.monthly.revenueAtRisk.toLocaleString()}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">revenue<br/>at risk / mo</div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-slate-500 text-xs">No impact data</div>
+                  )}
                 </div>
               </div>
 
-              {/* ── Row 2: Pillar bars (full width) ── */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-                <p className="text-xs text-slate-400 font-medium mb-4">Pillar Scores</p>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => (
-                    <PillarBar
-                      key={name}
-                      name={name}
-                      pillar={pillar}
-                      color={PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Row 3: Revenue Impact ── */}
+              {/* ══ ROW 2 — Email flow + Risk factors ══ */}
               {result.revenueImpact && (
-                <div>
-                  <h4 className="text-sm text-slate-400 font-medium mb-4 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Revenue Impact Analysis
-                  </h4>
-
-                  {/* 4 metric cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-center">
-                      <div className="text-xs text-slate-500 mb-1">Monthly Volume</div>
-                      <div className="text-lg font-bold text-white">
-                        {result.revenueImpact.monthly.emailVolume.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-500">emails</div>
+                <div className="grid lg:grid-cols-2 gap-4">
+                  {/* Email flow bars */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-4">For Every 100 Emails You Send</p>
+                    <div className="space-y-4">
+                      {([
+                        { label: 'Reach Inbox',        value: result.revenueImpact.per100.delivered, gradient: 'from-emerald-500 to-emerald-400', cls: 'text-emerald-400', Icon: CheckCircle2 },
+                        { label: 'Land in Spam',        value: result.revenueImpact.per100.spam,      gradient: 'from-amber-500 to-amber-400',   cls: 'text-amber-400',   Icon: AlertTriangle },
+                        { label: 'Rejected / Bounced',  value: result.revenueImpact.per100.rejected,  gradient: 'from-red-500 to-red-400',       cls: 'text-red-400',     Icon: XCircle },
+                      ] as const).map(({ label, value, gradient, cls, Icon }) => (
+                        <div key={label}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`text-xs font-medium flex items-center gap-1.5 ${cls}`}>
+                              <Icon className="w-3 h-3" />{label}
+                            </span>
+                            <span className={`text-sm font-bold tabular-nums ${cls}`}>{value}</span>
+                          </div>
+                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className={`h-full bg-gradient-to-r ${gradient} rounded-full transition-all duration-1000`} style={{ width: `${value}%` }} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
-                      <div className="text-xs text-slate-500 mb-1">Emails Lost</div>
-                      <div className="text-lg font-bold text-amber-400">
-                        {result.revenueImpact.monthly.emailsLost.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-500">spam + rejected</div>
-                    </div>
-                    <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 text-center">
-                      <div className="text-xs text-slate-500 mb-1">Leads Lost</div>
-                      <div className="text-lg font-bold text-orange-400">
-                        {result.revenueImpact.monthly.potentialLeadsLost}
-                      </div>
-                      <div className="text-xs text-slate-500">@ {result.revenueImpact.assumptions.conversionRate}% conv.</div>
-                    </div>
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-center">
-                      <div className="text-xs text-slate-500 mb-1">Revenue at Risk</div>
-                      <div className="text-lg font-bold text-red-400">
-                        ${result.revenueImpact.monthly.revenueAtRisk.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-500">/month</div>
-                    </div>
+                    <p className="text-[10px] text-slate-600 mt-5">
+                      {result.revenueImpact.assumptions.monthlyVolume.toLocaleString()} emails/mo · {result.revenueImpact.assumptions.conversionRate}% conv. · ${result.revenueImpact.assumptions.avgLeadValue} avg. lead value
+                    </p>
                   </div>
 
-                  {/* Per-100 + Risk Factors side by side on lg */}
-                  <div className="grid lg:grid-cols-2 gap-4">
-                    {/* Per-100 Emails Visual */}
+                  {/* Risk factors */}
+                  {result.revenueImpact.riskFactors.length > 0 ? (
                     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Mail className="w-4 h-4 text-indigo-400" />
-                        <span className="text-sm font-semibold text-white">For Every 100 Emails</span>
-                      </div>
-                      <div className="space-y-3 mb-4">
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3 h-3" /> Reach Inbox
-                            </span>
-                            <span className="text-sm font-bold text-emerald-400">{result.revenueImpact.per100.delivered}</span>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-4">Deliverability Risk Factors</p>
+                      <div className="space-y-3">
+                        {result.revenueImpact.riskFactors.map((rf, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <span className={`mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full ${
+                              rf.impact === 'critical' ? 'bg-red-400' :
+                              rf.impact === 'high' ? 'bg-orange-400' :
+                              rf.impact === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'
+                            }`} />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm text-white font-medium">{rf.factor}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide ${
+                                  rf.impact === 'critical' ? 'bg-red-500/15 text-red-400' :
+                                  rf.impact === 'high' ? 'bg-orange-500/15 text-orange-400' :
+                                  rf.impact === 'medium' ? 'bg-amber-500/15 text-amber-400' :
+                                  'bg-emerald-500/15 text-emerald-400'
+                                }`}>{rf.impact}</span>
+                              </div>
+                              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rf.description}</p>
+                            </div>
                           </div>
-                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.delivered}%` }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-amber-400 font-medium flex items-center gap-1.5">
-                              <AlertTriangle className="w-3 h-3" /> Land in Spam
-                            </span>
-                            <span className="text-sm font-bold text-amber-400">{result.revenueImpact.per100.spam}</span>
-                          </div>
-                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.spam}%` }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-red-400 font-medium flex items-center gap-1.5">
-                              <XCircle className="w-3 h-3" /> Rejected / Bounced
-                            </span>
-                            <span className="text-sm font-bold text-red-400">{result.revenueImpact.per100.rejected}</span>
-                          </div>
-                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.rejected}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-                        result.revenueImpact.per100.deliveryRate >= 90
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                          : result.revenueImpact.per100.deliveryRate >= 70
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                          : 'bg-red-500/10 border-red-500/30 text-red-400'
-                      }`}>
-                        <Zap className="w-3 h-3" />
-                        <span className="text-xs font-semibold">{result.revenueImpact.per100.deliveryRate}% Delivery Rate</span>
+                        ))}
                       </div>
                     </div>
-
-                    {/* Risk Factors */}
-                    {result.revenueImpact.riskFactors.length > 0 ? (
-                      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <TrendingDown className="w-4 h-4 text-red-400" />
-                          <span className="text-sm font-semibold text-white">Deliverability Risk Factors</span>
-                        </div>
-                        <div className="space-y-3">
-                          {result.revenueImpact.riskFactors.map((rf, i) => (
-                            <div key={i} className="flex items-start gap-3">
-                              <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${
-                                rf.impact === 'critical' ? 'bg-red-400' :
-                                rf.impact === 'high' ? 'bg-orange-400' :
-                                rf.impact === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'
-                              }`} />
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium text-white">{rf.factor}</span>
-                                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                                    rf.impact === 'critical' ? 'bg-red-500/10 text-red-400' :
-                                    rf.impact === 'high' ? 'bg-orange-500/10 text-orange-400' :
-                                    rf.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
-                                    'bg-emerald-500/10 text-emerald-400'
-                                  }`}>{rf.impact}</span>
-                                </div>
-                                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rf.description}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                  ) : (
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 flex items-center gap-4">
+                      <CheckCircle2 className="w-9 h-9 text-emerald-400 shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-300">Good deliverability health</p>
+                        <p className="text-xs text-slate-400 mt-1">No major risk factors detected.</p>
                       </div>
-                    ) : (
-                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 flex items-center gap-3">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" />
-                        <div>
-                          <p className="text-sm font-semibold text-emerald-300">Good deliverability</p>
-                          <p className="text-xs text-slate-400 mt-0.5">No major risk factors detected for this domain.</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-slate-600 mt-3 flex items-center gap-1.5">
-                    <BarChart3 className="w-3 h-3" />
-                    Based on {result.revenueImpact.assumptions.monthlyVolume.toLocaleString()} emails/mo,{' '}
-                    {result.revenueImpact.assumptions.conversionRate}% conversion, ${result.revenueImpact.assumptions.avgLeadValue} avg. lead value.
-                  </p>
+                    </div>
+                  )}
                 </div>
               )}
 
