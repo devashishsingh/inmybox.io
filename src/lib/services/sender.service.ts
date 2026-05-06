@@ -45,7 +45,6 @@ export async function autoClassifyFromEnrichment(senderId: string): Promise<void
   // Skip if already manually classified
   if (sender.classification && !sender.classification.autoClassified) return
 
-  const { batchEnrichIps } = await import('./ip-enrichment.service')
   const enrichments = await prisma.ipEnrichment.findMany({ where: { ip: sender.ip } })
   const enrichment = enrichments[0]
   if (!enrichment) return

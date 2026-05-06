@@ -78,7 +78,7 @@ export async function ingestReport(params: IngestionParams): Promise<IngestionRe
         }
 
         // 6. Create report with records
-        const report = await prisma.dmarcReport.create({
+        await prisma.dmarcReport.create({
           data: {
             reportId: feedback.reportMetadata.reportId,
             orgName: feedback.reportMetadata.orgName,

@@ -53,7 +53,6 @@ export function evaluateDeliveryOutcome(records: RecordInput[]): DeliveryOutcome
   let weightedScore = 0
   let quarantineVolume = 0
   let rejectVolume = 0
-  let passVolume = 0
 
   for (const record of records) {
     const count = record.count || 1
@@ -62,14 +61,6 @@ export function evaluateDeliveryOutcome(records: RecordInput[]): DeliveryOutcome
 
     if (record.disposition === 'quarantine') quarantineVolume += count
     else if (record.disposition === 'reject') rejectVolume += count
-
-    if (
-      record.spfResult === 'pass' &&
-      record.dkimResult === 'pass' &&
-      record.dmarcResult === 'pass'
-    ) {
-      passVolume += count
-    }
   }
 
   const avgScore = weightedScore / totalVolume

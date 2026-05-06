@@ -69,7 +69,7 @@ function validateFileSize(buffer: Buffer): void {
   }
 }
 
-function validateMagicBytes(buffer: Buffer, fileName: string): 'zip' | 'gzip' | 'xml' | '7z' {
+function validateMagicBytes(buffer: Buffer, _fileName: string): 'zip' | 'gzip' | 'xml' | '7z' {
   const detected = detectFileType(buffer)
   if (detected === 'unknown') {
     throw new ExtractionError('INVALID_TYPE',
