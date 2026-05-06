@@ -999,36 +999,49 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                 </div>
               )}
 
-              {/* ── 2-column grid: Score+Pillars LEFT | Revenue Impact RIGHT ── */}
-              <div className="grid lg:grid-cols-2 gap-5 items-start">
-                {/* LEFT: Score gauge + pillar bars */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0">
-                      <ScoreGauge score={result.score} riskLevel={result.riskLevel} />
-                    </div>
-                    <div className="flex-1 space-y-3 pt-3">
-                      {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => (
-                        <PillarBar
-                          key={name}
-                          name={name}
-                          pillar={pillar}
-                          color={PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-800/60 flex justify-center">
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${risk!.bgClass} border ${risk!.borderClass}`}>
-                      <RiskIcon className={`w-4 h-4 ${risk!.textClass}`} />
-                      <span className={`text-sm font-semibold ${risk!.textClass}`}>{result.riskLabel}</span>
-                      <span className="text-xs text-slate-500 ml-1">· {result.score}/100</span>
-                    </div>
+              {/* ── Row 1: Score gauge + Pillar donut (2-col) ── */}
+              <div className="grid sm:grid-cols-2 gap-5">
+                {/* Score gauge */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-center">
+                  <p className="text-xs text-slate-400 font-medium mb-3">Domain Health Score</p>
+                  <ScoreGauge score={result.score} riskLevel={result.riskLevel} />
+                  <div className={`inline-flex items-center gap-2 mt-3 px-4 py-1.5 rounded-full ${risk!.bgClass} border ${risk!.borderClass}`}>
+                    <RiskIcon className={`w-4 h-4 ${risk!.textClass}`} />
+                    <span className={`text-sm font-semibold ${risk!.textClass}`}>{result.riskLabel}</span>
                   </div>
                 </div>
 
-                {/* RIGHT: Revenue Impact */}
-                <div className="space-y-4">
+                {/* Pillar donut */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-center">
+                  <p className="text-xs text-slate-400 font-medium mb-3">Score Breakdown</p>
+                  <PillarDonut pillars={result.pillars} />
+                  <div className="flex flex-wrap justify-center gap-3 mt-3">
+                    {Object.entries(PILLAR_COLORS).map(([key, color]) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-xs text-slate-400">{PILLAR_LABELS[key as keyof typeof PILLAR_LABELS]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Row 2: Pillar bars (full width) ── */}
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                <p className="text-xs text-slate-400 font-medium mb-4">Pillar Scores</p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => (
+                    <PillarBar
+                      key={name}
+                      name={name}
+                      pillar={pillar}
+                      color={PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Row 3: Revenue Impact ── */}
               {result.revenueImpact && (
                 <div>
                   <h4 className="text-sm text-slate-400 font-medium mb-4 flex items-center gap-2">
@@ -1036,84 +1049,8 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                     Revenue Impact Analysis
                   </h4>
 
-                  {/* Per-100 Emails Visual */}
-                  <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 mb-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Mail className="w-4 h-4 text-indigo-400" />
-                      <span className="text-sm font-semibold text-white">For Every 100 Emails You Send</span>
-                    </div>
-
-                    {/* Email flow bars */}
-                    <div className="space-y-3 mb-5">
-                      {/* Delivered */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Reach Inbox
-                          </span>
-                          <span className="text-sm font-bold text-emerald-400">{result.revenueImpact.per100.delivered}</span>
-                        </div>
-                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000"
-                            style={{ width: `${result.revenueImpact.per100.delivered}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Spam */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-amber-400 font-medium flex items-center gap-1.5">
-                            <AlertTriangle className="w-3 h-3" />
-                            Land in Spam
-                          </span>
-                          <span className="text-sm font-bold text-amber-400">{result.revenueImpact.per100.spam}</span>
-                        </div>
-                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000"
-                            style={{ width: `${result.revenueImpact.per100.spam}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Rejected */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-red-400 font-medium flex items-center gap-1.5">
-                            <XCircle className="w-3 h-3" />
-                            Rejected / Bounced
-                          </span>
-                          <span className="text-sm font-bold text-red-400">{result.revenueImpact.per100.rejected}</span>
-                        </div>
-                        <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-1000"
-                            style={{ width: `${result.revenueImpact.per100.rejected}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Delivery rate badge */}
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${
-                      result.revenueImpact.per100.deliveryRate >= 90
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                        : result.revenueImpact.per100.deliveryRate >= 70
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                        : 'bg-red-500/10 border-red-500/30 text-red-400'
-                    }`}>
-                      <Zap className="w-3.5 h-3.5" />
-                      <span className="text-xs font-semibold">
-                        {result.revenueImpact.per100.deliveryRate}% Delivery Rate
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Monthly Revenue Impact Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  {/* 4 metric cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-center">
                       <div className="text-xs text-slate-500 mb-1">Monthly Volume</div>
                       <div className="text-lg font-bold text-white">
@@ -1144,53 +1081,110 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                     </div>
                   </div>
 
-                  {/* Risk Factors */}
-                  {result.revenueImpact.riskFactors.length > 0 && (
+                  {/* Per-100 + Risk Factors side by side on lg */}
+                  <div className="grid lg:grid-cols-2 gap-4">
+                    {/* Per-100 Emails Visual */}
                     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <TrendingDown className="w-4 h-4 text-red-400" />
-                        <span className="text-sm font-semibold text-white">Deliverability Risk Factors</span>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Mail className="w-4 h-4 text-indigo-400" />
+                        <span className="text-sm font-semibold text-white">For Every 100 Emails</span>
                       </div>
-                      <div className="space-y-3">
-                        {result.revenueImpact.riskFactors.map((rf, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
-                              rf.impact === 'critical' ? 'bg-red-400' :
-                              rf.impact === 'high' ? 'bg-orange-400' :
-                              rf.impact === 'medium' ? 'bg-amber-400' :
-                              'bg-emerald-400'
-                            }`} />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-white">{rf.factor}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                                  rf.impact === 'critical' ? 'bg-red-500/10 text-red-400' :
-                                  rf.impact === 'high' ? 'bg-orange-500/10 text-orange-400' :
-                                  rf.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
-                                  'bg-emerald-500/10 text-emerald-400'
-                                }`}>
-                                  {rf.impact}
-                                </span>
-                              </div>
-                              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rf.description}</p>
-                            </div>
+                      <div className="space-y-3 mb-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" /> Reach Inbox
+                            </span>
+                            <span className="text-sm font-bold text-emerald-400">{result.revenueImpact.per100.delivered}</span>
                           </div>
-                        ))}
+                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.delivered}%` }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-amber-400 font-medium flex items-center gap-1.5">
+                              <AlertTriangle className="w-3 h-3" /> Land in Spam
+                            </span>
+                            <span className="text-sm font-bold text-amber-400">{result.revenueImpact.per100.spam}</span>
+                          </div>
+                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.spam}%` }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                              <XCircle className="w-3 h-3" /> Rejected / Bounced
+                            </span>
+                            <span className="text-sm font-bold text-red-400">{result.revenueImpact.per100.rejected}</span>
+                          </div>
+                          <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-1000" style={{ width: `${result.revenueImpact.per100.rejected}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+                        result.revenueImpact.per100.deliveryRate >= 90
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                          : result.revenueImpact.per100.deliveryRate >= 70
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                          : 'bg-red-500/10 border-red-500/30 text-red-400'
+                      }`}>
+                        <Zap className="w-3 h-3" />
+                        <span className="text-xs font-semibold">{result.revenueImpact.per100.deliveryRate}% Delivery Rate</span>
                       </div>
                     </div>
-                  )}
 
-                  {/* Assumptions footnote */}
+                    {/* Risk Factors */}
+                    {result.revenueImpact.riskFactors.length > 0 ? (
+                      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <TrendingDown className="w-4 h-4 text-red-400" />
+                          <span className="text-sm font-semibold text-white">Deliverability Risk Factors</span>
+                        </div>
+                        <div className="space-y-3">
+                          {result.revenueImpact.riskFactors.map((rf, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${
+                                rf.impact === 'critical' ? 'bg-red-400' :
+                                rf.impact === 'high' ? 'bg-orange-400' :
+                                rf.impact === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'
+                              }`} />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-medium text-white">{rf.factor}</span>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                                    rf.impact === 'critical' ? 'bg-red-500/10 text-red-400' :
+                                    rf.impact === 'high' ? 'bg-orange-500/10 text-orange-400' :
+                                    rf.impact === 'medium' ? 'bg-amber-500/10 text-amber-400' :
+                                    'bg-emerald-500/10 text-emerald-400'
+                                  }`}>{rf.impact}</span>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rf.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 flex items-center gap-3">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-300">Good deliverability</p>
+                          <p className="text-xs text-slate-400 mt-0.5">No major risk factors detected for this domain.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <p className="text-xs text-slate-600 mt-3 flex items-center gap-1.5">
                     <BarChart3 className="w-3 h-3" />
                     Based on {result.revenueImpact.assumptions.monthlyVolume.toLocaleString()} emails/mo,{' '}
                     {result.revenueImpact.assumptions.conversionRate}% conversion, ${result.revenueImpact.assumptions.avgLeadValue} avg. lead value.
-                    Actual results depend on content, sender reputation, and recipient engagement.
                   </p>
                 </div>
               )}
-                </div>{/* /RIGHT col */}
-              </div>{/* /2-col grid */}
 
               {/* BIMI Status */}
               {result.bimi && (
