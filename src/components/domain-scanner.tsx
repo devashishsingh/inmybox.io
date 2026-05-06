@@ -13,7 +13,7 @@ import {
   ChevronDown, ChevronUp, ArrowRight, Loader2,
   FileText, Search, Lock, Settings, Mail,
   Image, DollarSign, TrendingDown, BarChart3, Zap,
-  Globe, Upload, Plus, Minus, RefreshCw, Layers,
+  Globe, Upload, Plus, Minus, RefreshCw, Layers, X,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -290,7 +290,7 @@ function PillarBar({ name, pillar, color }: { name: string; pillar: PillarResult
 }
 
 /* ─── Findings Accordion (gated details) ─── */
-function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked?: boolean }) {
+function FindingsSection({ findings, onRequestReport }: { findings: Finding[]; onRequestReport: () => void }) {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const categories = ['DMARC', 'SPF', 'DKIM', 'Config', 'BIMI'] as const
@@ -332,12 +332,12 @@ function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked
                           {finding.detail}
                         </div>
                         <div className="absolute inset-0 flex items-center justify-start">
-                          <a
-                            href="mailto:hello@inmybox.io?subject=Full domain report request"
+                          <button
+                            onClick={onRequestReport}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/90 border border-slate-700 text-xs font-medium text-slate-300 hover:text-white hover:border-indigo-500/40 transition-all"
                           >
-                            Contact us for full details
-                          </a>
+                            Request full details
+                          </button>
                         </div>
                       </div>
                       {finding.recommendation && (
@@ -360,75 +360,39 @@ function FindingsSection({ findings, unlocked }: { findings: Finding[]; unlocked
   )
 }
 
-/* ─── Raw Records Panel (locked unless unlocked) ─── */
-function RawRecords({ unlocked, rawRecords }: { unlocked?: boolean; rawRecords?: ScanResult['rawRecords'] }) {
+/* ─── Raw Records Panel ─── */
+function RawRecords({ rawRecords, onRequestReport }: { rawRecords?: ScanResult['rawRecords']; onRequestReport: () => void }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center px-4 py-3">
         <span className="text-sm font-semibold text-white">Raw DNS Records</span>
-        {!unlocked && (
-          <span className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Lock className="w-3 h-3" />
-            Pro feature
-          </span>
-        )}
       </div>
       <div className="px-4 pb-4 border-t border-slate-800 pt-3">
-        {unlocked && rawRecords ? (
-          <div className="space-y-3">
-            {rawRecords.dmarc && (
-              <div>
-                <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.dmarc}</div>
-              </div>
-            )}
-            {rawRecords.spf && (
-              <div>
-                <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.spf}</div>
-              </div>
-            )}
-            {rawRecords.dkim && (
-              <div>
-                <div className="text-xs text-slate-400 mb-1">DKIM</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.dkim}</div>
-              </div>
-            )}
-            {rawRecords.bimi && (
-              <div>
-                <div className="text-xs text-slate-400 mb-1">BIMI</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300 break-all">{rawRecords.bimi}</div>
-              </div>
-            )}
-            {!rawRecords.dmarc && !rawRecords.spf && !rawRecords.dkim && !rawRecords.bimi && (
-              <p className="text-xs text-slate-500">No DNS records found for this domain.</p>
-            )}
-          </div>
-        ) : (
-          <div className="relative">
-            {/* Blurred preview — always visible */}
-            <div className="space-y-3 select-none blur-[5px] pointer-events-none" aria-hidden>
-              <div>
-                <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:...</div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
-                <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com ~all</div>
-              </div>
+        <div className="relative">
+          <div className="space-y-3 select-none blur-[5px] pointer-events-none" aria-hidden>
+            <div>
+              <div className="text-xs text-slate-400 mb-1">DMARC (_dmarc.)</div>
+              <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DMARC1; p=reject; rua=mailto:dmarc-reports@yourdomain.com; pct=100</div>
             </div>
-            {/* Contact overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <a
-                href="mailto:hello@inmybox.io?subject=DNS records report request"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-semibold hover:border-indigo-500/40 transition-all shadow-lg"
-              >
-                <Mail className="w-3.5 h-3.5 text-indigo-400" />
-                Contact us for full report
-              </a>
+            <div>
+              <div className="text-xs text-slate-400 mb-1">SPF (TXT)</div>
+              <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=spf1 include:_spf.google.com include:sendgrid.net ~all</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-400 mb-1">DKIM (google._domainkey)</div>
+              <div className="bg-slate-800 rounded-lg px-3 py-2 font-mono text-xs text-slate-300">v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAO...</div>
             </div>
           </div>
-        )}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={onRequestReport}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-white text-sm font-semibold hover:border-indigo-500/40 hover:bg-slate-700/80 transition-all shadow-lg"
+            >
+              <Mail className="w-3.5 h-3.5 text-indigo-400" />
+              Request full records
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -445,7 +409,7 @@ function ScoringMethodology() {
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-800/50 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-brand-400" />
+          <Info className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-semibold text-white">How We Score Your Domain</span>
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
@@ -606,6 +570,152 @@ function ScoringMethodology() {
   )
 }
 
+/* ─── Report Request Modal ─── */
+function ReportRequestModal({ domain, onClose }: { domain: string; onClose: () => void }) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [company, setCompany] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [err, setErr] = useState('')
+
+  const submit = async () => {
+    if (!name.trim()) { setErr('Name is required'); return }
+    if (!email.includes('@')) { setErr('Please enter a valid work email'); return }
+    setErr('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/demo-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          company: company.trim() || undefined,
+          message: `Requesting full domain report for: ${domain}`,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setErr(data.error || 'Something went wrong. Please try again.'); return }
+      setSubmitted(true)
+    } catch {
+      setErr('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-[#0d1120] border border-slate-800 shadow-2xl shadow-black/50"
+        onClick={e => e.stopPropagation()}
+      >
+        {submitted ? (
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Request received!</h3>
+            <p className="text-sm text-slate-400 mb-6">
+              We&apos;ll prepare a detailed report for{' '}
+              <span className="text-white font-medium">{domain}</span> and reach out within 24 hours.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm font-medium hover:bg-slate-700 transition-all"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between p-6 border-b border-slate-800">
+              <div>
+                <h3 className="text-base font-bold text-white">Request Full Report</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Expert analysis for{' '}
+                  <span className="text-indigo-300 font-medium">{domain}</span>
+                </p>
+              </div>
+              <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors p-1 -mt-0.5">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {err && (
+                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/5 border border-red-500/20 rounded-lg px-3 py-2">
+                  <XCircle className="w-4 h-4 shrink-0" />
+                  {err}
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Full Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Jane Smith"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Work Email <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="jane@yourcompany.com"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Company <span className="text-slate-600">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={company}
+                  onChange={e => setCompany(e.target.value)}
+                  placeholder="Your company name"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+                />
+              </div>
+              <button
+                onClick={submit}
+                disabled={loading}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending…
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    Request Report
+                  </>
+                )}
+              </button>
+              <p className="text-[11px] text-slate-600 text-center">
+                We&apos;ll reach out within 24 hours. No spam, ever.
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MAIN EXPORT — DomainScanner
    ═══════════════════════════════════════════════════════════════ */
@@ -631,6 +741,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
   const [batchScanning, setBatchScanning] = useState(false)
   const [batchResults, setBatchResults] = useState<MultiScanResult[] | null>(null)
   const [aggregate, setAggregate] = useState<AggregateResult | null>(null)
+  const [showReportForm, setShowReportForm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const aggregateRef = useRef<HTMLDivElement>(null)
 
@@ -801,24 +912,24 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
   return (
     <div>
       {/* ── Scanner Input ── */}
-      <div className="max-w-lg mx-auto lg:mx-0 mb-3">
-        <div className="glow-input skeuo-input flex items-center bg-slate-900/80 border border-slate-700 rounded-xl p-1.5 focus-within:border-brand-500/50 transition-all">
+      <div className="w-full mb-4">
+        <div className="flex items-center bg-[#0b0f1e] border border-slate-700/60 rounded-2xl p-2 shadow-xl shadow-black/30 focus-within:border-indigo-500/40 focus-within:shadow-[0_0_0_3px_rgba(99,102,241,0.08)] transition-all duration-200">
           <div className="flex items-center gap-2 px-3 text-slate-500">
-            <Search className="w-4 h-4" />
+            <Globe className="w-4 h-4" />
           </div>
           <input
             type="text"
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="yourdomain.com"
-            className="flex-1 bg-transparent text-white text-sm placeholder:text-slate-500 outline-none py-2.5"
+            placeholder="yourcompany.com"
+            className="flex-1 bg-transparent text-white text-sm placeholder:text-slate-500 outline-none py-3 pr-2"
             disabled={loading}
           />
           <button
             onClick={handleScan}
             disabled={loading || !domain.trim()}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed skeuo-btn"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {loading ? (
               <>
@@ -827,17 +938,18 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
               </>
             ) : (
               <>
+                <Search className="w-3.5 h-3.5" />
                 Scan Domain
-                <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-2 text-center lg:text-left">
-          Free scan · No signup required · Results in seconds
-        </p>
+        <div className="flex items-center justify-between mt-2 px-1">
+          <p className="text-xs text-slate-500">Free · No signup · Results in ~2 seconds</p>
+          {loading && <p className="text-xs text-indigo-400 animate-pulse">Checking DNS records…</p>}
+        </div>
         {error && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
+          <div className="mt-2 flex items-center gap-2 text-sm text-red-400 px-1">
             <XCircle className="w-4 h-4 shrink-0" />
             {error}
           </div>
@@ -847,7 +959,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
       {/* ── Results Panel ── */}
       {result && (
         <div ref={resultRef} className="w-full scroll-mt-24">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-brand-500/5">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-indigo-500/5">
             {/* Header */}
             <div className={`px-6 py-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
               <div className="flex items-center gap-4">
@@ -862,17 +974,17 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   </div>
                 </div>
               </div>
-              <a
-                href="mailto:hello@inmybox.io?subject=Full domain monitoring inquiry"
+              <button
+                onClick={() => setShowReportForm(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 shrink-0"
               >
                 Get Full Report
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
             </div>
 
-            <div className="p-6 space-y-8">
-              {/* INMYBOX HERO ENHANCEMENT — Calculator tie-in banner */}
+            <div className="p-5 space-y-5">
+              {/* Calculator tie-in banner */}
               {calcRevenueLost != null && calcRevenueLost > 0 && (
                 <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
@@ -887,50 +999,36 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                 </div>
               )}
 
-              {/* Charts Row */}
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Score Gauge */}
-                <div className="text-center">
-                  <h4 className="text-sm text-slate-400 font-medium mb-4">Domain Health Score</h4>
-                  <ScoreGauge score={result.score} riskLevel={result.riskLevel} />
-                  <div className={`inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full ${risk!.bgClass} border ${risk!.borderClass}`}>
-                    <RiskIcon className={`w-4 h-4 ${risk!.textClass}`} />
-                    <span className={`text-sm font-semibold ${risk!.textClass}`}>{result.riskLabel}</span>
+              {/* ── 2-column grid: Score+Pillars LEFT | Revenue Impact RIGHT ── */}
+              <div className="grid lg:grid-cols-2 gap-5 items-start">
+                {/* LEFT: Score gauge + pillar bars */}
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0">
+                      <ScoreGauge score={result.score} riskLevel={result.riskLevel} />
+                    </div>
+                    <div className="flex-1 space-y-3 pt-3">
+                      {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => (
+                        <PillarBar
+                          key={name}
+                          name={name}
+                          pillar={pillar}
+                          color={PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-800/60 flex justify-center">
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${risk!.bgClass} border ${risk!.borderClass}`}>
+                      <RiskIcon className={`w-4 h-4 ${risk!.textClass}`} />
+                      <span className={`text-sm font-semibold ${risk!.textClass}`}>{result.riskLabel}</span>
+                      <span className="text-xs text-slate-500 ml-1">· {result.score}/100</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Pillar Breakdown Donut */}
-                <div className="text-center">
-                  <h4 className="text-sm text-slate-400 font-medium mb-4">Score Breakdown</h4>
-                  <PillarDonut pillars={result.pillars} />
-                  {/* Legend */}
-                  <div className="flex flex-wrap justify-center gap-4 mt-4">
-                    {Object.entries(PILLAR_COLORS).map(([key, color]) => (
-                      <div key={key} className="flex items-center gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-                        <span className="text-xs text-slate-400">{PILLAR_LABELS[key as keyof typeof PILLAR_LABELS]}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Pillar Bars */}
-              <div>
-                <h4 className="text-sm text-slate-400 font-medium mb-4">Pillar Scores</h4>
+                {/* RIGHT: Revenue Impact */}
                 <div className="space-y-4">
-                  {(Object.entries(result.pillars) as [string, PillarResult][]).map(([name, pillar]) => (
-                    <PillarBar
-                      key={name}
-                      name={name}
-                      pillar={pillar}
-                      color={PILLAR_COLORS[name as keyof typeof PILLAR_COLORS]}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* ═══ Revenue Impact Section ═══ */}
               {result.revenueImpact && (
                 <div>
                   <h4 className="text-sm text-slate-400 font-medium mb-4 flex items-center gap-2">
@@ -941,7 +1039,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   {/* Per-100 Emails Visual */}
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 mb-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <Mail className="w-4 h-4 text-brand-400" />
+                      <Mail className="w-4 h-4 text-indigo-400" />
                       <span className="text-sm font-semibold text-white">For Every 100 Emails You Send</span>
                     </div>
 
@@ -1091,8 +1189,10 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   </p>
                 </div>
               )}
+                </div>{/* /RIGHT col */}
+              </div>{/* /2-col grid */}
 
-              {/* BIMI Status */}
+              {/* BIMI Status */}}
               {result.bimi && (
                 <div>
                   <h4 className="text-sm text-slate-400 font-medium mb-4">BIMI (Brand Logo in Email)</h4>
@@ -1168,74 +1268,46 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
 
               {/* Detailed Findings */}
               <div>
-                <h4 className="text-sm text-slate-400 font-medium mb-4">Detailed Findings</h4>
-                <FindingsSection findings={result.findings} unlocked={unlocked} />
+                <h4 className="text-sm font-semibold text-white mb-3">Detailed Findings</h4>
+                <FindingsSection findings={result.findings} onRequestReport={() => setShowReportForm(true)} />
               </div>
 
-              {/* Raw Records (locked) */}
-              <RawRecords unlocked={unlocked} rawRecords={result.rawRecords} />
+              {/* Raw DNS Records */}
+              <RawRecords rawRecords={result.rawRecords} onRequestReport={() => setShowReportForm(true)} />
 
               {/* Scoring Methodology */}
               <ScoringMethodology />
 
-              {/* Email Capture */}
-              {result.scanId && !leadSubmitted && (
-                <div className="rounded-xl border border-brand-500/20 bg-brand-500/5 p-5">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-brand-400" />
-                        Get your full report emailed
-                      </h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        We&apos;ll send a detailed PDF report with recommendations to your inbox.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <input
-                        type="email"
-                        value={leadEmail}
-                        onChange={e => setLeadEmail(e.target.value)}
-                        placeholder="you@company.com"
-                        className="flex-1 sm:w-56 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none focus:border-brand-500/50"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' && leadEmail.includes('@')) {
-                            e.preventDefault()
-                            submitLead()
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={submitLead}
-                        disabled={leadLoading || !leadEmail.includes('@')}
-                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                      >
-                        {leadLoading ? 'Sending...' : 'Send Report'}
-                      </button>
-                    </div>
-                  </div>
+              {/* Full Report CTA */}
+              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-400" />
+                    Want the full breakdown?
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Get expert recommendations and a detailed report for <span className="text-white font-medium">{result.domain}</span>.
+                  </p>
                 </div>
-              )}
-              {leadSubmitted && (
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="text-sm text-emerald-300 font-medium">Report sent!</p>
-                    <p className="text-xs text-slate-400">Check your inbox for the full domain health report.</p>
-                  </div>
-                </div>
-              )}
+                <button
+                  onClick={() => setShowReportForm(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 shrink-0 whitespace-nowrap"
+                >
+                  Request Full Report
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
 
               {/* ═══ Subdomain / Multi-Domain Expansion ═══ */}
-              <div className="rounded-xl border border-brand-500/20 bg-gradient-to-b from-brand-500/5 to-transparent overflow-hidden">
+              <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-b from-indigo-500/5 to-transparent overflow-hidden">
                 {/* Expansion Header */}
                 <button
                   onClick={() => setExpandMode(expandMode === 'closed' ? 'discover' : 'closed')}
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-800/30 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
-                      <Layers className="w-4 h-4 text-brand-400" />
+                    <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                      <Layers className="w-4 h-4 text-indigo-400" />
                     </div>
                     <div className="text-left">
                       <div className="text-sm font-semibold text-white">Expand Your Scan</div>
@@ -1256,7 +1328,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                         onClick={() => { setExpandMode('discover'); if (discoveredSubs.length === 0) discoverSubdomains() }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                           expandMode === 'discover'
-                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                             : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700/50'
                         }`}
                       >
@@ -1267,7 +1339,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                         onClick={() => setExpandMode('import')}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
                           expandMode === 'import'
-                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                             : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700/50'
                         }`}
                       >
@@ -1281,7 +1353,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                       <div>
                         {discovering ? (
                           <div className="flex items-center gap-3 py-6 justify-center">
-                            <Loader2 className="w-5 h-5 text-brand-400 animate-spin" />
+                            <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                             <span className="text-sm text-slate-400">Checking common subdomains for MX records...</span>
                           </div>
                         ) : discoveredSubs.length === 0 ? (
@@ -1301,14 +1373,14 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                           <div>
                             <div className="flex items-center justify-between mb-3">
                               <span className="text-xs text-slate-400">
-                                Found <span className="text-brand-400 font-semibold">{discoveredSubs.length}</span> email-active subdomain{discoveredSubs.length !== 1 ? 's' : ''}
+                                Found <span className="text-indigo-400 font-semibold">{discoveredSubs.length}</span> email-active subdomain{discoveredSubs.length !== 1 ? 's' : ''}
                               </span>
                               <button
                                 onClick={() => {
                                   if (selectedDomains.size === discoveredSubs.length) setSelectedDomains(new Set())
                                   else setSelectedDomains(new Set(discoveredSubs.map(s => s.fqdn)))
                                 }}
-                                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
                               >
                                 {selectedDomains.size === discoveredSubs.length ? 'Deselect All' : 'Select All'}
                               </button>
@@ -1319,7 +1391,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                                   key={sub.fqdn}
                                   className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all ${
                                     selectedDomains.has(sub.fqdn)
-                                      ? 'bg-brand-500/5 border-brand-500/30'
+                                      ? 'bg-indigo-500/5 border-indigo-500/30'
                                       : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
                                   }`}
                                 >
@@ -1327,7 +1399,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                                     type="checkbox"
                                     checked={selectedDomains.has(sub.fqdn)}
                                     onChange={() => toggleDomain(sub.fqdn)}
-                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500/30"
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/30"
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div className="text-sm text-white font-medium">{sub.fqdn}</div>
@@ -1385,7 +1457,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                             />
                             <button
                               onClick={() => fileInputRef.current?.click()}
-                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/20"
+                              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
                             >
                               <Upload className="w-3.5 h-3.5" />
                               Choose File
@@ -1397,14 +1469,14 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                           <div>
                             <div className="flex items-center justify-between mb-3">
                               <span className="text-xs text-slate-400">
-                                Imported <span className="text-brand-400 font-semibold">{importedDomains.length}</span> domain{importedDomains.length !== 1 ? 's' : ''}
+                                Imported <span className="text-indigo-400 font-semibold">{importedDomains.length}</span> domain{importedDomains.length !== 1 ? 's' : ''}
                               </span>
                               <button
                                 onClick={() => {
                                   if (selectedDomains.size === importedDomains.length) setSelectedDomains(new Set())
                                   else setSelectedDomains(new Set(importedDomains))
                                 }}
-                                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
                               >
                                 {selectedDomains.size === importedDomains.length ? 'Deselect All' : 'Select All'}
                               </button>
@@ -1415,7 +1487,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                                   key={d}
                                   className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border cursor-pointer transition-all ${
                                     selectedDomains.has(d)
-                                      ? 'bg-brand-500/5 border-brand-500/30'
+                                      ? 'bg-indigo-500/5 border-indigo-500/30'
                                       : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
                                   }`}
                                 >
@@ -1423,7 +1495,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                                     type="checkbox"
                                     checked={selectedDomains.has(d)}
                                     onChange={() => toggleDomain(d)}
-                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500/30"
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/30"
                                   />
                                   <span className="text-sm text-white font-medium">{d}</span>
                                 </label>
@@ -1443,7 +1515,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                         <button
                           onClick={runBatchScan}
                           disabled={batchScanning}
-                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {batchScanning ? (
                             <>
@@ -1467,10 +1539,10 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
               {aggregate && batchResults && (
                 <div ref={aggregateRef} className="scroll-mt-24 space-y-6">
                   {/* Aggregate Header */}
-                  <div className="rounded-xl border border-brand-500/30 bg-gradient-to-r from-brand-600/10 to-brand-500/5 p-5">
+                  <div className="rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-600/10 to-indigo-500/5 p-5">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
-                        <Layers className="w-5 h-5 text-brand-400" />
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-indigo-400" />
                       </div>
                       <div>
                         <h4 className="text-base font-bold text-white">Portfolio Health Summary</h4>
@@ -1620,7 +1692,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                   )}
 
                   {/* Full Monitoring CTA for multi-domain */}
-                  <div className="rounded-xl border border-brand-500/20 bg-gradient-to-r from-brand-600/10 to-brand-500/5 p-5 text-center">
+                  <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-r from-indigo-600/10 to-indigo-500/5 p-5 text-center">
                     <h4 className="text-base font-bold text-white mb-1">
                       Losing ${aggregate.totalRevenueAtRiskYearly.toLocaleString()}/year across {aggregate.domainsScanned} domains?
                     </h4>
@@ -1629,7 +1701,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                     </p>
                     <Link
                       href="/auth/signup"
-                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25"
                     >
                       Start Monitoring All Domains
                       <ArrowRight className="w-4 h-4" />
@@ -1639,7 +1711,7 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
               )}
 
               {/* CTA */}
-              <div className="bg-gradient-to-r from-brand-600/10 to-brand-500/5 rounded-xl border border-brand-500/20 p-6 text-center">
+              <div className="bg-gradient-to-r from-indigo-600/10 to-indigo-500/5 rounded-xl border border-indigo-500/20 p-6 text-center">
                 <h4 className="text-lg font-bold text-white mb-2">
                   Your domain has issues. Let&apos;s fix them together.
                 </h4>
@@ -1650,23 +1722,28 @@ export function DomainScanner({ onScanResult, calcRevenueLost }: { onScanResult?
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link
                     href="/auth/signup"
-                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/25"
+                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25"
                   >
                     Get Started Free
                     <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <a
-                    href="mailto:hello@inmybox.io?subject=Domain%20Scan%20Follow-up"
-                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl border border-brand-500/30 text-brand-300 hover:text-white hover:border-brand-400/50 transition-all"
+                  <button
+                    onClick={() => setShowReportForm(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl border border-indigo-500/30 text-indigo-300 hover:text-white hover:border-indigo-400/50 transition-all"
                   >
                     <Mail className="w-4 h-4" />
                     Talk to an Expert
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Report Request Modal */}
+      {showReportForm && result && (
+        <ReportRequestModal domain={result.domain} onClose={() => setShowReportForm(false)} />
       )}
     </div>
   )
