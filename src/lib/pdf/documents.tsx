@@ -4,7 +4,7 @@
 
 import React from 'react'
 import {
-  Document, Page, Text, View, StyleSheet, Image, Link,
+  Document, Page, Text, View, StyleSheet,
 } from '@react-pdf/renderer'
 import { colors } from './theme'
 
@@ -262,7 +262,7 @@ function Header({ title, subtitle }: { title: string; subtitle: string }) {
   )
 }
 
-function Footer({ pageNum, total }: { pageNum?: string; total?: string }) {
+function Footer() {
   return (
     <View style={s.footer} fixed>
       <Text style={s.footerText}>InMyBox · DMARC Monitoring Platform · app.inmybox.io</Text>
@@ -565,13 +565,13 @@ export function AppWorkflowPDF({ generatedDate = new Date().toLocaleDateString('
           {/* Demo data */}
           <Text style={s.sectionTitle}>6. Demo Data & Lifecycle</Text>
           <Text style={s.p}>
-            On domain creation, <Text style={{ fontFamily: 'Courier', fontSize: 10 }}>seedDemoData()</Text> populates the tenant's dashboard with
+            On domain creation, <Text style={{ fontFamily: 'Courier', fontSize: 10 }}>seedDemoData()</Text> populates the tenant&apos;s dashboard with
             realistic sample DMARC data (3 reports, ~8 records, 6 senders, 1 risk score, 3 action items).
             All demo rows carry <Text style={{ fontFamily: 'Courier', fontSize: 10 }}>isDemo: true</Text>.
           </Text>
           <Text style={s.p}>
             On the first successful ingestion of a real DMARC report, <Text style={{ fontFamily: 'Courier', fontSize: 10 }}>purgeDemoData()</Text> removes
-            all demo rows atomically. The amber "sample data" banner is dismissed automatically.
+            all demo rows atomically. The amber &quot;sample data&quot; banner is dismissed automatically.
           </Text>
 
           {/* Infra */}
