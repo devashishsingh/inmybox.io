@@ -139,6 +139,24 @@ function Hero() {
               </Link>
             </div>
 
+            {/* Value proposition strip */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-8 justify-center lg:justify-start">
+              <div className="flex items-center gap-1.5 text-[13px] text-zinc-400">
+                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>One-time fix — no monthly fees</span>
+              </div>
+              <div className="hidden sm:block w-px h-3.5 bg-zinc-700" />
+              <div className="flex items-center gap-1.5 text-[13px] text-zinc-400">
+                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>We fix your DMARC &amp; walk away</span>
+              </div>
+              <div className="hidden sm:block w-px h-3.5 bg-zinc-700" />
+              <div className="flex items-center gap-1.5 text-[13px] text-zinc-400">
+                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>2 free assessments per year</span>
+              </div>
+            </div>
+
             <div className={hasScan ? 'w-full' : 'max-w-2xl'}>
               <DomainScanner onScanResult={setHasScan} />
             </div>
