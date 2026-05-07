@@ -374,6 +374,19 @@ async function main() {
   })
   console.log(`✓ Ingestion logs created`)
 
+  // Create pipeline config so the cron can poll this tenant
+  await prisma.pipelineConfig.upsert({
+    where: { tenantId: tenant.id },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      enabled: true,
+      pollIntervalMinutes: 1440,
+      startedAt: new Date(),
+    },
+  })
+  console.log(`✓ Pipeline config: enabled`)
+
   console.log('')
   console.log('🎉 Seed complete!')
   console.log('')
