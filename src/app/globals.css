@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f0f23;
+  --background: #000000;
   --foreground: #e2e8f0;
 }
 
@@ -22,6 +22,60 @@ body {
   background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* ===== DEEP BACKGROUND GLASSMORPHISM =====
+   Sits at the absolute back of the page (behind every component).
+   Pure black base + softly drifting colored orbs + frosted glass veil.
+   Purely additive — no existing layout, color, or component is altered. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Layer 1: colored light orbs floating on the black base */
+body::before {
+  background:
+    radial-gradient(closest-side at 18% 22%, rgba(99, 102, 241, 0.28), transparent 70%),
+    radial-gradient(closest-side at 82% 28%, rgba(167, 139, 250, 0.22), transparent 70%),
+    radial-gradient(closest-side at 30% 82%, rgba(239, 35, 60, 0.18), transparent 70%),
+    radial-gradient(closest-side at 78% 78%, rgba(245, 158, 11, 0.15), transparent 70%),
+    #000000;
+  background-size:
+    900px 900px,
+    1100px 1100px,
+    1000px 1000px,
+    1200px 1200px,
+    100% 100%;
+  background-repeat: no-repeat;
+  filter: saturate(115%);
+}
+
+/* Layer 2: frosted glass veil over the orbs */
+body::after {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(120px) saturate(140%);
+  -webkit-backdrop-filter: blur(120px) saturate(140%);
+  /* subtle hairline noise via gradient to avoid banding */
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.25));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body::before {
+    animation: bg-orb-drift 24s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes bg-orb-drift {
+  0%   { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%, 0 0; }
+  100% { background-position: 6% 4%, 94% 6%, 4% 96%, 96% 94%, 0 0; }
 }
 
 /* Custom scrollbar */
