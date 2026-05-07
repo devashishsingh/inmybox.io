@@ -11,21 +11,20 @@ export default withAuth(
     const publicPaths = ['/auth/', '/api/auth/', '/invite']
     const is2faPath = pathname.startsWith('/auth/setup-2fa') || pathname.startsWith('/auth/verify-2fa')
 
-    if (!is2faPath && !publicPaths.some((p) => pathname.startsWith(p))) {
-      if (token?.totpEnabled === false) {
-        // Never enrolled — force enrollment
-        const url = req.nextUrl.clone()
-        url.pathname = '/auth/setup-2fa'
-        return NextResponse.redirect(url)
-      }
-      if (token?.totpEnabled === true && token?.twoFactorVerified !== true) {
-        // Enrolled but not verified this session
-        const url = req.nextUrl.clone()
-        url.pathname = '/auth/verify-2fa'
-        url.searchParams.set('callbackUrl', encodeURIComponent(pathname))
-        return NextResponse.redirect(url)
-      }
-    }
+    // 2FA gate temporarily disabled — redirect straight to dashboard
+    // if (!is2faPath && !publicPaths.some((p) => pathname.startsWith(p))) {
+    //   if (token?.totpEnabled === false) {
+    //     const url = req.nextUrl.clone()
+    //     url.pathname = '/auth/setup-2fa'
+    //     return NextResponse.redirect(url)
+    //   }
+    //   if (token?.totpEnabled === true && token?.twoFactorVerified !== true) {
+    //     const url = req.nextUrl.clone()
+    //     url.pathname = '/auth/verify-2fa'
+    //     url.searchParams.set('callbackUrl', encodeURIComponent(pathname))
+    //     return NextResponse.redirect(url)
+    //   }
+    // }
 
     // ── Request ID injection for traceability ───────────────────────
     const requestId = crypto.randomUUID()

@@ -118,7 +118,7 @@ function SignInForm() {
               : "Don't have an account yet? \u00a0"}
             {!isNewUser && (
               <Link href="/demo" className="text-zinc-400 hover:text-white transition-colors underline underline-offset-2">
-                Sing up
+                Sign up
               </Link>
             )}
           </p>
