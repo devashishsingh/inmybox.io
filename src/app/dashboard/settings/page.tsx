@@ -13,6 +13,10 @@ import {
   Building2,
   User,
   AlertCircle,
+  RefreshCw,
+  Play,
+  Pause,
+  Clock,
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
@@ -31,6 +35,35 @@ export default function SettingsPage() {
   const [domains, setDomains] = useState<{ id: string; domain: string }[]>([])
   const [newDomain, setNewDomain] = useState('')
   const [error, setError] = useState('')
+
+  // Polling state
+  const [pipeline, setPipeline] = useState<any>(null)
+  const [lastPoll, setLastPoll] = useState<any>(null)
+  const [pollInterval, setPollInterval] = useState(5)
+  const [pollDuration, setPollDuration] = useState<number | null>(null) // null = unlimited (days)
+  const [polling, setPolling] = useState(false)
+  const [pollMessage, setPollMessage] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null)
+
+  const loadPipeline = () => {
+    fetch('/api/pipeline')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.pipeline) {
+          setPipeline(d.pipeline)
+          setPollInterval(d.pipeline.pollIntervalMinutes ?? 5)
+          if (d.pipeline.expiresAt && d.pipeline.startedAt) {
+            const ms = new Date(d.pipeline.expiresAt).getTime() - new Date(d.pipeline.startedAt).getTime()
+            setPollDuration(Math.max(1, Math.round(ms / (24 * 60 * 60 * 1000))))
+          } else {
+            setPollDuration(null)
+          }
+        }
+        setLastPoll(d.lastPoll || null)
+      })
+      .catch(() => {})
+  }
+
+  useEffect(() => { loadPipeline() }, [])
 
   useEffect(() => {
     fetch('/api/settings')
@@ -93,8 +126,54 @@ export default function SettingsPage() {
     }
   }
 
+  // ── Polling actions ──────────────────────────────────────────────
+  const callPipeline = async (action: string, payload: Record<string, any> = {}) => {
+    setPolling(true)
+    setPollMessage(null)
+    try {
+      const res = await fetch('/api/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...payload }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setPollMessage({ kind: 'error', text: data.error || 'Action failed' })
+      } else if (action === 'fetch_now') {
+        const fr = data.fetchResult
+        if (fr) {
+          setPollMessage({
+            kind: fr.processed > 0 ? 'success' : 'info',
+            text: `Fetched: ${fr.processed} processed, ${fr.skipped} skipped, ${fr.errors} errors`,
+          })
+        } else {
+          setPollMessage({ kind: 'info', text: 'Fetch triggered' })
+        }
+      } else {
+        setPollMessage({ kind: 'success', text: 'Saved' })
+      }
+      loadPipeline()
+    } catch (e: any) {
+      setPollMessage({ kind: 'error', text: e?.message || 'Network error' })
+    } finally {
+      setPolling(false)
+    }
+  }
+
+  const startPolling = () => callPipeline('start', {
+    pollIntervalMinutes: pollInterval,
+    durationDays: pollDuration,
+  })
+  const stopPolling = () => callPipeline('stop')
+  const updatePolling = () => callPipeline('update', {
+    pollIntervalMinutes: pollInterval,
+    durationDays: pollDuration,
+  })
+  const fetchNow = () => callPipeline('fetch_now')
+
   const tabs = [
     { id: 'domains', label: 'Domains', icon: Globe },
+    { id: 'polling', label: 'Polling', icon: RefreshCw },
     { id: 'impact', label: 'Business Impact', icon: BarChart3 },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'profile', label: 'Profile', icon: User },
@@ -189,6 +268,166 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'polling' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-200 mb-1">Email Polling</h2>
+                <p className="text-sm text-slate-500">
+                  Automatically fetch DMARC aggregate reports from your connected mailbox.
+                </p>
+              </div>
+
+              {/* Status card */}
+              <div className="grid sm:grid-cols-3 gap-3">
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]">
+                  <div className="text-xs text-slate-500 mb-1">Status</div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${
+                        pipeline?.enabled ? 'bg-emerald-400' : 'bg-slate-500'
+                      }`}
+                    />
+                    <span className="text-sm font-medium text-slate-200">
+                      {pipeline?.enabled ? 'Active' : 'Stopped'}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]">
+                  <div className="text-xs text-slate-500 mb-1">Last Fetch</div>
+                  <div className="text-sm font-medium text-slate-200">
+                    {pipeline?.lastFetchAt
+                      ? new Date(pipeline.lastFetchAt).toLocaleString()
+                      : 'Never'}
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]">
+                  <div className="text-xs text-slate-500 mb-1">Total Fetches</div>
+                  <div className="text-sm font-medium text-slate-200">{pipeline?.fetchCount ?? 0}</div>
+                </div>
+              </div>
+
+              {/* Last poll detail */}
+              {lastPoll && (
+                <div className="p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] text-xs text-slate-400">
+                  Last run: <span className="text-slate-300">{lastPoll.status}</span>
+                  {' · '}
+                  {lastPoll.reportsProcessed ?? 0} processed of {lastPoll.reportsFound ?? 0}
+                  {lastPoll.errorMessage ? ` · ${lastPoll.errorMessage}` : ''}
+                </div>
+              )}
+
+              {pollMessage && (
+                <div
+                  className={`flex items-center gap-2 p-3 rounded-xl text-sm ${
+                    pollMessage.kind === 'success'
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300'
+                      : pollMessage.kind === 'error'
+                      ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                      : 'bg-sky-500/10 border border-sky-500/20 text-sky-300'
+                  }`}
+                >
+                  {pollMessage.kind === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  {pollMessage.text}
+                </div>
+              )}
+
+              {/* Controls */}
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-1.5 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    Poll interval
+                  </label>
+                  <select
+                    value={pollInterval}
+                    onChange={(e) => setPollInterval(parseInt(e.target.value))}
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  >
+                    <option value={1}>Every 1 minute</option>
+                    <option value={5}>Every 5 minutes</option>
+                    <option value={15}>Every 15 minutes</option>
+                    <option value={30}>Every 30 minutes</option>
+                    <option value={60}>Every hour</option>
+                    <option value={360}>Every 6 hours</option>
+                    <option value={1440}>Daily</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    How often to check the inbox for new reports.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    Poll duration
+                  </label>
+                  <select
+                    value={pollDuration === null ? 'unlimited' : String(pollDuration)}
+                    onChange={(e) =>
+                      setPollDuration(e.target.value === 'unlimited' ? null : parseInt(e.target.value))
+                    }
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  >
+                    <option value="1">Next 1 day</option>
+                    <option value="7">Next 7 days</option>
+                    <option value="30">Next 30 days</option>
+                    <option value="90">Next 90 days</option>
+                    <option value="unlimited">Unlimited</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {pipeline?.expiresAt
+                      ? `Expires ${new Date(pipeline.expiresAt).toLocaleDateString()}`
+                      : 'How long polling should continue.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-white/[0.06]">
+                <button
+                  onClick={fetchNow}
+                  disabled={polling}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 dash-btn-primary text-sm disabled:opacity-60"
+                >
+                  <RefreshCw className={`w-4 h-4 ${polling ? 'animate-spin' : ''}`} />
+                  Fetch now
+                </button>
+
+                {pipeline?.enabled ? (
+                  <>
+                    <button
+                      onClick={updatePolling}
+                      disabled={polling}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 hover:bg-white/[0.06] disabled:opacity-60"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save changes
+                    </button>
+                    <button
+                      onClick={stopPolling}
+                      disabled={polling}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/15 disabled:opacity-60"
+                    >
+                      <Pause className="w-4 h-4" />
+                      Stop polling
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={startPolling}
+                    disabled={polling}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15 disabled:opacity-60"
+                  >
+                    <Play className="w-4 h-4" />
+                    Start polling
+                  </button>
                 )}
               </div>
             </div>

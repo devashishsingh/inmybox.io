@@ -34,6 +34,37 @@ const IMAP_CONFIG = {
   folder: process.env.EMAIL_FOLDER || 'dmarc_report',
 }
 
+/**
+ * Resolves the IMAP folder/mailbox path. Gmail labels can appear directly
+ * (e.g., 'dmarc_rua') or nested (e.g., '[Gmail]/dmarc_rua'). Tries the
+ * configured folder, common variants, then falls back to INBOX.
+ */
+async function resolveFolderPath(client: ImapFlow, preferred: string): Promise<string> {
+  try {
+    const list = await client.list()
+    const names = list.map((m: any) => m.path)
+
+    // Exact match
+    if (names.includes(preferred)) return preferred
+
+    // Case-insensitive match
+    const ciMatch = names.find((n: string) => n.toLowerCase() === preferred.toLowerCase())
+    if (ciMatch) return ciMatch
+
+    // Match by trailing label (e.g. "[Gmail]/dmarc_rua")
+    const tailMatch = names.find((n: string) =>
+      n.toLowerCase().endsWith(`/${preferred.toLowerCase()}`)
+    )
+    if (tailMatch) return tailMatch
+
+    console.warn(`[email-fetcher] Folder "${preferred}" not found, falling back to INBOX`)
+    return 'INBOX'
+  } catch (err: any) {
+    console.warn(`[email-fetcher] Folder list failed (${err.message}), using "${preferred}"`)
+    return preferred
+  }
+}
+
 interface EmailMessage {
   from: string
   to: string
@@ -80,7 +111,8 @@ export async function testConnection(): Promise<{
     await client.connect()
     console.log('[email-fetcher] IMAP connected successfully')
 
-    const mailbox = await client.getMailboxLock(IMAP_CONFIG.folder)
+    const folderPath = await resolveFolderPath(client, IMAP_CONFIG.folder)
+    const mailbox = await client.getMailboxLock(folderPath)
     const status = client.mailbox
     const total = (status && typeof status === 'object' && 'exists' in status) ? (status as any).exists : 0
 
@@ -98,7 +130,7 @@ export async function testConnection(): Promise<{
 
     return {
       connected: true,
-      folder: IMAP_CONFIG.folder,
+      folder: folderPath,
       totalMessages: total,
       unseenMessages: unseenCount,
     }
@@ -136,8 +168,9 @@ async function fetchEmailsFromImap(): Promise<{
   await client.connect()
   console.log('[email-fetcher] Connected to IMAP')
 
-  await client.getMailboxLock(IMAP_CONFIG.folder)
-  console.log(`[email-fetcher] Opened folder: ${IMAP_CONFIG.folder}`)
+  const folderPath = await resolveFolderPath(client, IMAP_CONFIG.folder)
+  await client.getMailboxLock(folderPath)
+  console.log(`[email-fetcher] Opened folder: ${folderPath}`)
 
   // Search for unseen (unread) messages
   const searchResult = await client.search({ seen: false })

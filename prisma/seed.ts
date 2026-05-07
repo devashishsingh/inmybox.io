@@ -381,7 +381,7 @@ async function main() {
     create: {
       tenantId: tenant.id,
       enabled: true,
-      pollIntervalMinutes: 1440,
+      pollIntervalMinutes: 5,
       startedAt: new Date(),
     },
   })

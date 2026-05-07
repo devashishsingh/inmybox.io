@@ -57,5 +57,6 @@ export const config = {
     '/api/onboarding/:path*',
     '/api/bimi/:path*',
     '/api/mailbox/:path*',
+    '/api/pipeline/:path*',
   ],
 }

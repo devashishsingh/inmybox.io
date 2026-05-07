@@ -116,6 +116,15 @@ export async function ingestReport(params: IngestionParams): Promise<IngestionRe
           await updateSenderFromRecord(domain.id, rec, feedback.reportMetadata.dateRange.end)
         }
 
+        // 7b. Trigger IP enrichment (RDNS, ASN, provider) for all source IPs.
+        // Fire-and-forget so ingestion is never blocked on external lookups.
+        const sourceIps = Array.from(new Set(feedback.records.map((r) => r.sourceIp).filter(Boolean)))
+        if (sourceIps.length > 0) {
+          import('./ip-enrichment.service')
+            .then(({ batchEnrichIps }) => batchEnrichIps(sourceIps))
+            .catch((err) => console.warn('[ingestion] background enrichment failed:', err.message))
+        }
+
         // 8. Generate action items for notable findings
         await generateActionItems(tenantId, domain.id, feedback)
 

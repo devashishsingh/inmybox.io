@@ -99,7 +99,7 @@ export async function POST(
 
   if (action === 'update_interval') {
     const intervalMin = pollIntervalMinutes && pollIntervalMinutes >= 1
-      ? pollIntervalMinutes : 1440
+      ? pollIntervalMinutes : 5
 
     const pipeline = await prisma.pipelineConfig.update({
       where: { tenantId: params.id },

@@ -61,7 +61,7 @@ model PipelineConfig {
   tenantId            String    @unique
   tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   enabled             Boolean   @default(false)
-  pollIntervalMinutes Int       @default(1440) // default 24 hours (1440 min)
+  pollIntervalMinutes Int       @default(5)    // default 5 minutes
   startedAt           DateTime?
   expiresAt           DateTime? // null = unlimited
   stoppedAt           DateTime?

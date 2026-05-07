@@ -9,10 +9,10 @@ import { prisma } from '@/lib/prisma'
 // ─── PLAN-BASED FREQUENCY TIERS ─────────────────────────────────────
 
 const PLAN_FREQUENCY_LIMITS: Record<string, number[]> = {
-  free:       [1440],                       // Daily only
-  starter:    [360, 1440],                  // 6h, Daily
-  pro:        [60, 360, 1440],              // 1h, 6h, Daily
-  enterprise: [15, 60, 360, 1440],          // 15m, 1h, 6h, Daily
+  free:       [60, 360, 1440],                       // 1h, 6h, Daily
+  starter:    [15, 60, 360, 1440],                   // 15m, 1h, 6h, Daily
+  pro:        [5, 15, 60, 360, 1440],                // 5m, 15m, 1h, 6h, Daily
+  enterprise: [1, 5, 15, 60, 360, 1440],             // 1m, 5m, 15m, 1h, 6h, Daily
 }
 
 function getAllowedFrequencies(plan: string): number[] {
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
     // Validate plan-gated frequency
     const tenantPlan = (pipeline as any).tenant?.plan || 'free'
     const allowed = getAllowedFrequencies(tenantPlan)
-    const requestedInterval = pipeline.pollIntervalMinutes || 1440
+    const requestedInterval = pipeline.pollIntervalMinutes || 5
     const effectiveInterval = allowed.includes(requestedInterval) ? requestedInterval : Math.max(...allowed)
 
     // Check if poll interval has elapsed
