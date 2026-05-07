@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, AlertCircle } from 'lucide-react'
@@ -69,7 +69,10 @@ function SignInForm() {
       if (result?.error) {
         setError('Invalid email or password')
       } else {
-        router.push('/dashboard')
+        // Route by role: super_admin -> /admin, others -> /dashboard
+        const session = await getSession()
+        const role = (session?.user as any)?.role
+        router.push(role === 'super_admin' ? '/admin' : '/dashboard')
         router.refresh()
       }
     } catch {

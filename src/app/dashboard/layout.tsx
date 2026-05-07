@@ -1,16 +1,24 @@
 import { SessionProvider } from '@/components/session-provider'
 import { DashboardSidebar } from '@/components/dashboard-sidebar'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
+import { redirect } from 'next/navigation'
 
 export const metadata = {
   title: 'Dashboard',
 }
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions)
+  if ((session?.user as any)?.role === 'super_admin') {
+    redirect('/admin')
+  }
+
   return (
     <SessionProvider>
         <div className="flex min-h-screen dash-surface">
