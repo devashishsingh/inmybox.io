@@ -226,7 +226,20 @@ async function extractFrom7z(buffer: Buffer, fileName: string): Promise<{ name: 
     await new Promise<void>((resolve, reject) => {
       execFile(sevenZipBin, ['x', archivePath, `-o${extractDir}`, '-y'], (err, stdout, stderr) => {
         if (err) {
-          reject(new Error(`7z extraction failed: ${stderr || err.message}`))
+          // The 7za binary is shipped via the 7zip-bin npm package but Vercel's
+          // build trace strips platform-specific binaries that aren't statically
+          // require()'d, so the spawn fails with ENOENT in production. Real
+          // DMARC senders never use .7z, so surface a clear, actionable message
+          // instead of a cryptic spawn error.
+          if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+            reject(new Error(
+              '7z format is not supported in cloud deployments. ' +
+              'Real DMARC providers (Google, Yahoo, Microsoft) send reports ' +
+              'as .zip or .gz which are fully supported.'
+            ))
+          } else {
+            reject(new Error(`7z extraction failed: ${stderr || err.message}`))
+          }
         } else {
           resolve()
         }
