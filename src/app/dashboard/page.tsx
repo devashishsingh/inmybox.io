@@ -35,16 +35,75 @@ import type { AnalyticsSummary } from '@/types'
 import { formatNumber, formatPercent, formatCurrency, getRiskColor, getRiskBgColor } from '@/lib/utils'
 import { OnboardingChecklist } from '@/components/onboarding-checklist'
 
+type RangeKey = '24h' | '7d' | '30d' | '90d' | 'custom'
+
+const PRESETS: Array<{ key: Exclude<RangeKey, 'custom'>; label: string; days: number }> = [
+  { key: '24h', label: '24h', days: 1 },
+  { key: '7d', label: '7d', days: 7 },
+  { key: '30d', label: '30d', days: 30 },
+  { key: '90d', label: '90d', days: 90 },
+]
+
+const RANGE_STORAGE_KEY = 'inmybox.dashboard.range'
+
+function isoDate(d: Date) {
+  return d.toISOString().slice(0, 10)
+}
+
+function computeRange(
+  selection: RangeKey,
+  customStart: string,
+  customEnd: string
+): { start: Date; end: Date } | null {
+  const now = new Date()
+  if (selection === 'custom') {
+    if (!customStart || !customEnd) return null
+    const s = new Date(customStart + 'T00:00:00')
+    const e = new Date(customEnd + 'T23:59:59')
+    if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return null
+    return { start: s, end: e }
+  }
+  const preset = PRESETS.find((p) => p.key === selection)!
+  const start = new Date(now.getTime() - preset.days * 24 * 60 * 60 * 1000)
+  return { start, end: now }
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Same fetch logic as before — wrapped so the refresh button can re-invoke it.
+  const [selection, setSelection] = useState<RangeKey>('30d')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
+
+  // Restore persisted range on mount.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RANGE_STORAGE_KEY)
+      if (raw) {
+        const saved = JSON.parse(raw) as { selection?: RangeKey; start?: string; end?: string }
+        if (saved.selection) setSelection(saved.selection)
+        if (saved.start) setCustomStart(saved.start)
+        if (saved.end) setCustomEnd(saved.end)
+        if (saved.selection === 'custom') setShowCustom(true)
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  }, [])
+
+  // Same fetch logic as before — wrapped so the refresh button can re-invoke it,
+  // and now passing the active date range as query params.
   const loadData = (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
-    return fetch('/api/analytics')
+    const range = computeRange(selection, customStart, customEnd)
+    const qs = range
+      ? `?start=${encodeURIComponent(range.start.toISOString())}&end=${encodeURIComponent(range.end.toISOString())}`
+      : ''
+    return fetch(`/api/analytics${qs}`)
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(console.error)
@@ -59,10 +118,21 @@ export default function DashboardPage() {
       })
   }
 
+  // Re-fetch whenever the selection or custom dates change. Skip when custom is
+  // selected but the user hasn't completed both date inputs yet.
   useEffect(() => {
+    if (selection === 'custom' && (!customStart || !customEnd)) return
+    try {
+      localStorage.setItem(
+        RANGE_STORAGE_KEY,
+        JSON.stringify({ selection, start: customStart, end: customEnd })
+      )
+    } catch {
+      /* ignore storage errors */
+    }
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [selection, customStart, customEnd])
 
   if (loading) {
     return (
@@ -100,10 +170,68 @@ export default function DashboardPage() {
       <OnboardingChecklist />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+
+            {/* Time range pills */}
+            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => {
+                    setSelection(p.key)
+                    setShowCustom(false)
+                  }}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    selection === p.key
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelection('custom')
+                  setShowCustom(true)
+                }}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                  selection === 'custom'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+
+            {/* Custom date inputs */}
+            {showCustom && (
+              <div className="inline-flex items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="date"
+                  value={customStart}
+                  max={customEnd || isoDate(new Date())}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-200 bg-white focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none"
+                />
+                <span className="text-slate-400">→</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  min={customStart || undefined}
+                  max={isoDate(new Date())}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-200 bg-white focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none"
+                />
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => loadData(true)}
@@ -122,6 +250,17 @@ export default function DashboardPage() {
               <>&middot; Data since {new Date(data.dataStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
             )}
           </p>
+          {(() => {
+            const r = computeRange(selection, customStart, customEnd)
+            if (!r) return null
+            const fmt = (d: Date) =>
+              d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            return (
+              <p className="text-xs text-slate-400 mt-1">
+                Showing data from {fmt(r.start)} to {fmt(r.end)}
+              </p>
+            )
+          })()}
         </div>
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
           {data.delivery.riskLevel === 'healthy' ? (

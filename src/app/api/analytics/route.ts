@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth-config'
 import { resolveTenantContext } from '@/lib/services/tenant.service'
 import { computeAnalytics } from '@/lib/services/analytics.service'
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,7 +17,21 @@ export async function GET() {
     return NextResponse.json(emptyAnalytics())
   }
 
-  const analytics = await computeAnalytics(ctx.tenantId)
+  // Parse optional ISO date range from query string. Invalid values are ignored
+  // (treated as "no filter") so the endpoint stays backward-compatible.
+  const url = new URL(req.url)
+  const startRaw = url.searchParams.get('start')
+  const endRaw = url.searchParams.get('end')
+  const safe = (v: string | null) => {
+    if (!v) return undefined
+    const d = new Date(v)
+    return isNaN(d.getTime()) ? undefined : d
+  }
+
+  const analytics = await computeAnalytics(ctx.tenantId, {
+    start: safe(startRaw),
+    end: safe(endRaw),
+  })
   return NextResponse.json(analytics)
 }
 
