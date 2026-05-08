@@ -4,7 +4,11 @@ import { execFile } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
+import * as zlib from 'zlib'
+import { promisify } from 'util'
 import type { DmarcFeedback, DmarcRecordParsed } from '@/types'
+
+const gunzipAsync = promisify(zlib.gunzip)
 
 // Resolve 7za binary path based on platform
 function get7zBin(): string {
@@ -38,15 +42,36 @@ export async function extractFilesFromUpload(
     return extractFrom7z(buffer, fileName)
   }
 
-  if (lower.endsWith('.zip') || lower.endsWith('.gz') || lower.endsWith('.tgz') || lower.endsWith('.tar.gz')) {
+  if (lower.endsWith('.zip')) {
     return extractFromZip(buffer)
+  }
+
+  // Real DMARC senders (Google, Yahoo, Microsoft) overwhelmingly ship .xml.gz —
+  // route gzip and tar.gz to a proper zlib-based extractor, not JSZip.
+  if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')) {
+    return extractFromTarGz(buffer, fileName)
+  }
+  if (lower.endsWith('.gz') || lower.endsWith('.gzip')) {
+    return extractFromGzip(buffer, fileName)
   }
 
   if (lower.endsWith('.xml')) {
     return [{ name: fileName, content: buffer.toString('utf-8') }]
   }
 
-  // Try as XML first, then ZIP, then 7z
+  // Unknown extension: detect by magic bytes, then text-sniff for XML.
+  // Order matters: gzip first (1f 8b), then zip (50 4b 03 04), then raw XML.
+  if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+    return extractFromGzip(buffer, fileName)
+  }
+  if (
+    buffer.length >= 4 &&
+    buffer[0] === 0x50 && buffer[1] === 0x4b &&
+    buffer[2] === 0x03 && buffer[3] === 0x04
+  ) {
+    return extractFromZip(buffer)
+  }
+
   try {
     const text = buffer.toString('utf-8')
     if (text.trim().startsWith('<?xml') || text.trim().startsWith('<feedback')) {
@@ -80,6 +105,112 @@ async function extractFromZip(buffer: Buffer): Promise<{ name: string; content: 
   }
 
   return files
+}
+
+/**
+ * Decompresses a single-member gzip stream. Most real-world DMARC reports
+ * (Google, Yahoo, Microsoft) ship as `<reportname>.xml.gz` — a single XML
+ * document gzipped. After gunzip, sniff the result: if it's XML, return it
+ * as a single file; if it looks like a tar archive, extract members.
+ */
+async function extractFromGzip(
+  buffer: Buffer,
+  fileName: string
+): Promise<{ name: string; content: string }[]> {
+  let decompressed: Buffer
+  try {
+    decompressed = await gunzipAsync(buffer)
+  } catch (err: any) {
+    throw new Error(`gz extraction failed: ${err?.message || 'unknown error'}`)
+  }
+
+  // Heuristic: tar magic 'ustar' lives at offset 257 of the first 512-byte block.
+  const looksLikeTar =
+    decompressed.length >= 512 &&
+    decompressed.slice(257, 262).toString('utf-8') === 'ustar'
+  if (looksLikeTar) {
+    const files = extractXmlFromTarBuffer(decompressed)
+    if (files.length === 0) {
+      throw new Error('gz extraction succeeded but no XML files found in tar archive')
+    }
+    return files
+  }
+
+  // Single-member gzip — should be the XML report itself.
+  const content = decompressed.toString('utf-8')
+  const trimmed = content.trim()
+  if (!trimmed.startsWith('<?xml') && !trimmed.startsWith('<feedback')) {
+    throw new Error('gz extraction produced a non-XML payload')
+  }
+
+  // Strip the .gz / .gzip suffix from the original filename for the inner name.
+  const innerName = fileName.replace(/\.(gz|gzip)$/i, '') || 'report.xml'
+  return [{ name: innerName, content }]
+}
+
+async function extractFromTarGz(
+  buffer: Buffer,
+  fileName: string
+): Promise<{ name: string; content: string }[]> {
+  let decompressed: Buffer
+  try {
+    decompressed = await gunzipAsync(buffer)
+  } catch (err: any) {
+    throw new Error(`gz extraction failed: ${err?.message || 'unknown error'}`)
+  }
+
+  const files = extractXmlFromTarBuffer(decompressed)
+  if (files.length === 0) {
+    throw new Error(`No XML files found in tar.gz archive (${fileName})`)
+  }
+  return files
+}
+
+/**
+ * Minimal POSIX/USTAR tar reader. Tar archives are a sequence of 512-byte
+ * header blocks followed by file content padded to a 512-byte boundary.
+ *  - bytes   0-99  : file name (NUL-terminated)
+ *  - bytes 124-135 : size in octal ASCII (NUL/space-terminated)
+ *  - bytes 156     : type flag ('0' or '\0' = regular file, '5' = directory)
+ *  - bytes 257-262 : "ustar" magic
+ * Two consecutive zero blocks mark end-of-archive.
+ *
+ * We only extract regular files whose name ends in `.xml`. This is enough
+ * for DMARC archives; we deliberately do not handle long-name extensions
+ * (LongLink) since DMARC report names are well under 100 chars.
+ */
+function extractXmlFromTarBuffer(
+  buf: Buffer
+): { name: string; content: string }[] {
+  const out: { name: string; content: string }[] = []
+  let offset = 0
+  while (offset + 512 <= buf.length) {
+    const header = buf.slice(offset, offset + 512)
+    // End-of-archive: a zero-filled block.
+    if (header.every((b) => b === 0)) break
+
+    const name = readCString(header, 0, 100)
+    const sizeOctal = readCString(header, 124, 12).trim()
+    const size = parseInt(sizeOctal, 8) || 0
+    const typeFlag = String.fromCharCode(header[156] || 0x30)
+    offset += 512
+
+    if ((typeFlag === '0' || typeFlag === '\0') && name && size > 0) {
+      const content = buf.slice(offset, offset + size)
+      if (name.toLowerCase().endsWith('.xml')) {
+        out.push({ name, content: content.toString('utf-8') })
+      }
+    }
+    // Advance past padded content.
+    offset += Math.ceil(size / 512) * 512
+  }
+  return out
+}
+
+function readCString(buf: Buffer, start: number, length: number): string {
+  const slice = buf.slice(start, start + length)
+  const nul = slice.indexOf(0)
+  return slice.slice(0, nul === -1 ? length : nul).toString('utf-8')
 }
 
 async function extractFrom7z(buffer: Buffer, fileName: string): Promise<{ name: string; content: string }[]> {
