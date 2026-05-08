@@ -31,9 +31,87 @@ import {
   BarChart,
   Bar,
 } from 'recharts'
-import type { AnalyticsSummary } from '@/types'
+import type { AnalyticsSummary, TrendPoint } from '@/types'
 import { formatNumber, formatPercent, formatCurrency, getRiskColor, getRiskBgColor } from '@/lib/utils'
 import { OnboardingChecklist } from '@/components/onboarding-checklist'
+
+type RangeKey = 'all' | '24h' | '7d' | '30d' | '90d' | 'custom'
+
+const RANGE_OPTIONS: Array<{ key: RangeKey; label: string }> = [
+  { key: 'all', label: 'All Time' },
+  { key: '24h', label: '24h' },
+  { key: '7d', label: '7d' },
+  { key: '30d', label: '30d' },
+  { key: '90d', label: '90d' },
+  { key: 'custom', label: 'Custom' },
+]
+
+const RANGE_DAYS: Partial<Record<RangeKey, number>> = {
+  '24h': 1,
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+}
+
+const RANGE_STORAGE_KEY = 'inmybox.dashboard.range'
+
+function isoDay(d: Date) {
+  return d.toISOString().slice(0, 10)
+}
+
+function computeRange(
+  selection: RangeKey,
+  customStart: string,
+  customEnd: string
+): { start: Date; end: Date } | null {
+  if (selection === 'all') return null
+  const now = new Date()
+  if (selection === 'custom') {
+    if (!customStart || !customEnd) return null
+    const s = new Date(customStart + 'T00:00:00')
+    const e = new Date(customEnd + 'T23:59:59')
+    if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return null
+    return { start: s, end: e }
+  }
+  const days = RANGE_DAYS[selection]
+  if (!days) return null
+  return { start: new Date(now.getTime() - days * 24 * 60 * 60 * 1000), end: now }
+}
+
+function rangeLabel(
+  selection: RangeKey,
+  customStart: string,
+  customEnd: string
+): string {
+  if (selection === 'all') return 'All Time'
+  if (selection === 'custom') {
+    if (!customStart || !customEnd) return 'Custom range — pick dates'
+    return `${customStart} → ${customEnd}`
+  }
+  const map: Record<string, string> = {
+    '24h': 'Last 24 hours',
+    '7d': 'Last 7 days',
+    '30d': 'Last 30 days',
+    '90d': 'Last 90 days',
+  }
+  return map[selection] || selection
+}
+
+// The range endpoint returns ISO YYYY-MM-DD trend dates; the all-time endpoint
+// already returns "Apr 5"-style labels. Normalise ISO entries to the same
+// display format so the chart looks identical regardless of source.
+function normalizeTrendDates(trend: TrendPoint[]): TrendPoint[] {
+  const isoRe = /^\d{4}-\d{2}-\d{2}$/
+  return trend.map((p) => {
+    if (!isoRe.test(p.date)) return p
+    const d = new Date(p.date + 'T00:00:00Z')
+    if (isNaN(d.getTime())) return p
+    return {
+      ...p,
+      date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    }
+  })
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null)
@@ -41,30 +119,86 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
-  // Same fetch logic as before — wrapped so the refresh button can re-invoke it.
-  const loadData = (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    return fetch('/api/analytics')
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(console.error)
-      .finally(() => {
-        if (isRefresh) {
-          setRefreshing(false)
-          setToast('Data updated')
-          setTimeout(() => setToast(null), 2000)
-        } else {
-          setLoading(false)
-        }
-      })
-  }
+  const [selection, setSelection] = useState<RangeKey>('all')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+  const [showCustom, setShowCustom] = useState(false)
 
+  // Restore persisted selection on mount.
   useEffect(() => {
-    loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    try {
+      const raw = localStorage.getItem(RANGE_STORAGE_KEY)
+      if (raw) {
+        const saved = JSON.parse(raw) as { selection?: RangeKey; start?: string; end?: string }
+        if (saved.selection) setSelection(saved.selection)
+        if (saved.start) setCustomStart(saved.start)
+        if (saved.end) setCustomEnd(saved.end)
+        if (saved.selection === 'custom') setShowCustom(true)
+      }
+    } catch {
+      /* ignore storage errors */
+    }
   }, [])
 
-  if (loading) {
+  // Always-safe fetch path: /api/analytics is the existing, untouched endpoint.
+  const fetchAllTime = () =>
+    fetch('/api/analytics').then((r) => {
+      if (!r.ok) throw new Error(`analytics ${r.status}`)
+      return r.json() as Promise<AnalyticsSummary>
+    })
+
+  const fetchRange = (start: Date, end: Date) =>
+    fetch(
+      `/api/analytics/range?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
+    ).then((r) => {
+      if (!r.ok) throw new Error(`range ${r.status}`)
+      return r.json() as Promise<AnalyticsSummary>
+    })
+
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    else setLoading(true)
+    const range = computeRange(selection, customStart, customEnd)
+    let usedFallback = false
+    try {
+      const result = range
+        ? await fetchRange(range.start, range.end).catch(async () => {
+            usedFallback = true
+            return fetchAllTime()
+          })
+        : await fetchAllTime()
+      setData({ ...result, trendData: normalizeTrendDates(result.trendData || []) })
+      if (isRefresh) setToast(usedFallback ? 'Showing all-time data' : 'Data updated')
+      else if (usedFallback) setToast('Showing all-time data')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      if (isRefresh) setRefreshing(false)
+      else setLoading(false)
+      if (isRefresh || usedFallback) setTimeout(() => setToast(null), 2000)
+    }
+  }
+
+  // Re-fetch when selection or custom dates change. Skip if Custom is selected
+  // but the user hasn't completed both date inputs yet.
+  useEffect(() => {
+    if (selection === 'custom' && (!customStart || !customEnd)) return
+    try {
+      localStorage.setItem(
+        RANGE_STORAGE_KEY,
+        JSON.stringify({ selection, start: customStart, end: customEnd })
+      )
+    } catch {
+      /* ignore */
+    }
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selection, customStart, customEnd])
+
+  // Initial-mount full-page skeleton: only when we genuinely have no data yet.
+  // Subsequent loads (range switches) keep the header/pills visible and show
+  // an inline skeleton further down.
+  if (loading && !data) {
     return (
       <div className="space-y-6">
         <div className="h-8 w-48 bg-slate-200 rounded-lg animate-pulse" />
@@ -78,21 +212,29 @@ export default function DashboardPage() {
     )
   }
 
-  if (!data || data.totalRecords === 0) {
+  const hasData = !loading && !!data && data.totalRecords > 0
+
+  // Truly empty system (no data ever uploaded) keeps the original onboarding
+  // screen. Only show it once a load has completed AND we're viewing All Time.
+  if (!loading && (!data || data.totalRecords === 0) && selection === 'all') {
     return <EmptyState />
   }
 
-  const pieData = [
-    { name: 'Pass', value: data.dmarcPassRate, color: '#10b981' },
-    { name: 'Fail', value: 1 - data.dmarcPassRate, color: '#ef4444' },
-  ]
+  const pieData = hasData
+    ? [
+        { name: 'Pass', value: data!.dmarcPassRate, color: '#10b981' },
+        { name: 'Fail', value: 1 - data!.dmarcPassRate, color: '#ef4444' },
+      ]
+    : []
 
-  const senderPieData = [
-    { name: 'Known', value: data.senderBreakdown.known, color: '#10b981' },
-    { name: 'Trusted', value: data.senderBreakdown.trusted, color: '#6366f1' },
-    { name: 'Unknown', value: data.senderBreakdown.unknown, color: '#f59e0b' },
-    { name: 'Suspicious', value: data.senderBreakdown.suspicious, color: '#ef4444' },
-  ].filter((d) => d.value > 0)
+  const senderPieData = hasData
+    ? [
+        { name: 'Known', value: data!.senderBreakdown.known, color: '#10b981' },
+        { name: 'Trusted', value: data!.senderBreakdown.trusted, color: '#6366f1' },
+        { name: 'Unknown', value: data!.senderBreakdown.unknown, color: '#f59e0b' },
+        { name: 'Suspicious', value: data!.senderBreakdown.suspicious, color: '#ef4444' },
+      ].filter((d) => d.value > 0)
+    : []
 
   return (
     <div className="space-y-6">
@@ -100,10 +242,54 @@ export default function DashboardPage() {
       <OnboardingChecklist />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+
+            {/* Range pills */}
+            <div className="inline-flex flex-wrap rounded-lg border border-slate-200 bg-white p-0.5">
+              {RANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => {
+                    setSelection(opt.key)
+                    setShowCustom(opt.key === 'custom')
+                  }}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    selection === opt.key
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom date inputs */}
+            {showCustom && (
+              <div className="inline-flex items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="date"
+                  value={customStart}
+                  max={customEnd || isoDay(new Date())}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-200 bg-white focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none"
+                />
+                <span className="text-slate-400">→</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  min={customStart || undefined}
+                  max={isoDay(new Date())}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="px-2 py-1 rounded-md border border-slate-200 bg-white focus:border-brand-400 focus:ring-1 focus:ring-brand-400 outline-none"
+                />
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => loadData(true)}
@@ -115,22 +301,29 @@ export default function DashboardPage() {
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {data.totalReports} reports analyzed &middot;{' '}
-            {formatNumber(data.totalVolume)} emails{' '}
-            {data.dataStartDate && (
-              <>&middot; Data since {new Date(data.dataStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
-            )}
+          {hasData && data && (
+            <p className="text-sm text-slate-500 mt-0.5">
+              {data.totalReports} reports analyzed &middot;{' '}
+              {formatNumber(data.totalVolume)} emails{' '}
+              {data.dataStartDate && (
+                <>&middot; Data since {new Date(data.dataStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
+              )}
+            </p>
+          )}
+          <p className="text-xs text-slate-400 mt-1">
+            Showing: {rangeLabel(selection, customStart, customEnd)}
           </p>
         </div>
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
-          {data.delivery.riskLevel === 'healthy' ? (
-            <ShieldCheck className="w-4 h-4" />
-          ) : (
-            <ShieldAlert className="w-4 h-4" />
-          )}
-          {data.delivery.label}
-        </div>
+        {hasData && data && (
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
+            {data.delivery.riskLevel === 'healthy' ? (
+              <ShieldCheck className="w-4 h-4" />
+            ) : (
+              <ShieldAlert className="w-4 h-4" />
+            )}
+            {data.delivery.label}
+          </div>
+        )}
       </div>
 
       {/* Subtle toast (auto-dismisses) */}
@@ -144,6 +337,40 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {loading && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-32 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+            ))}
+          </div>
+          <div className="h-80 bg-white rounded-2xl border border-slate-200 animate-pulse" />
+          <div className="text-center text-xs text-slate-400">Loading reports…</div>
+        </div>
+      )}
+
+      {!loading && !hasData && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+          <BarChart3 className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+          <h2 className="text-lg font-semibold text-slate-900">No reports found for this time range</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Try selecting a wider range or choose{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setSelection('all')
+                setShowCustom(false)
+              }}
+              className="text-brand-600 hover:text-brand-700 font-medium hover:underline"
+            >
+              All Time
+            </button>
+            .
+          </p>
+        </div>
+      )}
+
+      {!loading && hasData && data && (<>
       {/* Technical Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/dashboard/drilldown/spf">
@@ -419,6 +646,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      </>)}
     </div>
   )
 }
