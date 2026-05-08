@@ -38,10 +38,15 @@ export async function POST(req: Request) {
   }
 
   const ctx = await resolveTenantContext(guard.userId)
-  if (!ctx) {
-    return NextResponse.json({ error: 'No tenant context for this user' }, { status: 400 })
+  let tenantId = ctx?.tenantId
+  if (!tenantId) {
+    // Super-admin without a tenant membership: fall back to the first tenant.
+    const fallback = await prisma.tenant.findFirst({ select: { id: true } })
+    if (!fallback) {
+      return NextResponse.json({ error: 'No tenant exists in database' }, { status: 400 })
+    }
+    tenantId = fallback.id
   }
-  const tenantId = ctx.tenantId
 
   // Domains belonging to this tenant — used to scope per-domain tables.
   const domains = await prisma.domain.findMany({
