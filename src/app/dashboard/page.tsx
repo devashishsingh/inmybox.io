@@ -15,6 +15,7 @@ import {
   Activity,
   Users,
   BarChart3,
+  RefreshCw,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -37,13 +38,30 @@ import { OnboardingChecklist } from '@/components/onboarding-checklist'
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch('/api/analytics')
+  // Same fetch logic as before — wrapped so the refresh button can re-invoke it.
+  const loadData = (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    return fetch('/api/analytics')
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(console.error)
-      .finally(() => setLoading(false))
+      .finally(() => {
+        if (isRefresh) {
+          setRefreshing(false)
+          setToast('Data updated')
+          setTimeout(() => setToast(null), 2000)
+        } else {
+          setLoading(false)
+        }
+      })
+  }
+
+  useEffect(() => {
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {
@@ -84,7 +102,19 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+            <button
+              type="button"
+              onClick={() => loadData(true)}
+              disabled={refreshing}
+              aria-label="Refresh dashboard data"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
           <p className="text-sm text-slate-500 mt-0.5">
             {data.totalReports} reports analyzed &middot;{' '}
             {formatNumber(data.totalVolume)} emails{' '}
@@ -102,6 +132,17 @@ export default function DashboardPage() {
           {data.delivery.label}
         </div>
       </div>
+
+      {/* Subtle toast (auto-dismisses) */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm shadow-lg animate-fade-in"
+        >
+          {toast}
+        </div>
+      )}
 
       {/* Technical Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
