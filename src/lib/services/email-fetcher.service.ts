@@ -153,6 +153,12 @@ async function fetchEmailsFromImap(): Promise<{
   for (const uid of unseenUids) {
     try {
       const download = await client.download(uid.toString(), undefined, { uid: true })
+
+      if (!download || !download.content) {
+        console.warn(`[email-fetcher] UID ${uid}: no content returned by IMAP — skipping`)
+        continue
+      }
+
       const parsed = await simpleParser(download.content)
 
       // Extract "to" address
