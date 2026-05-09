@@ -25,8 +25,10 @@ export interface DmarcRecordParsed {
   sourceIp: string;
   count: number;
   disposition: 'none' | 'quarantine' | 'reject';
-  spfResult: 'pass' | 'fail';
-  dkimResult: 'pass' | 'fail';
+  spfResult: 'pass' | 'fail';                 // ALIGNMENT (policy_evaluated.spf)
+  dkimResult: 'pass' | 'fail';                // ALIGNMENT (policy_evaluated.dkim)
+  spfAuthResult?: string;                     // AUTH (auth_results.spf.result) — optional, may be missing in malformed XML
+  dkimAuthResult?: string;                    // AUTH (auth_results.dkim.result) — optional, may be missing in malformed XML
   dmarcResult: 'pass' | 'fail';
   headerFrom?: string;
   envelopeFrom?: string;

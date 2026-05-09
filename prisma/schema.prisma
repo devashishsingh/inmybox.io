@@ -185,8 +185,10 @@ model DmarcRecord {
   sourceIp       String
   count          Int
   disposition    String // none, quarantine, reject
-  spfResult      String // pass, fail
-  dkimResult     String // pass, fail
+  spfResult      String // pass, fail — ALIGNMENT (from policy_evaluated.spf)
+  dkimResult     String // pass, fail — ALIGNMENT (from policy_evaluated.dkim)
+  spfAuthResult  String? // pass, fail, neutral, softfail, temperror, permerror — AUTHENTICATION (from auth_results.spf.result). Nullable for legacy records.
+  dkimAuthResult String? // pass, fail, neutral, policy, temperror, permerror — AUTHENTICATION (from auth_results.dkim.result). Nullable for legacy records.
   dmarcResult    String // pass, fail
   headerFrom     String?
   envelopeFrom   String?

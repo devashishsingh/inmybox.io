@@ -93,6 +93,8 @@ export async function ingestReport(params: IngestionParams): Promise<IngestionRe
                 disposition: rec.disposition,
                 spfResult: rec.spfResult,
                 dkimResult: rec.dkimResult,
+                spfAuthResult: rec.spfAuthResult,
+                dkimAuthResult: rec.dkimAuthResult,
                 dmarcResult: rec.dmarcResult,
                 headerFrom: rec.headerFrom,
                 envelopeFrom: rec.envelopeFrom,

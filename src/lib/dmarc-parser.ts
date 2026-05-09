@@ -291,15 +291,39 @@ export function parseDmarcXml(xml: string): DmarcFeedback {
       const identifiers = rec.identifiers || {}
       const authResults = rec.auth_results || {}
 
-      // Use policy_evaluated for SPF/DKIM results (DMARC alignment check)
+      // ALIGNMENT — from policy_evaluated. This is what DMARC uses to compute pass/fail.
       const spfResult = (policyEval.spf || 'fail').toLowerCase()
       const dkimResult = (policyEval.dkim || 'fail').toLowerCase()
 
-      // Use auth_results for domain info only
+      // AUTHENTICATION — from auth_results. Tells us whether the SPF/DKIM check itself
+      // passed, independent of whether the authenticated domain aligned with header_from.
+      // DMARC XML allows multiple <dkim> blocks (one per signature). We pick the first
+      // pass if any signature passed, otherwise the first reported result. SPF is single
+      // in practice but we use the same shape for safety.
       const spfAuth = authResults.spf
       const dkimAuth = authResults.dkim
       const spfResults = Array.isArray(spfAuth) ? spfAuth : spfAuth ? [spfAuth] : []
       const dkimResults = Array.isArray(dkimAuth) ? dkimAuth : dkimAuth ? [dkimAuth] : []
+
+      const pickAuthResult = (entries: any[]): string | undefined => {
+        if (entries.length === 0) return undefined
+        const passing = entries.find(
+          (e) => typeof e?.result === 'string' && e.result.toLowerCase() === 'pass'
+        )
+        const chosen = passing || entries[0]
+        return typeof chosen?.result === 'string' ? chosen.result.toLowerCase() : undefined
+      }
+
+      // For domain selection, prefer the entry whose result was chosen above so the
+      // domain shown in the UI corresponds to the auth verdict shown.
+      const pickAuthDomain = (entries: any[]): string | undefined => {
+        if (entries.length === 0) return undefined
+        const passing = entries.find(
+          (e) => typeof e?.result === 'string' && e.result.toLowerCase() === 'pass'
+        )
+        const chosen = passing || entries[0]
+        return typeof chosen?.domain === 'string' ? chosen.domain : undefined
+      }
 
       return {
         sourceIp: row.source_ip || 'unknown',
@@ -307,11 +331,13 @@ export function parseDmarcXml(xml: string): DmarcFeedback {
         disposition: (policyEval.disposition || 'none').toLowerCase() as any,
         spfResult: spfResult as 'pass' | 'fail',
         dkimResult: dkimResult as 'pass' | 'fail',
+        spfAuthResult: pickAuthResult(spfResults),
+        dkimAuthResult: pickAuthResult(dkimResults),
         dmarcResult: dkimResult === 'pass' || spfResult === 'pass' ? 'pass' : 'fail',
         headerFrom: identifiers.header_from,
         envelopeFrom: identifiers.envelope_from,
-        spfDomain: spfResults[0]?.domain,
-        dkimDomain: dkimResults[0]?.domain,
+        spfDomain: pickAuthDomain(spfResults),
+        dkimDomain: pickAuthDomain(dkimResults),
       }
     }
   )

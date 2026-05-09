@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -23,13 +23,31 @@ import {
 } from 'lucide-react'
 import { formatNumber, formatPercent } from '@/lib/utils'
 
+interface Enrichment {
+  asn: string | null
+  asnOrg: string | null
+  country: string | null
+  provider: string | null
+  providerType: string | null
+  reverseDns: string | null
+  isKnownSender: boolean
+}
+
 interface DrilldownRecord {
   id: string
   sourceIp: string
   count: number
   disposition: string
+  // alignment
   spfResult: string
   dkimResult: string
+  // authentication (resolved — heuristic for legacy nulls)
+  spfAuthResult: string
+  dkimAuthResult: string
+  spfAuthInferred: boolean
+  dkimAuthInferred: boolean
+  spfAuthResultRaw: string | null
+  dkimAuthResultRaw: string | null
   dmarcResult: string
   headerFrom: string | null
   envelopeFrom: string | null
@@ -40,23 +58,32 @@ interface DrilldownRecord {
   reportDate: string
   reportEnd: string
   policy: string | null
+  enrichment: Enrichment | null
 }
+
+type FailureReason = 'fully_aligned' | 'misaligned' | 'auth_failed' | 'mixed'
 
 interface IpAgg {
   ip: string
   totalVolume: number
-  spfPass: number
-  spfFail: number
-  dkimPass: number
-  dkimFail: number
-  dmarcPass: number
-  dmarcFail: number
-  dispositionNone: number
-  dispositionQuarantine: number
-  dispositionReject: number
+  spfPass: number; spfFail: number
+  dkimPass: number; dkimFail: number
+  dmarcPass: number; dmarcFail: number
+  spfAuthPass: number; spfAuthFail: number
+  dkimAuthPass: number; dkimAuthFail: number
+  fullyAlignedVolume: number
+  misalignedVolume: number
+  authFailedVolume: number
+  inferredVolume: number
+  dispositionNone: number; dispositionQuarantine: number; dispositionReject: number
   domains: string[]
+  headerFroms: string[]
+  spfDomains: string[]
+  dkimDomains: string[]
   orgs: string[]
   lastSeen: string
+  enrichment: Enrichment | null
+  failureReason: FailureReason
 }
 
 interface Summary {
@@ -66,6 +93,242 @@ interface Summary {
   failVolume: number
   passRate: number
   failRate: number
+  fullyAlignedVolume: number
+  misalignedVolume: number
+  authFailedVolume: number
+  totalSenders: number
+  fullyAlignedSenders: number
+  misalignedSenders: number
+  authFailedSenders: number
+  topMisaligned: {
+    ip: string
+    volume: number
+    providerName: string | null
+    spfDomains: string[]
+    dkimDomains: string[]
+    headerFroms: string[]
+  } | null
+}
+
+// Common ESP SPF includes for fix recommendations. Keyed by lowercase token
+// matched against IpEnrichment.provider or asnOrg.
+const ESP_FIX_HINTS: Record<string, { spfInclude: string; docsLabel: string }> = {
+  sendgrid:   { spfInclude: 'include:sendgrid.net',                docsLabel: 'SendGrid sender authentication' },
+  mailchimp:  { spfInclude: 'include:servers.mcsv.net',            docsLabel: 'Mailchimp domain authentication' },
+  amazonses:  { spfInclude: 'include:amazonses.com',               docsLabel: 'Amazon SES verified identity' },
+  amazon:     { spfInclude: 'include:amazonses.com',               docsLabel: 'Amazon SES verified identity' },
+  google:     { spfInclude: 'include:_spf.google.com',             docsLabel: 'Google Workspace DKIM' },
+  microsoft:  { spfInclude: 'include:spf.protection.outlook.com',  docsLabel: 'Microsoft 365 custom DKIM' },
+  mailgun:    { spfInclude: 'include:mailgun.org',                 docsLabel: 'Mailgun domain verification' },
+  postmark:   { spfInclude: 'include:spf.mtasv.net',               docsLabel: 'Postmark sender signatures' },
+  zendesk:    { spfInclude: 'include:mail.zendesk.com',            docsLabel: 'Zendesk DKIM signing' },
+  hubspot:    { spfInclude: 'include:_spf.hubspot.com',            docsLabel: 'HubSpot connected email' },
+  klaviyo:    { spfInclude: 'include:_spf.klaviyo.com',            docsLabel: 'Klaviyo dedicated sending domain' },
+}
+
+function identifyEsp(
+  enrichment: Enrichment | null
+): { key: string; name: string; hint: typeof ESP_FIX_HINTS[string] } | null {
+  if (!enrichment) return null
+  const haystack = `${enrichment.provider || ''} ${enrichment.asnOrg || ''}`.toLowerCase()
+  for (const [key, hint] of Object.entries(ESP_FIX_HINTS)) {
+    if (haystack.includes(key)) {
+      return { key, name: enrichment.provider || enrichment.asnOrg || key, hint }
+    }
+  }
+  return null
+}
+
+const REASON_STYLES: Record<FailureReason, { bg: string; text: string; border: string; label: string; Icon: any }> = {
+  fully_aligned: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Fully Aligned', Icon: CheckCircle2 },
+  misaligned:    { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   label: 'Misaligned',    Icon: AlertTriangle },
+  auth_failed:   { bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200',     label: 'Auth Failed',   Icon: XCircle },
+  mixed:         { bg: 'bg-slate-100',  text: 'text-slate-700',   border: 'border-slate-200',   label: 'Mixed Results', Icon: AlertTriangle },
+}
+
+function ReasonBadge({ reason }: { reason: FailureReason }) {
+  const s = REASON_STYLES[reason]
+  const Icon = s.Icon
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${s.bg} ${s.text} ${s.border}`}>
+      <Icon className="w-3 h-3" />
+      {s.label}
+    </span>
+  )
+}
+
+function AuthCell({
+  result,
+  domain,
+  inferred,
+}: {
+  result: string
+  domain?: string | null
+  inferred?: boolean
+}) {
+  const pass = result === 'pass'
+  return (
+    <div className="flex items-center gap-1.5">
+      {pass ? (
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+      ) : (
+        <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+      )}
+      <span className={`text-xs font-medium ${pass ? 'text-emerald-700' : 'text-red-700'}`}>
+        {pass ? 'Pass' : 'Fail'}
+      </span>
+      {domain && (
+        <span className="text-xs text-slate-400 font-mono truncate max-w-[140px]" title={domain}>
+          ({domain})
+        </span>
+      )}
+      {inferred && (
+        <span
+          className="text-[10px] text-slate-400 cursor-help"
+          title="Inferred from legacy data — re-fetch reports to capture exact authentication results"
+        >
+          ℹ
+        </span>
+      )}
+    </div>
+  )
+}
+
+function buildRecommendation(ip: IpAgg): { title: string; body: React.ReactNode } | null {
+  if (ip.failureReason === 'fully_aligned' && ip.misalignedVolume === 0 && ip.authFailedVolume === 0) {
+    return {
+      title: 'Fully authenticated and aligned',
+      body: <>No action needed for this sender.</>,
+    }
+  }
+
+  const headerFrom = ip.headerFroms[0] || ip.domains[0] || 'your domain'
+  const authedDomain = ip.spfDomains[0] || ip.dkimDomains[0] || null
+  const esp = identifyEsp(ip.enrichment)
+  const orgName = ip.enrichment?.provider || ip.enrichment?.asnOrg || null
+
+  if (ip.misalignedVolume >= ip.authFailedVolume && ip.misalignedVolume > 0) {
+    return {
+      title: 'Authenticates correctly but does not align with your domain',
+      body: (
+        <>
+          <p>
+            SPF and/or DKIM pass for{' '}
+            <span className="font-mono text-slate-700">{authedDomain || 'a third-party domain'}</span>{' '}
+            but your <span className="font-mono">From:</span> address uses{' '}
+            <span className="font-mono text-slate-700">{headerFrom}</span>. These domains must match
+            (or be organisationally aligned) for DMARC to pass.
+          </p>
+          {esp ? (
+            <p className="mt-2">
+              This sender is <span className="font-medium">{esp.name}</span>. Configure them to send
+              using your domain identity:
+            </p>
+          ) : orgName ? (
+            <p className="mt-2">
+              This sender appears to be <span className="font-medium">{orgName}</span>. Configure
+              them to send using your domain identity:
+            </p>
+          ) : (
+            <p className="mt-2">Configure this sending platform to send using your domain identity:</p>
+          )}
+          <ol className="list-decimal list-inside mt-1 space-y-1 text-slate-600">
+            <li>Add a custom sending domain pointing to <span className="font-mono">{headerFrom}</span></li>
+            <li>Enable DKIM signing with <span className="font-mono">{headerFrom}</span> as the d= domain</li>
+            <li>Set the envelope-from (Return-Path) to a subdomain of <span className="font-mono">{headerFrom}</span></li>
+            {esp && (
+              <li>See <span className="font-medium">{esp.hint.docsLabel}</span> for platform-specific steps</li>
+            )}
+          </ol>
+        </>
+      ),
+    }
+  }
+
+  if (esp) {
+    return {
+      title: `${esp.name} is not authorised on your DNS`,
+      body: (
+        <>
+          <p>
+            This IP belongs to <span className="font-medium">{esp.name}</span> but is sending as{' '}
+            <span className="font-mono text-slate-700">{headerFrom}</span> without passing
+            authentication. Add the following to your domain&apos;s SPF record:
+          </p>
+          <pre className="mt-2 px-3 py-2 bg-slate-900 text-emerald-300 text-xs rounded-lg overflow-x-auto">
+            {esp.hint.spfInclude}
+          </pre>
+          <p className="mt-2">
+            Then enable DKIM signing in your {esp.name} account using{' '}
+            <span className="font-mono">{headerFrom}</span> as the signing domain.
+          </p>
+        </>
+      ),
+    }
+  }
+
+  return {
+    title: 'Unauthenticated sender',
+    body: (
+      <>
+        <p>
+          IP <span className="font-mono text-slate-700">{ip.ip}</span>
+          {orgName && <> ({orgName})</>} is sending as{' '}
+          <span className="font-mono text-slate-700">{headerFrom}</span> but is not authenticated.
+        </p>
+        <ul className="list-disc list-inside mt-2 space-y-1 text-slate-600">
+          <li>If you recognise this sender, add it to your SPF record and enable DKIM.</li>
+          <li>
+            If you do not recognise it, this may be an unauthorised sender — consider moving DMARC
+            to <span className="font-mono">p=quarantine</span> or{' '}
+            <span className="font-mono">p=reject</span>.
+          </li>
+        </ul>
+      </>
+    ),
+  }
+}
+
+function AlignmentSummaryBanner({ summary }: { summary: Summary }) {
+  if (!summary || summary.totalSenders === 0) return null
+  const { fullyAlignedSenders, misalignedSenders, authFailedSenders, totalSenders, topMisaligned } = summary
+  return (
+    <div className="bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-200 p-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <div className="text-xs text-slate-500 mb-1">Fully Aligned</div>
+          <div className="text-2xl font-bold text-emerald-600">
+            {fullyAlignedSenders}
+            <span className="text-sm text-slate-400 font-normal"> / {totalSenders}</span>
+          </div>
+          <div className="text-xs text-slate-500 mt-0.5">{formatNumber(summary.fullyAlignedVolume)} emails</div>
+        </div>
+        <div>
+          <div className="text-xs text-slate-500 mb-1">Alignment Issues</div>
+          <div className="text-2xl font-bold text-amber-600">{misalignedSenders}</div>
+          <div className="text-xs text-slate-500 mt-0.5">{formatNumber(summary.misalignedVolume)} emails misaligned</div>
+        </div>
+        <div>
+          <div className="text-xs text-slate-500 mb-1">Authentication Failures</div>
+          <div className="text-2xl font-bold text-red-600">{authFailedSenders}</div>
+          <div className="text-xs text-slate-500 mt-0.5">{formatNumber(summary.authFailedVolume)} emails failed auth</div>
+        </div>
+      </div>
+      {topMisaligned && topMisaligned.volume > 0 && (
+        <div className="mt-4 pt-4 border-t border-slate-100 flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <div className="text-sm text-slate-700">
+            <span className="font-medium">Top priority:</span> Fix alignment for{' '}
+            <span className="font-mono text-slate-900">{topMisaligned.ip}</span>
+            {topMisaligned.providerName && (
+              <span className="text-slate-500"> ({topMisaligned.providerName})</span>
+            )}
+            {' '}— affecting <span className="font-semibold">{formatNumber(topMisaligned.volume)}</span> emails.
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const TYPE_CONFIG: Record<string, { label: string; description: string; icon: any; passLabel: string; failLabel: string }> = {
@@ -320,70 +583,79 @@ export default function DrilldownPage() {
         </div>
       ) : type === 'ip' ? (
         /* ═══════ IP AGGREGATION VIEW ═══════ */
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <>
+          {summary && <AlignmentSummaryBanner summary={summary} />}
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-100">
                   <th className="px-6 py-3">Source IP</th>
                   <th className="px-6 py-3"><SortHeader field="count">Volume</SortHeader></th>
-                  <th className="px-6 py-3"><SortHeader field="spfFail">SPF</SortHeader></th>
-                  <th className="px-6 py-3"><SortHeader field="dkimFail">DKIM</SortHeader></th>
-                  <th className="px-6 py-3"><SortHeader field="dmarcFail">DMARC</SortHeader></th>
+                  <th className="px-6 py-3">Authentication</th>
+                  <th className="px-6 py-3">Alignment</th>
+                  <th className="px-6 py-3">DMARC Result</th>
                   <th className="px-6 py-3"><SortHeader field="rejected">Disposition</SortHeader></th>
-                  <th className="px-6 py-3">Domains</th>
                   <th className="px-6 py-3">Reporter</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {sortedIps.map((ip) => {
-                  const hasFailures = ip.spfFail > 0 || ip.dkimFail > 0 || ip.dmarcFail > 0
                   const isExpanded = expandedIp === ip.ip
+                  const orgName = ip.enrichment?.provider || ip.enrichment?.asnOrg
+                  const spfAuthPass = ip.spfAuthPass > ip.spfAuthFail
+                  const dkimAuthPass = ip.dkimAuthPass > ip.dkimAuthFail
+                  const spfAlignPass = ip.spfPass > ip.spfFail
+                  const dkimAlignPass = ip.dkimPass > ip.dkimFail
+                  const spfAuthDomain = ip.spfDomains[0] || null
+                  const dkimAuthDomain = ip.dkimDomains[0] || null
+                  const inferred = ip.inferredVolume > 0
+                  const dmarcPassDominant = ip.dmarcPass >= ip.dmarcFail
+                  const rec = buildRecommendation(ip)
                   return (
-                    <>
+                    <Fragment key={ip.ip}>
                       <tr
-                        key={ip.ip}
                         onClick={() => loadIpRecords(ip.ip)}
                         className={`cursor-pointer transition-colors ${isExpanded ? 'bg-brand-50' : 'hover:bg-slate-50/50'}`}
                       >
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-2">
-                            {hasFailures ? (
-                              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                            )}
-                            <span className="font-mono text-slate-700">{ip.ip}</span>
+                            <ReasonBadge reason={ip.failureReason} />
                             {isExpanded ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
                           </div>
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <span className="font-mono text-slate-700">{ip.ip}</span>
+                          </div>
+                          {orgName && (
+                            <div className="text-xs text-slate-400 truncate max-w-[220px] mt-0.5">{orgName}</div>
+                          )}
                         </td>
-                        <td className="px-6 py-3.5 font-medium text-slate-700">{formatNumber(ip.totalVolume)}</td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <MiniBar pass={ip.spfPass} fail={ip.spfFail} />
-                            <span className="text-xs text-slate-500">
-                              {formatPercent(ip.totalVolume > 0 ? ip.spfPass / ip.totalVolume : 0)}
-                            </span>
+                        <td className="px-6 py-3.5 font-medium text-slate-700 align-top">{formatNumber(ip.totalVolume)}</td>
+                        <td className="px-6 py-3.5 align-top space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-slate-400 w-10">SPF</span>
+                            <AuthCell result={spfAuthPass ? 'pass' : 'fail'} domain={spfAuthDomain} inferred={inferred} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-slate-400 w-10">DKIM</span>
+                            <AuthCell result={dkimAuthPass ? 'pass' : 'fail'} domain={dkimAuthDomain} inferred={inferred} />
                           </div>
                         </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <MiniBar pass={ip.dkimPass} fail={ip.dkimFail} />
-                            <span className="text-xs text-slate-500">
-                              {formatPercent(ip.totalVolume > 0 ? ip.dkimPass / ip.totalVolume : 0)}
-                            </span>
+                        <td className="px-6 py-3.5 align-top space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-slate-400 w-10">SPF</span>
+                            <AuthCell result={spfAlignPass ? 'pass' : 'fail'} />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-slate-400 w-10">DKIM</span>
+                            <AuthCell result={dkimAlignPass ? 'pass' : 'fail'} />
                           </div>
                         </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <MiniBar pass={ip.dmarcPass} fail={ip.dmarcFail} />
-                            <span className="text-xs text-slate-500">
-                              {formatPercent(ip.totalVolume > 0 ? ip.dmarcPass / ip.totalVolume : 0)}
-                            </span>
-                          </div>
+                        <td className="px-6 py-3.5 align-top">
+                          <StatusBadge value={dmarcPassDominant ? 'pass' : 'fail'} />
                         </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-1.5 text-xs">
+                        <td className="px-6 py-3.5 align-top">
+                          <div className="flex items-center gap-1.5 text-xs flex-wrap">
                             {ip.dispositionNone > 0 && (
                               <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded font-medium">
                                 {formatNumber(ip.dispositionNone)} ok
@@ -401,14 +673,22 @@ export default function DrilldownPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-3.5 text-xs text-slate-500">{ip.domains.join(', ')}</td>
-                        <td className="px-6 py-3.5 text-xs text-slate-500">{ip.orgs.join(', ')}</td>
+                        <td className="px-6 py-3.5 text-xs text-slate-500 align-top">{ip.orgs.join(', ')}</td>
                       </tr>
                       {isExpanded && (
                         <tr key={`${ip.ip}-detail`}>
-                          <td colSpan={8} className="p-0">
-                            <div className="bg-slate-50 border-y border-slate-200 p-4">
-                              <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                          <td colSpan={7} className="p-0">
+                            <div className="bg-slate-50 border-y border-slate-200 p-4 space-y-4">
+                              {rec && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <ReasonBadge reason={ip.failureReason} />
+                                    <h4 className="text-sm font-semibold text-slate-800">{rec.title}</h4>
+                                  </div>
+                                  <div className="text-xs text-slate-600 leading-relaxed">{rec.body}</div>
+                                </div>
+                              )}
+                              <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                                 <Server className="w-4 h-4 text-brand-500" />
                                 All records from {ip.ip}
                               </h4>
@@ -422,31 +702,31 @@ export default function DrilldownPage() {
                                     <thead>
                                       <tr className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-200">
                                         <th className="px-4 py-2">Count</th>
-                                        <th className="px-4 py-2">SPF</th>
-                                        <th className="px-4 py-2">DKIM</th>
+                                        <th className="px-4 py-2">SPF Auth</th>
+                                        <th className="px-4 py-2">DKIM Auth</th>
+                                        <th className="px-4 py-2">SPF Align</th>
+                                        <th className="px-4 py-2">DKIM Align</th>
                                         <th className="px-4 py-2">DMARC</th>
                                         <th className="px-4 py-2">Disposition</th>
                                         <th className="px-4 py-2">From</th>
-                                        <th className="px-4 py-2">SPF Domain</th>
-                                        <th className="px-4 py-2">DKIM Domain</th>
                                         <th className="px-4 py-2">Reporter</th>
                                         <th className="px-4 py-2">Date</th>
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                      {ipRecords.map((rec) => (
-                                        <tr key={rec.id} className="hover:bg-white transition-colors">
-                                          <td className="px-4 py-2 font-medium text-slate-700">{formatNumber(rec.count)}</td>
-                                          <td className="px-4 py-2"><StatusBadge value={rec.spfResult} /></td>
-                                          <td className="px-4 py-2"><StatusBadge value={rec.dkimResult} /></td>
-                                          <td className="px-4 py-2"><StatusBadge value={rec.dmarcResult} /></td>
-                                          <td className="px-4 py-2"><StatusBadge value={rec.disposition} /></td>
-                                          <td className="px-4 py-2 text-slate-500">{rec.headerFrom || rec.envelopeFrom || '—'}</td>
-                                          <td className="px-4 py-2 text-slate-500 font-mono">{rec.spfDomain || '—'}</td>
-                                          <td className="px-4 py-2 text-slate-500 font-mono">{rec.dkimDomain || '—'}</td>
-                                          <td className="px-4 py-2 text-slate-500">{rec.reportOrg}</td>
+                                      {ipRecords.map((r) => (
+                                        <tr key={r.id} className="hover:bg-white transition-colors">
+                                          <td className="px-4 py-2 font-medium text-slate-700">{formatNumber(r.count)}</td>
+                                          <td className="px-4 py-2"><AuthCell result={r.spfAuthResult} domain={r.spfDomain} inferred={r.spfAuthInferred} /></td>
+                                          <td className="px-4 py-2"><AuthCell result={r.dkimAuthResult} domain={r.dkimDomain} inferred={r.dkimAuthInferred} /></td>
+                                          <td className="px-4 py-2"><AuthCell result={r.spfResult} /></td>
+                                          <td className="px-4 py-2"><AuthCell result={r.dkimResult} /></td>
+                                          <td className="px-4 py-2"><StatusBadge value={r.dmarcResult} /></td>
+                                          <td className="px-4 py-2"><StatusBadge value={r.disposition} /></td>
+                                          <td className="px-4 py-2 text-slate-500">{r.headerFrom || r.envelopeFrom || '—'}</td>
+                                          <td className="px-4 py-2 text-slate-500">{r.reportOrg}</td>
                                           <td className="px-4 py-2 text-slate-400 whitespace-nowrap">
-                                            {new Date(rec.reportDate).toLocaleDateString()}
+                                            {new Date(r.reportDate).toLocaleDateString()}
                                           </td>
                                         </tr>
                                       ))}
@@ -458,7 +738,7 @@ export default function DrilldownPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   )
                 })}
               </tbody>
@@ -470,7 +750,8 @@ export default function DrilldownPage() {
               <p className="text-sm text-slate-500">No source IPs found</p>
             </div>
           )}
-        </div>
+          </div>
+        </>
       ) : (
         /* ═══════ RECORD-LEVEL VIEW (SPF/DKIM/DMARC/Disposition) ═══════ */
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -480,12 +761,13 @@ export default function DrilldownPage() {
                 <tr className="text-left text-xs font-medium text-slate-500 uppercase tracking-wider border-b border-slate-100">
                   <th className="px-6 py-3">Source IP</th>
                   <th className="px-6 py-3">Volume</th>
-                  <th className="px-6 py-3">SPF</th>
-                  <th className="px-6 py-3">DKIM</th>
+                  <th className="px-6 py-3">SPF Auth</th>
+                  <th className="px-6 py-3">DKIM Auth</th>
+                  <th className="px-6 py-3">SPF Align</th>
+                  <th className="px-6 py-3">DKIM Align</th>
                   <th className="px-6 py-3">DMARC</th>
                   <th className="px-6 py-3">Disposition</th>
                   <th className="px-6 py-3">From</th>
-                  <th className="px-6 py-3">Domain</th>
                   <th className="px-6 py-3">Reporter</th>
                   <th className="px-6 py-3">Date</th>
                   <th className="px-6 py-3">Policy</th>
@@ -503,12 +785,13 @@ export default function DrilldownPage() {
                       </Link>
                     </td>
                     <td className="px-6 py-3.5 font-medium text-slate-700">{formatNumber(rec.count)}</td>
-                    <td className="px-6 py-3.5"><StatusBadge value={rec.spfResult} /></td>
-                    <td className="px-6 py-3.5"><StatusBadge value={rec.dkimResult} /></td>
+                    <td className="px-6 py-3.5"><AuthCell result={rec.spfAuthResult} domain={rec.spfDomain} inferred={rec.spfAuthInferred} /></td>
+                    <td className="px-6 py-3.5"><AuthCell result={rec.dkimAuthResult} domain={rec.dkimDomain} inferred={rec.dkimAuthInferred} /></td>
+                    <td className="px-6 py-3.5"><AuthCell result={rec.spfResult} /></td>
+                    <td className="px-6 py-3.5"><AuthCell result={rec.dkimResult} /></td>
                     <td className="px-6 py-3.5"><StatusBadge value={rec.dmarcResult} /></td>
                     <td className="px-6 py-3.5"><StatusBadge value={rec.disposition} /></td>
                     <td className="px-6 py-3.5 text-slate-500 text-xs">{rec.headerFrom || rec.envelopeFrom || '—'}</td>
-                    <td className="px-6 py-3.5 text-slate-500 text-xs">{rec.reportDomain}</td>
                     <td className="px-6 py-3.5 text-slate-500 text-xs">{rec.reportOrg}</td>
                     <td className="px-6 py-3.5 text-slate-400 text-xs whitespace-nowrap">
                       {new Date(rec.reportDate).toLocaleDateString()}
