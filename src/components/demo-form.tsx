@@ -91,7 +91,7 @@ export function RequestDemoForm() {
               {[
                 { step: '1', text: 'Our team reviews your request and confirms your demo slot via email' },
                 { step: '2', text: 'A 20-minute live walkthrough tailored to your email infrastructure' },
-                { step: '3', text: 'Upload your first DMARC report during the demo GÇö see real results instantly' },
+                { step: '3', text: 'Once your DMARC record points to Inmybox, reports flow in automatically from Google, Yahoo and Microsoft — no manual uploads needed' },
               ].map((item) => (
                 <div key={item.step} className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">

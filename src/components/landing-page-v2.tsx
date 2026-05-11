@@ -353,11 +353,11 @@ function HeroDashboardMock() {
 /* ═══ STATS STRIP ═════════════════════════════════════════════════ */
 function StatsStrip() {
   const items = [
-    { value: '50K+', label: 'Reports Processed' },
-    { value: '12K+', label: 'Senders Monitored' },
-    { value: '99.9%', label: 'Parse Accuracy' },
-    { value: '$14K', label: 'Avg. Recovery / mo' },
-    { value: '< 2d', label: 'Issue Resolution' },
+    { value: 'Continuous', label: 'Monitoring' },
+    { value: 'Real-time', label: 'Parsing' },
+    { value: '200+', label: 'Providers Detected' },
+    { value: '99.9%', label: 'Uptime SLA' },
+    { value: '< 2min', label: 'Setup' },
   ]
   return (
     <section className="relative z-10 border-y border-white/[0.06] bg-white/[0.015] backdrop-blur-sm">
@@ -643,17 +643,19 @@ function TestimonialBanner() {
             border: '1px solid rgba(99,102,241,0.15)',
           }}>
           <div className="flex justify-center gap-1 mb-6">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Star key={i} className="w-5 h-5 fill-indigo-400 text-indigo-400" />
-            ))}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+              <Sparkles className="w-3 h-3 text-indigo-400" />
+              <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-indigo-300/80">
+                Industry Insight
+              </span>
+            </div>
           </div>
           <blockquote className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight max-w-4xl mx-auto">
-            &ldquo;Inmybox gave us instant visibility into email delivery issues we didn&apos;t even know
-            we had. Within a week, our inbox rate jumped from 87% to 96%.&rdquo;
+            &ldquo;Companies achieving full DMARC enforcement typically see inbox rates improve from
+            ~70% to 95%+ within 30 days.&rdquo;
           </blockquote>
           <div className="mt-8 text-slate-400 font-medium">
-            <div className="text-sm">Sarah Chen</div>
-            <div className="text-xs uppercase tracking-[0.18em]">Head of Growth, ScaleUp SaaS</div>
+            <div className="text-xs uppercase tracking-[0.18em]">&mdash; Inmybox Analysis</div>
           </div>
         </div>
       </div>
@@ -692,9 +694,8 @@ function FooterV2() {
               <li><Link href="/demo" className="hover:text-white transition-colors">Request Demo</Link></li>
               <li><Link href="/docs/setup" className="hover:text-white transition-colors">Setup Guide</Link></li>
               <li>
-                <a href="/api/docs/onboarding-guide" className="hover:text-white transition-colors flex items-center gap-1.5">
+                <a href="mailto:hello@inmybox.io?subject=Onboarding%20Guide%20Request" className="hover:text-white transition-colors">
                   Onboarding Guide
-                  <span className="text-[10px] text-indigo-400 font-medium px-1 py-0.5 bg-indigo-500/10 rounded">PDF</span>
                 </a>
               </li>
             </ul>
@@ -708,9 +709,8 @@ function FooterV2() {
               <li><Link href="/#features" className="hover:text-white transition-colors">Sender Intelligence</Link></li>
               <li><Link href="/#features" className="hover:text-white transition-colors">Revenue Impact</Link></li>
               <li>
-                <a href="/api/docs/app-workflow" className="hover:text-white transition-colors flex items-center gap-1.5">
+                <a href="mailto:hello@inmybox.io?subject=ROI%20Whitepaper%20Request" className="hover:text-white transition-colors">
                   ROI Whitepaper
-                  <span className="text-[10px] text-indigo-400 font-medium px-1 py-0.5 bg-indigo-500/10 rounded">PDF</span>
                 </a>
               </li>
             </ul>
@@ -721,6 +721,7 @@ function FooterV2() {
               <li><Link href="/docs/setup" className="hover:text-white transition-colors">Documentation</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
             </ul>
           </div>
 

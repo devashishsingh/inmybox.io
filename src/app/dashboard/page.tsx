@@ -315,13 +315,13 @@ export default function DashboardPage() {
           </p>
         </div>
         {hasData && data && (
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold shrink-0 self-start whitespace-nowrap max-w-full ${getRiskBgColor(data.delivery.riskLevel)} ${getRiskColor(data.delivery.riskLevel)}`}>
             {data.delivery.riskLevel === 'healthy' ? (
-              <ShieldCheck className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4 shrink-0" />
             ) : (
-              <ShieldAlert className="w-4 h-4" />
+              <ShieldAlert className="w-4 h-4 shrink-0" />
             )}
-            {data.delivery.label}
+            <span className="truncate">{data.delivery.label}</span>
           </div>
         )}
       </div>

@@ -77,7 +77,7 @@ export default function SignInPage() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
         <Link
           href="/"
-          className="absolute top-6 left-6 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-5 left-5 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-lg shadow-sm transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Home
@@ -112,10 +112,12 @@ export default function SignInPage() {
                 <input
                   id="email"
                   type="email"
+                  name="signin-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
+                  autoComplete="off"
                   className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow"
                 />
               </div>

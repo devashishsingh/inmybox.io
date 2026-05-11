@@ -91,7 +91,7 @@ export default function SignUpPage() {
 
           <div className="space-y-4">
             {[
-              'Upload DMARC reports in seconds',
+              'DMARC reports flow in automatically — no manual uploads',
               'See delivery health and sender trust instantly',
               'Understand business impact with real metrics',
               'Identify unknown and suspicious senders',
