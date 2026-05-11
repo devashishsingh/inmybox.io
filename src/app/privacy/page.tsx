@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Mail, ArrowLeft } from 'lucide-react'
+import { EmberShell } from '@/components/ember-shell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -9,18 +10,19 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-slate-100">
+    <EmberShell withNav={false}>
+      <div className="min-h-screen">
+      <header className="border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <Mail className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-900">Inmybox</span>
+            <span className="text-lg font-bold text-white">Inmybox</span>
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+            className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -29,10 +31,10 @@ export default function PrivacyPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-slate-500 mb-10">Last updated: April 4, 2026</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
+        <p className="text-sm text-zinc-400 mb-10">Last updated: April 13, 2026</p>
 
-        <div className="prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600">
+        <div className="prose prose-invert max-w-none prose-headings:font-semibold prose-headings:text-white prose-p:text-zinc-300 prose-p:leading-relaxed prose-li:text-zinc-300">
           <h2>1. Introduction</h2>
           <p>
             Inmybox (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) is committed to protecting
@@ -75,10 +77,24 @@ export default function PrivacyPage() {
             We conduct regular security reviews.
           </p>
 
+          {/* INMYBOX ENHANCEMENT: M10/M11 — disclose third-party IP enrichment services */}
           <h2>5. Data Sharing</h2>
           <p>
             We do not sell your personal information. We may share data with third-party service
             providers who assist in operating our platform, subject to confidentiality obligations.
+          </p>
+          <h3>IP Enrichment Services</h3>
+          <p>
+            To provide sender intelligence from your DMARC reports, we query the following external
+            services with the sending IP addresses found in those reports:
+          </p>
+          <ul>
+            <li><strong>RDAP (rdap.org)</strong> — to resolve IP ownership and registrant details</li>
+            <li><strong>BGPView (bgpview.io)</strong> — to resolve ASN and network information</li>
+          </ul>
+          <p>
+            These services receive only the IP addresses contained in your DMARC reports. No
+            personal user information is transmitted to these services.
           </p>
 
           <h2>6. Your Rights (GDPR)</h2>
@@ -88,17 +104,42 @@ export default function PrivacyPage() {
             objection to processing. Contact us to exercise these rights.
           </p>
 
+          {/* INMYBOX ENHANCEMENT: L6 — lead/demo data retention clause */}
           <h2>7. Data Retention</h2>
           <p>
             We retain your data for as long as your account is active or as needed to provide
             services. You can configure report data retention in your workspace settings. Upon
             account deletion, we remove your data within 30 days.
           </p>
+          <h3>Lead &amp; Demo Request Data</h3>
+          <p>
+            If you submit a demo request or contact form, we retain your name, email, company,
+            phone number (if provided), and message for up to 12 months to follow up and improve
+            our service. You may request deletion of this data at any time by contacting us.
+          </p>
 
+          {/* INMYBOX ENHANCEMENT: M10 — expanded cookie disclosure */}
           <h2>8. Cookies</h2>
           <p>
-            We use essential cookies for authentication and session management. Analytics cookies
-            are optional and require your consent.
+            We use the following cookies:
+          </p>
+          <ul>
+            <li>
+              <strong>next-auth.session-token</strong> (essential) — Authenticates your session.
+              Expires after 7 days of inactivity. HttpOnly, Secure.
+            </li>
+            <li>
+              <strong>cookie-consent</strong> (essential) — Records your cookie consent choice.
+              Expires after 365 days. HttpOnly.
+            </li>
+            <li>
+              <strong>theme</strong> (functional) — Stores your light/dark theme preference.
+              Persistent. Not sent to server.
+            </li>
+          </ul>
+          <p>
+            We do not use third-party advertising or tracking cookies. Analytics cookies, if
+            introduced in the future, will require your explicit consent before activation.
           </p>
 
           <h2>9. Changes to This Policy</h2>
@@ -110,12 +151,13 @@ export default function PrivacyPage() {
           <h2>10. Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy, contact us at{' '}
-            <a href="mailto:privacy@inmybox.io" className="text-brand-600 hover:underline">
+            <a href="mailto:privacy@inmybox.io" className="text-amber-300 hover:underline">
               privacy@inmybox.io
             </a>
           </p>
         </div>
       </main>
-    </div>
+      </div>
+    </EmberShell>
   )
 }
