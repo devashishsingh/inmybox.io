@@ -1,25 +1,35 @@
+// INMYBOX ENHANCEMENT — Phase 3 M9: Cookie consent (localStorage-only on restore branch; backend /api/consent not present)
 'use client'
 
 import { useState, useEffect } from 'react'
+
+const STORAGE_KEY = 'inmybox-consent'
 
 export function CookieBanner() {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    const consent = localStorage.getItem('inmybox-cookie-consent')
-    if (!consent) {
+    let stored: string | null = null
+    try {
+      stored = localStorage.getItem(STORAGE_KEY)
+    } catch {
+      // localStorage unavailable — fall back to checking companion cookie
+      const hasCookie = document.cookie.split(';').some((c) => c.trim().startsWith('inmybox-consent-set='))
+      stored = hasCookie ? '1' : null
+    }
+    if (!stored) {
       const timer = setTimeout(() => setShow(true), 1500)
       return () => clearTimeout(timer)
     }
   }, [])
 
-  const accept = () => {
-    localStorage.setItem('inmybox-cookie-consent', 'accepted')
-    setShow(false)
-  }
-
-  const decline = () => {
-    localStorage.setItem('inmybox-cookie-consent', 'declined')
+  const setConsent = async (value: 'accepted' | 'declined') => {
+    try {
+      localStorage.setItem(STORAGE_KEY, value)
+    } catch {
+      // Fallback: write a non-httpOnly cookie flag
+      document.cookie = `inmybox-consent-set=1; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax`
+    }
     setShow(false)
   }
 
@@ -27,23 +37,24 @@ export function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <p className="text-sm text-slate-600 flex-1">
+      <div className="max-w-4xl mx-auto rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-black/80 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]">
+        <p className="text-sm text-zinc-300 flex-1 leading-relaxed">
           We use essential cookies to make Inmybox work. We&apos;d also like to set analytics cookies to understand how you use the product and make improvements.{' '}
-          <a href="/privacy" className="text-brand-600 hover:underline font-medium">
+          <a href="/privacy" className="text-amber-400 hover:text-amber-300 underline-offset-2 hover:underline font-medium">
             Privacy Policy
           </a>
         </p>
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={decline}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
+            onClick={() => setConsent('declined')}
+            className="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white rounded-full border border-white/10 hover:border-white/20 hover:bg-white/[0.04] transition-colors"
           >
             Decline
           </button>
           <button
-            onClick={accept}
-            className="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition-colors shadow-sm"
+            onClick={() => setConsent('accepted')}
+            className="px-5 py-2 text-sm font-semibold text-white rounded-full transition-all"
+            style={{ background: 'linear-gradient(135deg, #ef233c 0%, #f59e0b 60%, #d4a843 100%)' }}
           >
             Accept
           </button>
