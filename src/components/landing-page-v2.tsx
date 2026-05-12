@@ -28,8 +28,8 @@ import {
   Target,
 } from 'lucide-react'
 import { NavbarV2 } from '@/components/landing-nav-v2'
-import { useRouter } from 'next/navigation'
 import { CookieBanner } from '@/components/cookie-banner'
+import { DomainScanner } from '@/components/domain-scanner'
 
 /* ─── Animated counter ───────────────────────────────────────────── */
 function useCounter(target: number, duration = 1800, suffix = '') {
@@ -127,8 +127,9 @@ function Hero() {
             </h1>
 
             <p className="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-              Inmybox gives growth teams complete visibility into DMARC reports, sender
-              reputation, and inbox placement &mdash; so you always know the gap between sent and seen.
+              Most businesses pay hundreds every month for DMARC dashboards they check twice a year.
+              Inmybox fixes your email deliverability once, shows you exactly what it was costing you,
+              and gives you two free health checks a year. No subscriptions. No lock-in. Just results.
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-10">
@@ -147,7 +148,7 @@ function Hero() {
               <div className="hidden sm:block w-px h-3.5 bg-zinc-700" />
               <div className="flex items-center gap-1.5 text-[13px] text-zinc-400">
                 <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span>We fix your DMARC &amp; walk away</span>
+                <span>Results in under 48 hours</span>
               </div>
               <div className="hidden sm:block w-px h-3.5 bg-zinc-700" />
               <div className="flex items-center gap-1.5 text-[13px] text-zinc-400">
@@ -157,7 +158,7 @@ function Hero() {
             </div>
 
             <div className="max-w-2xl">
-              <DomainCTA />
+              <DomainScanner />
             </div>
           </div>
 
@@ -166,50 +167,6 @@ function Hero() {
         </div>
       </div>
     </section>
-  )
-}
-
-/* ═══ DOMAIN CTA (static — routes to /demo) ══════════════════════ */
-function DomainCTA() {
-  const router = useRouter()
-  const [domain, setDomain] = useState('')
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const d = domain.trim()
-    router.push(d ? `/demo?domain=${encodeURIComponent(d)}` : '/demo')
-  }
-
-  return (
-    <div className="w-full">
-      <div className="text-[13px] font-semibold tracking-wide text-zinc-300 mb-2">
-        Enter your domain to check your email health
-      </div>
-      <form
-        onSubmit={submit}
-        className="flex flex-col sm:flex-row gap-2 p-2 rounded-2xl ember-glass border border-white/10"
-      >
-        <input
-          type="text"
-          value={domain}
-          onChange={(e) => setDomain(e.target.value)}
-          placeholder="yourdomain.com"
-          className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/30 whitespace-nowrap"
-        >
-          <span>Check Free</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </form>
-      <div className="text-[11px] text-zinc-500 mt-2">
-        Free assessment &middot; no signup required
-      </div>
-    </div>
   )
 }
 
